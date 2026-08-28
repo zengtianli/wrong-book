@@ -1,0 +1,33 @@
+# Xcode 派生数据(可重生,别进仓)
+.dd*/
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+
+# xcodegen 从 project.yml 生成,不进仓 —— 进仓会和 project.yml 打架:
+# 改了 yml 忘了重生成,工程和规格就悄悄不一致了。
+WrongBook.xcodeproj/
+
+# 练习页:SSOT 在 ~/Edu(curriculum.yaml + 题库 + 渲染门),这里只是构建时组装来的副本。
+# 存进仓就是第二份,加了课两边会漂。clone 之后跑 bash sync-lessons.sh 就有了
+# (构建也会自动跑一次,~/Edu 不在或组装失败直接 exit 1)。
+# 目录里的 README.md 要进仓 —— 只为让目录存在,否则 xcodegen 会因
+# 「missing source directory」直接拒,那时 preBuildScripts 还没轮到跑。
+Resources/Lessons/*.html
+Resources/Lessons/*.json
+Resources/Lessons/primary-*/
+
+.DS_Store
+__pycache__/
+
+# ── PNG 白名单 ──
+# git-template 的 info/exclude 默认拦所有 *.png。图标是**构建输入**:actool 读它,
+# 不进仓则 clone 下来编出来的 app 没图标。
+!Resources/icon-1024.png
+!Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
+# shots/ 是验收证据,几 MB,留本地不进仓;要复现: bash sim-run.sh
+shots/
+
+# CC 本地覆盖(可能含机器专属路径/开关)
+.claude/settings.local.json

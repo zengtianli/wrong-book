@@ -1,0 +1,104 @@
+import SwiftUI
+import UserNotifications
+
+/// 我的 —— 登录态、今日进度、每日提醒、课程包版本。
+///
+/// 这一屏刻意很短。账本、兑换、走势、家长记账全在**另一个 app**（京宝积分）——
+/// 2026-08-28 用户拍板「分开2个app，一个关注错题，一个关注积分」。
+/// 在这儿再放一个余额大字，就是把那件事又做了半遍。
+struct MeView: View {
+    @EnvironmentObject var session: Session
+    @EnvironmentObject var sync: LessonSync
+
+    private let pack = LessonPack.load()
+    @State private var profile: GrowthProfile?
+    @State private var remindOn = Reminder.enabled
+    @State private var remindHour = Reminder.hour
+    @State private var notifyState = "—"
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("今天") {
+                    if let p = profile {
+                        row("已经做了", "\(p.doneToday) / \(p.goal) 题")
+                        row("还差", p.remaining == 0 ? "做完了 ✅" : "\(p.remaining) 题")
+                        row("等级 / 连续", "Lv.\(p.level) · 🔥 \(p.streakDays) 天")
+                    } else {
+                        Text("还没做过题 —— 去「学习」挑一课")
+                            .font(.footnote).foregroundStyle(Ink.dim)
+                    }
+                    if let s = session.status {
+                        row("今天刷题还能挣", "\(s.practiceLeft) 分")
+                    }
+                }
+
+                Section {
+                    Toggle("每天提醒我做完任务", isOn: $remindOn)
+                    if remindOn {
+                        Picker("提醒时间", selection: $remindHour) {
+                            ForEach([16, 17, 18, 19, 20, 21], id: \.self) { Text("\($0):00").tag($0) }
+                        }
+                    }
+                    HStack {
+                        Text("通知权限").foregroundStyle(Ink.dim)
+                        Spacer()
+                        Text(notifyState).foregroundStyle(Ink.dim)
+                    }
+                } header: {
+                    Text("提醒")
+                } footer: {
+                    // 说清它只在「今天没做够」时才响 —— 否则用户会以为坏了
+                    Text("只在当天还没做够 \(pack.dailyGoal) 题时才响；做完了当天就不再提醒。")
+                }
+
+                Section("课程包") {
+                    row("课数", "\(pack.lessons.count) 课")
+                    row("每日任务", "\(pack.dailyGoal) 题")
+                    row("更新", sync.running ? "正在拉…" : (sync.note ?? "已是最新"))
+                    Button("现在检查更新") { Task { await sync.sync(force: true) } }
+                    Button("回到随包发的那一版", role: .destructive) { sync.reset() }
+                }
+
+                Section("账号") {
+                    if let s = session.status {
+                        row("登录为", s.nick.isEmpty ? s.user : "\(s.nick)（\(s.user)）")
+                        Button("退出登录", role: .destructive) { Task { await session.logout() } }
+                    } else {
+                        // 没登录也能做题，但要说清代价 —— 不然「分怎么不涨」查不出来
+                        Text("没有登录：题照做，但**刷题积分不记账、进度不跨设备**。")
+                            .font(.footnote).foregroundStyle(Ink.dim)
+                        Button("去登录") { Task { await session.logout() } }
+                    }
+                }
+
+                Section {
+                    Text("题、题库、学习路径的 SSOT 都在 edu.tianli.cyou；"
+                         + "这个 app 只是把它们装在身上，离线也能做。")
+                        .font(.caption).foregroundStyle(Ink.dim)
+                }
+            }
+            .navigationTitle("我的")
+        }
+        .task { await load() }
+        .onChange(of: remindOn) { _, v in
+            Reminder.enabled = v
+            Task { notifyState = await Reminder.reschedule() }
+        }
+        .onChange(of: remindHour) { _, v in
+            Reminder.hour = v
+            Task { notifyState = await Reminder.reschedule() }
+        }
+    }
+
+    private func row(_ k: String, _ v: String) -> some View {
+        HStack { Text(k).foregroundStyle(Ink.dim); Spacer(); Text(v).foregroundStyle(Ink.text) }
+    }
+
+    private func load() async {
+        if let snap = try? await EduArchive.shared.snapshot() {
+            profile = GrowthProfile.parse(archive: snap)
+        }
+        notifyState = await Reminder.permissionText()
+    }
+}

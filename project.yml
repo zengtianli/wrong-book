@@ -1,0 +1,44 @@
+name: WrongBook
+options:
+  bundleIdPrefix: cyou.tianli
+  deploymentTarget: { iOS: "18.0" }
+  createIntermediateGroups: true
+settings:
+  base:
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.0"
+targets:
+  WrongBook:
+    type: application
+    platform: iOS
+    # 每次构建前从 ~/Edu 组装一次练习页。
+    # 页面的 SSOT 在 ~/Edu(curriculum.yaml + 题库 + 渲染门 + PII 门),仓里存一份就是第二份。
+    # 漏同步的表现是**编译通过、装上能跑、只是那一课点不开**,或者更坏 ——
+    # 做的是上一版的题。这种缺陷不报错,只会被当成「设计就这样」。缺源时脚本 exit 1。
+    preBuildScripts:
+      - script: bash "$PROJECT_DIR/sync-lessons.sh"
+        name: 同步练习页
+        basedOnDependencyAnalysis: false
+    sources:
+      - path: Sources
+      # ⚠ 图标资产必须在这儿列出来。漏了的表现是**编译通过、装机通过、桌面白板**——
+      #   ASSETCATALOG_COMPILER_APPICON_NAME 指向一个不在工程里的 catalog,
+      #   actool 根本没被调起,全程零报错。
+      - path: Resources/Assets.xcassets
+      # 练习页 —— folder 引用(不是 group),进包后保持 primary-*/ 子目录结构
+      - path: Resources/Lessons
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: cyou.tianli.wrongbook
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_CFBundleDisplayName: 错题本
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        GENERATE_INFOPLIST_FILE: YES
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+    scheme:
+      testTargets: []
+      configVariants: []

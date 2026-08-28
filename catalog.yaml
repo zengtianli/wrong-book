@@ -1,0 +1,26 @@
+name: wrong-book
+origin: own
+lifecycle: active
+form: ios
+
+one_liner: 错题本随身版 —— 装着 ~/Edu 的练习引擎离线做题,错题按「题型」复习出同类新题,进度跟着账号走
+
+stack: swift-ui
+notes: |
+  **不用 SwiftUI 重写练习引擎。** app 是个壳,题在 WKWebView 里跑
+  ~/Edu/engine/practice.js（判题 verify() / 组卷权重 nextGen() / 错题本两层 /
+  勋章判定 PRED / 上瘾机制五件套,1200+ 行,题库内联进每个 HTML）。
+  原生重写 = 第二份判题逻辑,和 bank.db / badges.json 必然漂移。
+
+  **错题本记的是题型,不是那一道原题**（~/Edu 用户钦定:「为了防止记住答案,
+  错的题目也要变下」）。所以原生模型里**没有 ans / options** —— 想重放也放不出来。
+  点「复习」走引擎自己的入口 window.__PRACTICE__.review(gid),由它出同类新题。
+
+  离线是这个 app 存在的理由:页面随包发（sync-lessons.sh → ~/Edu/engine/app_pack.py,
+  与上线共用同一道 PII 门）。不需要离线就该用 /appweb 加书签,不该做原生 app。
+
+  和 ~/Apps/ios/points-deck 是**两个 app**（2026-08-28 用户拍板「分开2个app,
+  一个关注错题,一个关注积分」）:这边管学习,那边管账本。
+  两边共用 edu.tianli.cyou 的同一套账号与 cookie,但各装各的、各登各的。
+
+  方案全文 ~/Dev/wiki/handoffs/dev/ios-fleet-landing/06-练习平台app方案.md
