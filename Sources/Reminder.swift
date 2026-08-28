@@ -24,31 +24,51 @@ enum Reminder {
     private static let kHour = "remind_hour"
     private static let horizonDays = 7
 
+    /// 默认关。用 `bool(forKey:)` 而不是 `object(...) as? Bool`：
+    /// 前者认得 launch 参数域里的 `-remind_enabled YES`（那是字符串，转不成 Bool），
+    /// 于是这个开关在 headless 验证里也拨得动。
     static var enabled: Bool {
-        get { UserDefaults.standard.object(forKey: kEnabled) as? Bool ?? false }
+        get { UserDefaults.standard.bool(forKey: kEnabled) }
         set { UserDefaults.standard.set(newValue, forKey: kEnabled) }
     }
 
+    /// 同上用 `integer(forKey:)`：launch 参数域里的 `-remind_hour 23` 是字符串，
+    /// `object(...) as? Int` 转不成，于是 headless 验证永远只能验 19:00 那一档。
+    /// 没设过时 integer 返回 0，落回默认 19。
     static var hour: Int {
-        get { UserDefaults.standard.object(forKey: kHour) as? Int ?? 19 }
+        get { let h = UserDefaults.standard.integer(forKey: kHour); return (1...23).contains(h) ? h : 19 }
         set { UserDefaults.standard.set(newValue, forKey: kHour) }
     }
 
-    /// 重排。返回一句给界面显示的权限状态 —— **不静默失败**：
-    /// 用户点了开关却没通知，八成是权限被拒，而那一句话就是唯一能看见的线索。
-    @discardableResult
-    static func reschedule() async -> String {
-        let c = UNUserNotificationCenter.current()
-        let existing = await c.pendingNotificationRequests()
-            .map(\.identifier).filter { $0.hasPrefix(idPrefix) }
-        c.removePendingNotificationRequests(withIdentifiers: existing)
+    /// 排哪几条 —— **纯函数**，不碰系统、不弹框。
+    ///
+    /// 抽出来是为了让它验得了：真正的排期要么弹权限框（headless 点不掉），
+    /// 要么落在系统里看不见。而这一段才是会出错的地方（今天该不该排、说什么）。
+    /// 界面上也直接摊开它 —— 用户能自己看出「今晚 19:00 会说什么」。
+    static func plan(now: Date, hour: Int, remaining: Int?, goal: Int,
+                     days: Int = horizonDays) -> [(day: Int, fire: Date, body: String)] {
+        let cal = Calendar.current
+        var out: [(Int, Date, String)] = []
+        for day in 0..<days {
+            guard let base = cal.date(byAdding: .day, value: day, to: now),
+                  let fire = cal.date(bySettingHour: hour, minute: 0, second: 0, of: base),
+                  fire > now else { continue }
+            // 今天已经做够了就不排今天这一条 —— 提醒说错一次，往后就没人信它了
+            if day == 0, let r = remaining, r == 0 { continue }
+            let body: String
+            if day == 0, let r = remaining {
+                body = "今天还差 \(r) 题就完成任务了，补完 +50 经验"
+            } else {
+                // 往后几天的进度还没发生，说不出数字就别说数字
+                body = "今天的 \(goal) 题做了吗？错过的那几类正等着换新题考你"
+            }
+            out.append((day, fire, body))
+        }
+        return out
+    }
 
-        guard enabled else { return await permissionText() }
-
-        let granted = (try? await c.requestAuthorization(options: [.alert, .sound])) ?? false
-        guard granted else { return await permissionText() }
-
-        // 今天的进度：读引擎写的那一份
+    /// 当前该排的那几条（读引擎写的存档现算）。界面直接显示它。
+    static func currentPlan() async -> [(day: Int, fire: Date, body: String)] {
         var remaining: Int?
         var goal = 12
         if let snap = try? await EduArchive.shared.snapshot(),
@@ -56,30 +76,41 @@ enum Reminder {
             remaining = p.remaining
             goal = p.goal
         }
+        return plan(now: Date(), hour: hour, remaining: remaining, goal: goal)
+    }
 
-        let cal = Calendar.current
-        let now = Date()
-        for day in 0..<horizonDays {
-            guard let base = cal.date(byAdding: .day, value: day, to: now),
-                  let fire = cal.date(bySettingHour: hour, minute: 0, second: 0, of: base),
-                  fire > now else { continue }
-            // 今天已经做够了就不排今天这一条 —— 说错一次，往后就没人信它了
-            if day == 0, let r = remaining, r == 0 { continue }
+    /// 重排。返回一句给界面显示的权限状态 —— **不静默失败**：
+    /// 用户点了开关却没通知，八成是权限被拒，而那一句话就是唯一能看见的线索。
+    ///
+    /// `ask` 只在**用户自己拨开关**那一下为真。每次回前台都问一遍权限，
+    /// 会在孩子做题做到一半时弹系统框 —— 那是最讨厌的一种打扰，而且问不出新答案。
+    @discardableResult
+    static func reschedule(ask: Bool = false) async -> String {
+        let c = UNUserNotificationCenter.current()
+        let existing = await c.pendingNotificationRequests()
+            .map(\.identifier).filter { $0.hasPrefix(idPrefix) }
+        c.removePendingNotificationRequests(withIdentifiers: existing)
 
-            let body: String
-            if day == 0, let r = remaining {
-                body = "今天还差 \(r) 题就完成任务了，补完 +50 经验"
-            } else {
-                body = "今天的 \(goal) 题做了吗？错过的那几类正等着换新题考你"
-            }
+        guard enabled else { return await permissionText() }
+
+        var status = await c.notificationSettings().authorizationStatus
+        if status == .notDetermined, ask {
+            _ = try? await c.requestAuthorization(options: [.alert, .sound])
+            status = await c.notificationSettings().authorizationStatus
+        }
+        guard status == .authorized || status == .provisional || status == .ephemeral else {
+            return await permissionText()
+        }
+
+        for p in await currentPlan() {
             let content = UNMutableNotificationContent()
             content.title = "错题本"
-            content.body = body
+            content.body = p.body
             content.sound = .default
-
-            let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: fire)
+            let comps = Calendar.current.dateComponents(
+                [.year, .month, .day, .hour, .minute], from: p.fire)
             let req = UNNotificationRequest(
-                identifier: idPrefix + "\(day)",
+                identifier: idPrefix + "\(p.day)",
                 content: content,
                 trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
             try? await c.add(req)
@@ -101,16 +132,5 @@ enum Reminder {
         @unknown default:
             return "未知"
         }
-    }
-
-    /// 只给验证用：把排了什么原样吐出来。
-    static func pendingDump() async -> [String] {
-        await UNUserNotificationCenter.current().pendingNotificationRequests()
-            .filter { $0.identifier.hasPrefix(idPrefix) }
-            .sorted { $0.identifier < $1.identifier }
-            .map { r in
-                let t = (r.trigger as? UNCalendarNotificationTrigger)?.dateComponents
-                return "\(r.identifier) @\(t?.month ?? 0)-\(t?.day ?? 0) \(t?.hour ?? 0):00 「\(r.content.body)」"
-            }
     }
 }

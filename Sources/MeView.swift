@@ -15,6 +15,7 @@ struct MeView: View {
     @State private var remindOn = Reminder.enabled
     @State private var remindHour = Reminder.hour
     @State private var notifyState = "—"
+    @State private var planRows: [String] = []
 
     var body: some View {
         NavigationStack {
@@ -37,13 +38,23 @@ struct MeView: View {
                     Toggle("每天提醒我做完任务", isOn: $remindOn)
                     if remindOn {
                         Picker("提醒时间", selection: $remindHour) {
-                            ForEach([16, 17, 18, 19, 20, 21], id: \.self) { Text("\($0):00").tag($0) }
+                            // 选项里必须包含当前值,否则 Picker 显示成空白 ——
+                            // 一个「有开关、没有值」的设置项看着就像坏了(验证时用
+                            // -remind_hour 23 当场撞到)
+                            ForEach(hourOptions, id: \.self) { Text("\($0):00").tag($0) }
                         }
                     }
                     HStack {
                         Text("通知权限").foregroundStyle(Ink.dim)
                         Spacer()
                         Text(notifyState).foregroundStyle(Ink.dim)
+                    }
+                    // 把「接下来会说什么」摊开：提醒最怕的是它悄悄不响、
+                    // 或者在孩子已经做完时还说「你还差 12 题」。摊开就都看得见。
+                    if remindOn {
+                        ForEach(planRows, id: \.self) { r in
+                            Text(r).font(.caption).foregroundStyle(Ink.dim)
+                        }
                     }
                 } header: {
                     Text("提醒")
@@ -83,12 +94,17 @@ struct MeView: View {
         .task { await load() }
         .onChange(of: remindOn) { _, v in
             Reminder.enabled = v
-            Task { notifyState = await Reminder.reschedule() }
+            // ask: true 只在这儿 —— 用户自己拨了开关，这时问权限才不算打扰
+            Task { notifyState = await Reminder.reschedule(ask: true); await refreshPlan() }
         }
         .onChange(of: remindHour) { _, v in
             Reminder.hour = v
-            Task { notifyState = await Reminder.reschedule() }
+            Task { notifyState = await Reminder.reschedule(); await refreshPlan() }
         }
+    }
+
+    private var hourOptions: [Int] {
+        Array(Set([16, 17, 18, 19, 20, 21] + [remindHour])).sorted()
     }
 
     private func row(_ k: String, _ v: String) -> some View {
@@ -100,5 +116,13 @@ struct MeView: View {
             profile = GrowthProfile.parse(archive: snap)
         }
         notifyState = await Reminder.permissionText()
+        await refreshPlan()
+    }
+
+    private func refreshPlan() async {
+        let f = DateFormatter()
+        f.dateFormat = "M月d日 HH:00"
+        planRows = await Reminder.currentPlan().prefix(3).map { "\(f.string(from: $0.fire))　\($0.body)" }
+        if planRows.isEmpty && remindOn { planRows = ["今天已经做够了，今天不再提醒"] }
     }
 }
