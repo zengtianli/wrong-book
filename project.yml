@@ -6,6 +6,7 @@ options:
 settings:
   base:
     CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: B9LJH93LA4
     SWIFT_VERSION: "5.0"
 targets:
   WrongBook:
