@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- TestFlight 上传用。destination=upload 让 xcodebuild -exportArchive 直连 App Store
+     Connect，不用开 Organizer。前提是该 bundle id 的 app 记录已存在（见 appios SKILL.md）。 -->
+<plist version="1.0"><dict>
+  <key>method</key><string>app-store-connect</string>
+  <key>teamID</key><string>B9LJH93LA4</string>
+  <key>signingStyle</key><string>automatic</string>
+  <key>destination</key><string>upload</string>
+  <key>uploadSymbols</key><true/>
+</dict></plist>
