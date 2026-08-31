@@ -71,6 +71,20 @@ struct MeView: View {
                     Button("回到随包发的那一版", role: .destructive) { sync.reset() }
                 }
 
+                Section {
+                    NavigationLink {
+                        PaperScanView().environmentObject(sync)
+                    } label: {
+                        Label("录卷子", systemImage: "doc.viewfinder")
+                    }
+                } header: {
+                    Text("整卷入档")
+                } footer: {
+                    // 说清它到哪儿为止 —— 不然会以为拍完就自动进题库了
+                    Text("扫一份卷子传到学习库；识别与复盘在 Mac 上做（`paper_ingest pull` → `/exam`）。"
+                         + "单道错题不用走这儿，用网页版 wrong.html 更快。")
+                }
+
                 Section("账号") {
                     if let s = session.status {
                         row("登录为", s.nick.isEmpty ? s.user : "\(s.nick)（\(s.user)）")

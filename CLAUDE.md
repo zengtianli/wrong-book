@@ -22,6 +22,8 @@
 | **`archive/` 的任何东西不进包** | 孩子姓名、成绩、作文、试卷原图。`app_pack.py` 里那道 PII 门是 fail-closed 的 |
 | **不用 `.page` 分页 TabView** | 练习页自己带左右滑翻题（`bindNav()`），外壳再套横向分页手势会抢 |
 | **亮色** | 练习页是亮色自包含单文件，深壳套亮页每次进课都闪一下白 |
+| **「录卷子」只传图，不识别** | 读图那步（哪道题/标答/孩子答了什么/失分归哪根轴）是人和 LLM 一起判的活。塞进 app 等于把「读不准就别猜」交给没人看的日志。手机到「传上去」为止，`/exam` 在 Mac 上做 |
+| **单道错题不走 app** | 网页 `wrong.html` + `wrong_ingest.py` 2026-08-16 就有了，手机 Safari 打开就能传。app 这一屏只解决**整卷**（多页 + 页序 + 文档扫描） |
 
 ## 跑起来
 
@@ -30,6 +32,18 @@ bash sim-run.sh                 # 编译 + 装模拟器 + 截一张图（总部 
 bash install-to-iphone.sh       # 装真机（默认走 WiFi）
 bash sync-lessons.sh            # 单独同步一次课页（构建时会自动跑）
 python3 make_icon.py            # 重生图标（逐像素可复现）
+```
+
+### 「录卷子」这一屏
+
+原生独占的那一条能力是 `VNDocumentCameraViewController`：卷子是**文档**不是风景，
+手机浏览器只能调普通相机，拍出来斜、有阴影、边不齐，而读图那步要认密密麻麻的题干和红笔批改
+—— 畸变直接变成「读出一道错的题」。系统扫描器白送自动找边 + 去透视 + 多页 + 重拍 + 排序。
+
+```
+手机（我的 → 录卷子）→ POST edu.tianli.cyou/api/paper_page
+   → Mac: python3 ~/Edu/engine/paper_ingest.py pull <slug>   # 落 archive/<slug>/scans/，VPS 侧删
+   → Mac: CC 会话 /exam                                       # 读图 → paper.yaml / review.md
 ```
 
 ### 验证通道（launch 参数，生产路径上永远是 nil）
@@ -42,7 +56,17 @@ xcrun simctl launch $UDID cyou.tianli.wrongbook \
   -tab 1 \                                 # 落到错题本
   -review 'remainder-basics:only-r'        # 直接进某一类的复习
   # 或 -lesson remainder-basics            # 直接开一课（验「不登录不联网也能做」）
+  # 或 -paperscan 1                        # 直接开「录卷子」（它藏在「我的」二级页）
+  # 或 -papertest 1 -papertest_user jingbao -papertest_pw 160912
+  #                                        # 跑一遍**真实上传路径**并把结果画在屏上
 ```
+
+`-papertest` 存在的理由：这一屏最容易错的不是布局，是「压出来的图服务端收不收」——
+dataURL 前缀、字段名、大小上限，任何一处对不上都只表现为一句笼统的 400。
+而这条路人得用手点相册才走得到。它跑的是 `PaperScan.jpeg` + `Api.paperPage` **本身**，
+不是照着重写一遍（重写的那种「实测」测的是替身，会假绿）。
+2026-08-31 实测：压图 931KB（1760×2400，走到阶梯第一档）→ 上传成功 →
+坏 slug `../etc` 被服务端拒 → 服务端侧独立核验落盘是完整 JPEG（ffd8…ffd9）。
 
 `-review` 存在的理由：**「复习出的是同类新题、不是原题」这条只能靠手点验**，
 而手点验不了的东西等于没验过。2026-08-28 实测：错题记的是 `255 ÷ 12`，

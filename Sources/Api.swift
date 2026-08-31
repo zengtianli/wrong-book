@@ -58,6 +58,18 @@ enum Api {
         _ = try? await request("api/logout", body: [:])
     }
 
+    /// 传一份卷子的**一页**（整卷扫描）。一页一个请求 —— 六页塞进一个 body 就是十几兆，
+    /// 断线得从第一页重来。服务端同一条口径，见 `points/server.py::paper_page` 的注释。
+    ///
+    /// `slug` 必须过服务端那条白名单正则；拼错了这里会拿到「卷子编号不对」的 400，
+    /// 而不是悄悄落到别的目录 —— 那是它要挡的事。
+    static func paperPage(slug: String, page: Int, jpeg: Data, note: String = "") async throws {
+        _ = try await request("api/paper_page", body: [
+            "slug": slug, "page": page, "note": note,
+            "data": "data:image/jpeg;base64," + jpeg.base64EncodedString(),
+        ], timeout: 90)          // 3MB 走手机网络，20 秒不够
+    }
+
     /// 会话探活 + 顺带取几个**回显**用的数。
     ///
     /// ⚠ 这里的 `practiceLeft` / `balance` 一律**原样回显服务端算好的值**，

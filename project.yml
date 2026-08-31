@@ -36,6 +36,10 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_CFBundleDisplayName: 错题本
+        # 缺这一行的表现是**点「扫描卷子」当场闪退**，而崩溃日志只说 access violation，
+        # 一个字都不提「你没声明用途」。VisionKit 的文档扫描器走的就是相机权限。
+        INFOPLIST_KEY_NSCameraUsageDescription: 用系统的文档扫描器拍卷子（自动找边、去畸变），照片只传到你自己的学习库。
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: 从相册里挑已经拍好的卷子照片上传。
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         # 出口合规:声明不使用非豁免加密 → TestFlight 每次传新包不再弹问卷,
         # 直接进 Ready to Test(缺这行则每个 build 都要人去网页点一次)。

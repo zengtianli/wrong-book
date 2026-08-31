@@ -24,6 +24,13 @@ struct RootView: View {
                 // 而手点验不了的东西，等于没有验过。
                 let parts = r.split(separator: ":", maxSplits: 1).map(String.init)
                 LessonPreview(slug: parts[0], drillGid: parts[1])
+            } else if UserDefaults.standard.bool(forKey: "papertest") {
+                PaperSelfTest()
+            } else if UserDefaults.standard.bool(forKey: "paperscan") {
+                // 验证通道：`-paperscan 1` 直接开录卷子那一屏。
+                // 它平时藏在「我的」二级页里，没有这条通道就只能靠人点进去看 ——
+                // 而人点得到的东西，机器截不到就等于没验过。
+                NavigationStack { PaperScanView().environmentObject(LessonSync.shared) }
             } else if let slug = UserDefaults.standard.string(forKey: "lesson") {
                 // 验证通道：`-lesson <slug>` 直接开某一课，不必先登录。
                 // 练习引擎本身不依赖登录（页面自包含，登录只决定分记不记得上），
