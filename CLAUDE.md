@@ -22,8 +22,8 @@
 | **`archive/` 的任何东西不进包** | 孩子姓名、成绩、作文、试卷原图。`app_pack.py` 里那道 PII 门是 fail-closed 的 |
 | **不用 `.page` 分页 TabView** | 练习页自己带左右滑翻题（`bindNav()`），外壳再套横向分页手势会抢 |
 | **亮色** | 练习页是亮色自包含单文件，深壳套亮页每次进课都闪一下白 |
-| **「录卷子」只传图，不识别** | 读图那步（哪道题/标答/孩子答了什么/失分归哪根轴）是人和 LLM 一起判的活。塞进 app 等于把「读不准就别猜」交给没人看的日志。手机到「传上去」为止，`/exam` 在 Mac 上做 |
-| **单道错题不走 app** | 网页 `wrong.html` + `wrong_ingest.py` 2026-08-16 就有了，手机 Safari 打开就能传。app 这一屏只解决**整卷**（多页 + 页序 + 文档扫描） |
+| **「录卷子」只传图，不识别** | 整卷读图（哪道题 / 标答 / 孩子答了什么 / 失分归哪根轴）是人和 LLM 一起判的活，`/exam` 在 Mac 上做。⚠ **2026-09-01 起这是产品选择，不再是技术限制** —— VPS 上已经有 claude 订阅登录 + root 常驻的 `edu-wrong-worker`，服务端**确实能**读图入库（单题那条链现在就这么跑的）。别再拿「服务端做不了」当理由 |
+| **单道错题不走 app** | 网页 `wrong.html` **2026-09-01 起全自动**：传一张图 → 整页读 → 上面所有错题自动入库；不要密码、不选知识点，读不准的自动跳过，归不到现有课的落 `math-inbox` / `chinese-inbox` 待归类。手机 Safari 打开就能用 —— 再做一份原生的就是第二条通路。app 这一屏只解决**整卷**（多页 + 页序 + 文档扫描） |
 
 ## 跑起来
 
@@ -44,6 +44,34 @@ python3 make_icon.py            # 重生图标（逐像素可复现）
 手机（我的 → 录卷子）→ POST edu.tianli.cyou/api/paper_page
    → Mac: python3 ~/Edu/engine/paper_ingest.py pull <slug>   # 落 archive/<slug>/scans/，VPS 侧删
    → Mac: CC 会话 /exam                                       # 读图 → paper.yaml / review.md
+```
+
+#### ⚠ 传输层曾经是断的：2026-09-01 之前，这一屏对着生产传必然 413
+
+nginx 上 `edu.tianli.cyou` 的 `client_max_body_size` 原来是 **1m**（旧值还留在 VPS 的
+`/etc/nginx/sites-available/edu.tianli.cyou.bak-points` 里）。dataURL 是 base64、膨胀 4/3 ——
+1m 的 body 只装得下 **≈780KB 的 JPEG**；而 `PaperScan.jpeg` 是按服务端 `WRONG_MAX`（3MB）压的，
+压到 2.9MB 才收手。真卷子一页压完 0.9~2.9MB 都正常，**于是每一页都被挡在 app 门外**。
+
+它的表现完全不像「图太大」：nginx 的 413 回的是 HTML，`Api.request` 那道
+`guard let obj = JSON` 于是抛 **「连不上学习库(HTTP 413)」** —— 指着网络。
+
+**这一屏从来没在生产上成功过**，两处该留痕的地方都是空的：VPS `/var/lib/edu-points/papers/`
+空目录，`~/Edu/archive/*/scans` 自 2026-08-08 未被动过（`paper_ingest pull` 会在这两处留痕）。
+所以本文原来记的那次「压图 931KB → 上传成功」**不可能是生产** —— 931KB 的 body 是 1.24MB，
+过不了当时的 1m。那次 `-papertest` 打的是本地 server（本地没有 nginx）。
+
+现在是 `client_max_body_size 17m`，由 `points/server.py::WRONG_BODY_MAX` 派生、
+`points/vps_setup.py` 生成，并带一道往公网 POST 近上限 body 的 live gate。
+2026-09-01 实测（走 CF+nginx 打生产 `/api/paper_page`，未登录）：body **0.93 / 1.73 / 3.87 MB
+三档全部穿过 nginx 打到 app**，回的是 401 JSON 而不是 413 HTML。
+
+**留下的规矩：`-papertest` 打本地过了 ≠ 生产传得上去。** 传输层的上限只有走公网那条路才验得到，
+所以这一屏改动之后至少跑一次**不带 `-api_base`** 的 `-papertest`。它会在账号下留一份待拉取批次
+（page 7 / note `papertest`），跑完删掉：
+
+```bash
+ssh root@104.218.100.67 'rm -rf /var/lib/edu-points/papers/<用户名>/2025s2-g3-yuwen-final'
 ```
 
 ### 验证通道（launch 参数，生产路径上永远是 nil）
@@ -67,6 +95,9 @@ dataURL 前缀、字段名、大小上限，任何一处对不上都只表现为
 不是照着重写一遍（重写的那种「实测」测的是替身，会假绿）。
 2026-08-31 实测：压图 931KB（1760×2400，走到阶梯第一档）→ 上传成功 →
 坏 slug `../etc` 被服务端拒 → 服务端侧独立核验落盘是完整 JPEG（ffd8…ffd9）。
+⚠ **那一次打的是本地 server，不是生产** —— 同样一张图当时打生产必被 nginx 413，
+理由与实证见上面「传输层曾经是断的」。所以这条记录证明的是「压图器和字段名对」，
+**不证明「手机传得上去」**。
 
 `-review` 存在的理由：**「复习出的是同类新题、不是原题」这条只能靠手点验**，
 而手点验不了的东西等于没验过。2026-08-28 实测：错题记的是 `255 ÷ 12`，
@@ -84,6 +115,10 @@ cd ~/Edu/points && EDU_POINTS_HOME=$D/home EDU_POINTS_STATIC=$D/site EDU_POINTS_
 cd ~/Edu/points && EDU_POINTS_HOME=$D/home EDU_POINTS_STATIC=$D/site EDU_POINTS_PORT=8799 \
   nohup python3 server.py serve > $D/server.log 2>&1 &
 ```
+
+⚠ 本地这份 server **验不到两件事**：① 它前面没有 nginx，body 大小上限在这儿永远不触发
+（见上面 413 那一段）② 它没有 `edu-wrong-worker`，`/api/wrong_job` 派出去的作业永远停在 `running`。
+这两件只有打生产才验得到。
 
 ⚠ 服务只 bind IPv4 `127.0.0.1`（`server.py` 写死）—— baseURL 写 `http://127.0.0.1:8799`，
 别写 `localhost`（会先试 `::1` 被拒再回落）。**真机连不上本地服务**，只能用模拟器。
@@ -122,6 +157,13 @@ window.__EDU_POINTS__.flush(true)  切后台前把学习存档落一次（sendBe
   这是 ~/Edu 的既有行为，不在这个 app 里绕过去（绕 = 第二份同步逻辑）。
 - **课页的 sha256 和站上 `/primary-*/` 那份对不上**：站上那份在剥离之后又注了反馈浮标，
   字节必然不同。所以增量更新的下载源是 `/app/`（`app_pack` 的原样产物）。
+- **手机上刚录进题库的错题，不会出现在 app 的离线包里**：包里的题是 `~/Edu` 那份**已渲染的 HTML**
+  （`app_pack.py` 只搬渲染产物，根本不碰 `bank.db`）。要它进包：Mac 上重渲那一课 →
+  `bash sync-lessons.sh` → 重装。**手机传图入库**和**手机做题**是两条链，中间隔着一次 Mac 上的渲染。
+- **离线渲不了课页了**：`bank.db` 的权威副本 2026-09-01 搬到 VPS（`/var/lib/edu-points/bank.db`），
+  Mac 上那份降级成工作副本，`bank.py.conn()` 每次都先跟远端对 `PRAGMA user_version`。连不上 VPS 时
+  `practice_render` **直接拒绝渲染**（fail-closed：宁可停，也别渲出一个「少了几道题但看着完全正常」的页面）。
+  逃生 `EDU_BANK_OFFLINE=1`，会大声警告。
 
 ## 相关
 

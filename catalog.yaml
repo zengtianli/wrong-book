@@ -12,7 +12,13 @@ notes: |
   它到「把图传上去」为止 —— 识别、结构化、错因归轴全在 Mac 的 `/exam`（那是人和 LLM 一起判的活）。
   链路：`Sources/PaperScan*.swift` → `POST edu.tianli.cyou/api/paper_page`
       → `~/Edu/engine/paper_ingest.py pull <slug>` → `~/Edu/archive/<slug>/scans/`。
-  单道错题**不走这儿**，走网页 `wrong.html` + `wrong_ingest.py`（那条 2026-08-16 就有了）。
+  ⚠ 2026-09-01 订正两条：① 识别留在 Mac 现在是**产品选择不是技术限制** —— VPS 上已有
+  claude 登录 + root 常驻 `edu-wrong-worker`，服务端能读图入库 ② **这一屏此前对生产传必然 413**
+  （nginx `client_max_body_size` 原为 1m，只装得下 ≈780KB 的 JPEG，而客户端压到 2.9MB 才收手）；
+  现已改为由 `server.py::WRONG_BODY_MAX` 派生的 17m 并带 live gate，实测 3.87MB body 打得进 app。
+  `-papertest` 打本地过了不算数，传输层上限只有走公网才验得到。
+  单道错题**不走这儿**，走网页 `wrong.html`（2026-09-01 起全自动：传图 → 整页读 → 全部自动入库，
+  不要密码、不选知识点，读不准的跳过，归不到课的落 `math-inbox` / `chinese-inbox`）。
   ⚠ slug 的规则在两侧各有一份（这边拼、服务端 `PAPER_SLUG_RE` 校验）——
   服务端收紧了而这边没跟，表现是传的时候一句「卷子编号不对」。守它的是
   `-papertest` 自检通道（跑的是生产同一份 Api.paperPage + 压图器，不是替身）。
