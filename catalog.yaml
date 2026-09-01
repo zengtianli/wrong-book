@@ -4,16 +4,17 @@ lifecycle: active
 form: ios
 
 one_liner: 错题本随身版 —— 装着 ~/Edu 的练习引擎离线做题,错题按「题型」复习出同类新题;另带「录卷子」:
-           系统文档扫描器拍整份卷子传回学习库,识别与复盘仍在 Mac(paper_ingest pull → /exam)
+           系统文档扫描器拍整份卷子传回学习库,服务端逐页自动读错题入库(与网页同一条链);整卷复盘留 Mac /exam(可选)
 
 stack: swift-ui
 notes: |
-  **「录卷子」这一屏（2026-08-31 加）**：整卷入档链的手机端。
-  它到「把图传上去」为止 —— 识别、结构化、错因归轴全在 Mac 的 `/exam`（那是人和 LLM 一起判的活）。
-  链路：`Sources/PaperScan*.swift` → `POST edu.tianli.cyou/api/paper_page`
-      → `~/Edu/engine/paper_ingest.py pull <slug>` → `~/Edu/archive/<slug>/scans/`。
-  ⚠ 2026-09-01 订正两条：① 识别留在 Mac 现在是**产品选择不是技术限制** —— VPS 上已有
-  claude 登录 + root 常驻 `edu-wrong-worker`，服务端能读图入库 ② **这一屏此前对生产传必然 413**
+  **「录卷子」这一屏（2026-08-31 加，2026-09-01 接上自动链）**：整卷入库链的手机端。
+  链路：`Sources/PaperScan*.swift` → `POST edu.tianli.cyou/api/paper_page`（一页一发）
+      → 服务端登记成错题图 + 派 auto 作业 → `edu-wrong-worker` → `wrong_ingest.py auto`（读整页 → 逐道入库）
+      → app 轮询 `GET /api/job` 画出「录进 N 道 / 跳过 M 道」。
+      扫描件同时留 `papers/`，想整卷复盘再 `paper_ingest.py pull <slug>` → `/exam`（可选）。
+  用户拍板（2026-09-01）：「web 是正品，app 是附属」—— 这一屏和网页 wrong.html 是同一条链，app 不做原生识别。
+  ⚠ 2026-09-01 订正：**这一屏此前对生产传必然 413**
   （nginx `client_max_body_size` 原为 1m，只装得下 ≈780KB 的 JPEG，而客户端压到 2.9MB 才收手）；
   现已改为由 `server.py::WRONG_BODY_MAX` 派生的 17m 并带 live gate，实测 3.87MB body 打得进 app。
   `-papertest` 打本地过了不算数，传输层上限只有走公网才验得到。

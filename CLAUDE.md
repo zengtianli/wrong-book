@@ -8,7 +8,8 @@
 
 它是 <https://edu.tianli.cyou> 的**离线随身版**，不是一个新产品。
 题、题库、学习路径、判题、勋章、上瘾机制全在 `~/Edu`；这边只提供三样东西：
-**离线**、**原生错题本入口**、**每日任务提醒**。
+**离线**、**原生错题本入口**、**每日任务提醒**，外加一个**系统文档扫描器**（录卷子）。
+2026-09-01 用户拍板的分工：**「web 是正品，app 是附属」** —— 能在 Safari 里做的事，app 里不再做一份。
 
 ## 硬约束（违反其一，这个 app 就没有存在理由了）
 
@@ -22,8 +23,8 @@
 | **`archive/` 的任何东西不进包** | 孩子姓名、成绩、作文、试卷原图。`app_pack.py` 里那道 PII 门是 fail-closed 的 |
 | **不用 `.page` 分页 TabView** | 练习页自己带左右滑翻题（`bindNav()`），外壳再套横向分页手势会抢 |
 | **亮色** | 练习页是亮色自包含单文件，深壳套亮页每次进课都闪一下白 |
-| **「录卷子」只传图，不识别** | 整卷读图（哪道题 / 标答 / 孩子答了什么 / 失分归哪根轴）是人和 LLM 一起判的活，`/exam` 在 Mac 上做。⚠ **2026-09-01 起这是产品选择，不再是技术限制** —— VPS 上已经有 claude 订阅登录 + root 常驻的 `edu-wrong-worker`，服务端**确实能**读图入库（单题那条链现在就这么跑的）。别再拿「服务端做不了」当理由 |
-| **单道错题不走 app** | 网页 `wrong.html` **2026-09-01 起全自动**：传一张图 → 整页读 → 上面所有错题自动入库；不要密码、不选知识点，读不准的自动跳过，归不到现有课的落 `math-inbox` / `chinese-inbox` 待归类。手机 Safari 打开就能用 —— 再做一份原生的就是第二条通路。app 这一屏只解决**整卷**（多页 + 页序 + 文档扫描） |
+| **「录卷子」自己不识别，识别在服务端，且和网页是同一条链** | 2026-09-01 起每一页传上去，服务端就登记成一张错题图 + 派 `auto` 作业（`server.py::paper_page` 复用 `/api/wrong` 那份登记与派活），读到的错题全部入库、归不到课的进 `math-inbox` / `chinese-inbox`。app 里**不做原生 OCR/判题**，只传图 + 轮询 + 把「录进 N 道 / 跳过 M 道」画出来。整卷复盘（失分归轴、作文点评）留在 Mac 的 `/exam`，**从必经降成可选** |
+| **单道错题不走 app** | 网页 `wrong.html` 一张图就能传、全自动入库，手机 Safari 打开就能用 —— 再做一份原生的就是第二条通路。app 这一屏只解决**整卷**（多页 + 页序 + 文档扫描器） |
 
 ## 跑起来
 
@@ -41,10 +42,14 @@ python3 make_icon.py            # 重生图标（逐像素可复现）
 —— 畸变直接变成「读出一道错的题」。系统扫描器白送自动找边 + 去透视 + 多页 + 重拍 + 排序。
 
 ```
-手机（我的 → 录卷子）→ POST edu.tianli.cyou/api/paper_page
-   → Mac: python3 ~/Edu/engine/paper_ingest.py pull <slug>   # 落 archive/<slug>/scans/，VPS 侧删
-   → Mac: CC 会话 /exam                                       # 读图 → paper.yaml / review.md
+手机（我的 → 录卷子）→ POST edu.tianli.cyou/api/paper_page（一页一发）
+   ├ VPS: wrongs/ 登记 + jobs/ 派 auto → edu-wrong-worker → wrong_ingest.py auto   # 自动：读整页错题 → 逐道入库
+   │      app 拿返回的 job 号轮询 GET /api/job?id= ，读完把「录进 N 道 / 跳过 M 道」画在那一页下面
+   └ VPS: papers/<user>/<slug>/ 留档 → （可选）Mac: paper_ingest.py pull <slug> → /exam   # 整卷复盘
 ```
+
+app 这边**只摘不数**：每页那句「录进题库 N 道」是 `wrong_ingest.py auto` 算的，界面用正则摘出来
+（`PaperScanView.counts`），和 `wrong.html` 同一条原则 —— 两处各数一遍迟早对不上。
 
 #### ⚠ 传输层曾经是断的：2026-09-01 之前，这一屏对着生产传必然 413
 
@@ -67,12 +72,12 @@ nginx 上 `edu.tianli.cyou` 的 `client_max_body_size` 原来是 **1m**（旧值
 三档全部穿过 nginx 打到 app**，回的是 401 JSON 而不是 413 HTML。
 
 **留下的规矩：`-papertest` 打本地过了 ≠ 生产传得上去。** 传输层的上限只有走公网那条路才验得到，
-所以这一屏改动之后至少跑一次**不带 `-api_base`** 的 `-papertest`。它会在账号下留一份待拉取批次
-（page 7 / note `papertest`），跑完删掉：
+所以这一屏改动之后至少跑一次**不带 `-api_base`** 的 `-papertest`。它现在**自己收尾**
+（`paper_del` + `wrong_del`），不在生产上留东西。
 
-```bash
-ssh root@104.218.100.67 'rm -rf /var/lib/edu-points/papers/<用户名>/2025s2-g3-yuwen-final'
-```
+⚠ 模拟器的上行有时慢到 20KB/s（2026-09-01 实测，同一台 Mac 直接 curl 是 395KB/s），
+1.2MB 的 body 会撞 90s 超时。超时是 error，**曾被自检当成「坏 slug 被拒」报绿** —— 现在只认
+服务端那句「卷子编号不对」。模拟器慢不是 app 的问题，但它会让自检整体拖到 5 分钟以上。
 
 ### 验证通道（launch 参数，生产路径上永远是 nil）
 
@@ -86,13 +91,16 @@ xcrun simctl launch $UDID cyou.tianli.wrongbook \
   # 或 -lesson remainder-basics            # 直接开一课（验「不登录不联网也能做」）
   # 或 -paperscan 1                        # 直接开「录卷子」（它藏在「我的」二级页）
   # 或 -papertest 1 -papertest_user jingbao -papertest_pw 160912
-  #                                        # 跑一遍**真实上传路径**并把结果画在屏上
+  #                                        # 跑一遍**真实上传 + 真实自动读图 + 轮询**并把结果画在屏上
+  #    加 -papertest_noauto 1              # 只验传输层，不烧那一次读图
 ```
 
 `-papertest` 存在的理由：这一屏最容易错的不是布局，是「压出来的图服务端收不收」——
 dataURL 前缀、字段名、大小上限，任何一处对不上都只表现为一句笼统的 400。
-而这条路人得用手点相册才走得到。它跑的是 `PaperScan.jpeg` + `Api.paperPage` **本身**，
-不是照着重写一遍（重写的那种「实测」测的是替身，会假绿）。
+而这条路人得用手点相册才走得到。它跑的是 `PaperScan.jpeg` + `Api.paperPage` + `Api.job` **本身**，
+不是照着重写一遍（重写的那种「实测」测的是替身，会假绿）。四步：① `auto:false` 传 p7 验传输层
+② 坏 slug 必须收到「卷子编号不对」③ 真派一次读图并轮询到完（噪点图读出「没读到做错的题」就是对的）
+④ 删掉自己留下的批次和错题图。
 2026-08-31 实测：压图 931KB（1760×2400，走到阶梯第一档）→ 上传成功 →
 坏 slug `../etc` 被服务端拒 → 服务端侧独立核验落盘是完整 JPEG（ffd8…ffd9）。
 ⚠ **那一次打的是本地 server，不是生产** —— 同样一张图当时打生产必被 nginx 413，

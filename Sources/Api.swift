@@ -30,8 +30,14 @@ enum Api {
     /// 服务端发的是 HttpOnly cookie，URLSession 的共享存储会自己带上并持久化。
     /// 我们**不碰** cookie 的值 —— 碰了就等于在 app 里复制一份会话状态。
     private static func request(_ path: String, body: [String: Any]? = nil,
+                                query: [String: String]? = nil,
                                 timeout: TimeInterval = 20) async throws -> [String: Any] {
-        var req = URLRequest(url: base.appendingPathComponent(path))
+        var url = base.appendingPathComponent(path)
+        if let query, var c = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+            c.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
+            url = c.url ?? url
+        }
+        var req = URLRequest(url: url)
         req.timeoutInterval = timeout
         if let body {
             req.httpMethod = "POST"
@@ -58,16 +64,61 @@ enum Api {
         _ = try? await request("api/logout", body: [:])
     }
 
+    /// 传一页卷子回来的东西：服务端顺手把这页登记成了一张错题图并派了自动读图，
+    /// `job` 就是那件作业的号（拿它去 `job(_:)` 轮询）。`job == nil` 时看 `autoErr` ——
+    /// 页是存下了，只是没派上读图（比如待录入积压到了上限）。
+    struct PaperUpload {
+        let wrongId: String?
+        let job: String?
+        let autoErr: String?
+    }
+
     /// 传一份卷子的**一页**（整卷扫描）。一页一个请求 —— 六页塞进一个 body 就是十几兆，
     /// 断线得从第一页重来。服务端同一条口径，见 `points/server.py::paper_page` 的注释。
     ///
     /// `slug` 必须过服务端那条白名单正则；拼错了这里会拿到「卷子编号不对」的 400，
     /// 而不是悄悄落到别的目录 —— 那是它要挡的事。
-    static func paperPage(slug: String, page: Int, jpeg: Data, note: String = "") async throws {
-        _ = try await request("api/paper_page", body: [
+    ///
+    /// 2026-09-01 起服务端收到一页就走网页单题那条**全自动**链（读整页错题 → 逐道入库），
+    /// 返回值里带作业号。`auto: false` 只给自检通道用 —— 合成的噪点图不该烧一次读图。
+    static func paperPage(slug: String, page: Int, jpeg: Data, note: String = "",
+                          auto: Bool = true) async throws -> PaperUpload {
+        var body: [String: Any] = [
             "slug": slug, "page": page, "note": note,
             "data": "data:image/jpeg;base64," + jpeg.base64EncodedString(),
-        ], timeout: 90)          // 3MB 走手机网络，20 秒不够
+        ]
+        if !auto { body["auto"] = false }
+        let r = try await request("api/paper_page", body: body, timeout: 90)  // 3MB 走手机网络，20 秒不够
+        return PaperUpload(wrongId: r["wrong_id"] as? String, job: r["job"] as? String,
+                           autoErr: r["auto_err"] as? String)
+    }
+
+    enum JobState {
+        case running
+        case done(ok: Bool, log: String)
+    }
+
+    /// 轮询一件读图/入库作业。读图在服务端要 30~120 秒，这里只问「完了没」，
+    /// 结果那段 `log` 是 `wrong_ingest.py auto` 的原样输出 —— 「录进题库 N 道」那句
+    /// 是它算的，界面只摘不数（两处各数一遍迟早对不上，和 wrong.html 同一条原则）。
+    static func job(_ id: String) async throws -> JobState {
+        let r = try await request("api/job", query: ["id": id])
+        guard (r["state"] as? String) == "done", let res = r["res"] as? [String: Any] else {
+            return .running
+        }
+        return .done(ok: res["ok"] as? Bool == true, log: res["log"] as? String ?? "")
+    }
+
+    /// 撤一张登记过的错题图（自检通道收尾用；真删，服务端不留底）。
+    static func wrongDel(id: String) async throws {
+        _ = try await request("api/wrong_del", body: ["id": id])
+    }
+
+    /// 撤卷子的一页（不给 page 就撤整批）。同上，自检收尾用。
+    static func paperDel(slug: String, page: Int? = nil) async throws {
+        var body: [String: Any] = ["slug": slug]
+        if let page { body["page"] = page }
+        _ = try await request("api/paper_del", body: body)
     }
 
     /// 会话探活 + 顺带取几个**回显**用的数。

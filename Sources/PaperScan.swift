@@ -3,16 +3,17 @@ import SwiftUI
 import UIKit
 import VisionKit
 
-/// 整卷扫描 —— 把一份卷子拍成 `archive/<slug>/scans/pN.*`，供 Mac 上的 `/exam` 录档。
+/// 整卷扫描 —— 把一份卷子一页页传到学习库；服务端每收一页就自动读错题、入库。
 ///
 /// **这一屏为什么值得做成原生**，就一条：`VNDocumentCameraViewController`。
 /// 卷子是文档不是风景 —— 手机浏览器只能调普通相机，拍出来是斜的、有阴影、边不齐，
 /// 而读图那步要认的是密密麻麻的题干和红笔批改，畸变直接变成「读出一道错的题」。
 /// 系统这个扫描器白送：自动找边 + 去透视 + 多页 + 当场重拍 + 拍完排序。
 ///
-/// **它不读图、不判题、不入库。** 图传到 VPS 就结束，剩下的全在 Mac：
-///     paper_ingest.py pull <slug>   →   CC 会话 /exam
-/// 原因见 `~/Edu/engine/paper_ingest.py` 的模块注释（同一条分工）。
+/// **它自己不读图、不判题、不入库** —— 那些在服务端，和网页 `wrong.html` 是同一条链
+/// （`points/server.py::paper_page` → `engine/wrong_worker.py` → `wrong_ingest.py auto`）。
+/// 这边只传图 + 等结果。扫描件同时留在 `papers/`，Mac 上想做整卷复盘再
+/// `paper_ingest.py pull <slug>` + `/exam`（可选，不是必经）。
 enum PaperScan {
 
     // MARK: - 卷子的身份 = 档案目录名
@@ -132,11 +133,31 @@ struct ScanPage: Identifiable, Equatable {
     var page: Int
     var image: UIImage
     var state: State = .idle
+    var log = ""                 // 服务端读图那步的原样输出（给人看细节，不参与判断）
+    var got: Int?                // 「录进题库 N 道」—— 从 log 里摘的，服务端算的
+    var skipped: Int?
 
     enum State: Equatable {
-        case idle, uploading, done, failed(String)
+        case idle, uploading
+        case uploaded(job: String?)   // 传上了。job 为 nil = 存档了但没派上自动读图
+        case reading(Int)             // 服务端读图中，已等 N 秒
+        case done(String)             // 读完，括号里是给人看的一句
+        case failed(String)           // 没传上去（会被重传）
+        case readFailed(String)       // 传上了但读图没成（不重传：图在服务端，重传只会再读一遍）
 
-        var isDone: Bool { self == .done }
+        /// 服务端已经有这一页了 —— 再按「传」也不该重传。
+        var isUploaded: Bool {
+            switch self {
+            case .idle, .uploading, .failed: return false
+            default: return true
+            }
+        }
+        var isBad: Bool {
+            switch self {
+            case .failed, .readFailed: return true
+            default: return false
+            }
+        }
     }
 
     static func == (a: ScanPage, b: ScanPage) -> Bool { a.id == b.id && a.state == b.state }
@@ -197,18 +218,64 @@ struct PaperSelfTest: View {
         }
         lines.append("✅ 压图 \(jpg.count / 1000)KB")
 
+        // ① 传输层 + 字段：auto:false —— 噪点图不该为这一步烧读图
         do {
-            try await Api.paperPage(slug: slug, page: 7, jpeg: jpg, note: "papertest")
-            lines.append("✅ 上传 \(slug) p7")
+            let r = try await Api.paperPage(slug: slug, page: 7, jpeg: jpg, note: "papertest", auto: false)
+            lines.append(r.job == nil ? "✅ 上传 \(slug) p7（auto:false，未派读图）"
+                                      : "❌ auto:false 还是派了作业 \(r.job!)")
         } catch {
             lines.append("❌ 上传：\(error.localizedDescription)"); return
         }
-        // 坏 slug 必须被服务端挡回来 —— 这条绿了才说明白名单真的在生效
+        // ② 坏 slug 必须被服务端挡回来 —— 这条绿了才说明白名单真的在生效
+        //    ⚠ 只有服务端那句「卷子编号不对」才算被拒 —— 超时/断网也是 error，
+        //    2026-09-01 实测模拟器上行慢到 90s 超时，这条曾把超时当成「被拒」报了绿。
         do {
-            try await Api.paperPage(slug: "../etc", page: 1, jpeg: jpg)
+            _ = try await Api.paperPage(slug: "../etc", page: 1, jpeg: jpg, auto: false)
             lines.append("❌ 坏 slug 竟然被收了")
         } catch {
-            lines.append("✅ 坏 slug 被拒：\(error.localizedDescription)")
+            let m = error.localizedDescription
+            lines.append(m.contains("卷子编号不对") ? "✅ 坏 slug 被拒：\(m)"
+                                                : "❌ 坏 slug 没到服务端就失败了（不算被拒）：\(m)")
+        }
+        // ③ 真派一次自动读图并轮询到完 —— 走的就是 PaperScanView 那条路（Api.job）。
+        //    烧一次读图是它的价格；噪点图读出「没读到做错的题」就是对的答案。
+        //    `-papertest_noauto 1` 跳过这步（只想验传输层时）。
+        var wrongId: String?
+        if !d.bool(forKey: "papertest_noauto") {
+            do {
+                let r = try await Api.paperPage(slug: slug, page: 8, jpeg: jpg, note: "papertest")
+                guard let job = r.job else {
+                    lines.append("❌ 没派上自动读图：\(r.autoErr ?? "无说明")"); return
+                }
+                wrongId = r.wrongId
+                lines.append("✅ 上传 p8 → 登记 \(r.wrongId ?? "?") · 作业 \(job)")
+                lines.append("⏳ 读图中 0s")
+                var sec = 0
+                poll: while true {
+                    switch try await Api.job(job) {
+                    case .running:
+                        try? await Task.sleep(for: .seconds(3)); sec += 3
+                        lines[lines.count - 1] = "⏳ 读图中 \(sec)s"
+                        if sec > 600 { lines[lines.count - 1] = "❌ 10 分钟没等到结果"; break poll }
+                    case .done(let ok, let log):
+                        let (g, k) = PaperScanView.counts(in: log)
+                        lines[lines.count - 1] = (ok ? "✅" : "❌") + " 读图 \(sec)s：" +
+                            PaperScanView.summary(log, got: g, skipped: k)
+                        lines.append(String(log.suffix(300)))
+                        break poll
+                    }
+                }
+            } catch {
+                lines.append("❌ 自动读图那条：\(error.localizedDescription)")
+            }
+        }
+        // ④ 收尾：自己留下的东西自己删（批次 + 错题图），别让生产上攒 papertest 垃圾
+        do {
+            try await Api.paperDel(slug: slug)
+            if let wrongId { try await Api.wrongDel(id: wrongId) }
+            lines.append("✅ 收尾：批次与错题图已删")
+        } catch {
+            lines.append("⚠️ 收尾没删干净：\(error.localizedDescription)")
         }
         lines.append("DONE")
     }

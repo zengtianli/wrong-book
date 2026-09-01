@@ -1,10 +1,13 @@
 import PhotosUI
 import SwiftUI
 
-/// 录卷子 —— 扫描 → 定页码 → 传到学习库。
+/// 录卷子 —— 扫描 → 定页码 → 传到学习库 → **等服务端把这页的错题读完、入库**。
 ///
-/// 传完就结束，本机不留副本、不做识别。下一步在 Mac 上：
-///     python3 engine/paper_ingest.py pull <slug>   →   CC 会话 /exam
+/// 2026-09-01 起（用户拍板「web 是正品，app 是附属」）这一屏和网页 `wrong.html` 是**同一条链**：
+/// 每一页传上去，服务端就登记成一张错题图、派自动读图，读到的错题全部进题库，
+/// 归不到课的进「待归类」。这边只多做一件事：把「录进 N 道 / 跳过 M 道」画在屏上。
+/// 扫描件同时留在 `papers/` —— 想做整卷复盘（失分归轴）再在 Mac 上
+/// `paper_ingest.py pull <slug>` + `/exam`，那是可选的，不再是必经的门。
 ///
 /// 放在「我的」里而不是单开一个 tab：拍卷子是**家长**偶尔做的事，
 /// 学习/错题本是孩子每天做的事。为它加第四个 tab，会让每天用的那两屏各挤窄一点。
@@ -73,15 +76,28 @@ struct PaperScanView: View {
             }
 
             if !pages.isEmpty {
-                Section("待传 \(pages.count) 页") {
+                Section(pagesTitle) {
                     ForEach($pages) { $p in
-                        HStack(spacing: 12) {
-                            Image(uiImage: p.image).resizable().scaledToFill()
-                                .frame(width: 44, height: 58).clipped()
-                                .overlay(Rectangle().stroke(Ink.line))
-                            Stepper("第 \(p.page) 页", value: $p.page, in: 1...40)
-                                .disabled(busy)
-                            statusIcon(p.state)
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 12) {
+                                Image(uiImage: p.image).resizable().scaledToFill()
+                                    .frame(width: 44, height: 58).clipped()
+                                    .overlay(Rectangle().stroke(Ink.line))
+                                Stepper("第 \(p.page) 页", value: $p.page, in: 1...40)
+                                    .disabled(busy || p.state.isUploaded)
+                                statusIcon(p.state)
+                            }
+                            if let line = statusLine(p.state) {
+                                Text(line).font(.footnote)
+                                    .foregroundStyle(p.state.isBad ? Ink.red : Ink.dim)
+                            }
+                            if !p.log.isEmpty {
+                                DisclosureGroup("读图记录") {
+                                    Text(p.log).font(.caption.monospaced())
+                                        .textSelection(.enabled)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }.font(.footnote)
+                            }
                         }
                     }
                     .onDelete { idx in pages.remove(atOffsets: idx) }
@@ -94,15 +110,16 @@ struct PaperScanView: View {
                 } label: {
                     HStack {
                         if busy { ProgressView().padding(.trailing, 4) }
-                        Text(busy ? "正在传…" : "传到学习库（\(pending) 页）")
+                        Text(busy ? busyLabel : "传到学习库并自动录错题（\(pending) 页）")
                     }
                 }
                 .disabled(busy || pending == 0)
             } footer: {
                 if let banner {
-                    Text(banner).foregroundStyle(allDone ? Ink.green : Ink.red)
+                    Text(banner).foregroundStyle(hasBad ? Ink.red : Ink.green)
                 } else {
-                    Text("传完在 Mac 上跑 `paper_ingest.py pull \(slug.text)`，再用 /exam 录档。")
+                    Text("传完服务端自动读每一页的错题、录进题库（一页一两分钟，可以先放着）。"
+                         + "读不准的题自动跳过；扫描件同时留档，想做整卷复盘再在 Mac 上 /exam。")
                         .font(.footnote)
                 }
             }
@@ -132,17 +149,37 @@ struct PaperScanView: View {
     }
 
     private var thisYear: Int { Calendar(identifier: .gregorian).component(.year, from: Date()) }
-    private var pending: Int { pages.filter { !$0.state.isDone }.count }
-    private var allDone: Bool { !pages.isEmpty && pages.allSatisfy { $0.state.isDone } }
+    private var pending: Int { pages.filter { !$0.state.isUploaded }.count }
+    private var hasBad: Bool { pages.contains { $0.state.isBad } }
+    private var pagesTitle: String {
+        pending > 0 ? "待传 \(pending) 页" : "这 \(pages.count) 页"
+    }
+    private var busyLabel: String {
+        for p in pages {
+            if case .reading(let sec) = p.state { return "第 \(p.page) 页读图中… \(sec)s" }
+        }
+        return "正在传…"
+    }
 
     @ViewBuilder private func statusIcon(_ st: ScanPage.State) -> some View {
         switch st {
         case .idle:      EmptyView()
-        case .uploading: ProgressView()
+        case .uploading, .reading: ProgressView()
+        case .uploaded:  Image(systemName: "arrow.up.circle").foregroundStyle(Ink.dim)
         case .done:      Image(systemName: "checkmark.circle.fill").foregroundStyle(Ink.green)
-        case .failed(let m):
+        case .failed, .readFailed:
             Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Ink.red)
-                .accessibilityLabel(m)
+        }
+    }
+
+    private func statusLine(_ st: ScanPage.State) -> String? {
+        switch st {
+        case .idle, .uploading:        return nil
+        case .uploaded(let job):       return job == nil ? "已存档，没派上自动读图" : "已传上，排队读图…"
+        case .reading(let sec):        return "服务端读图中… \(sec)s"
+        case .done(let s):             return s
+        case .failed(let m):           return "没传上去：\(m)"
+        case .readFailed(let m):       return "传上了，读图没成：\(m)"
         }
     }
 
@@ -156,8 +193,8 @@ struct PaperScanView: View {
         banner = nil
     }
 
-    /// 逐页传。**已经传成功的不重传** —— 中途断网重按一次只补没传上去的那几页，
-    /// 而不是把服务端上已有的页再覆盖一遍（覆盖本身是允许的，只是白烧流量）。
+    /// 逐页传，传完逐页等读图结果。**已经传成功的不重传** —— 中途断网重按一次只补没传上去的那几页，
+    /// 而不是把服务端上已有的页再覆盖一遍（覆盖本身是允许的，只是白烧流量、白烧一次读图）。
     private func upload() async {
         busy = true
         banner = nil
@@ -165,13 +202,13 @@ struct PaperScanView: View {
 
         // 同一页码传两次 = 后一张把前一张覆盖掉，而且**不会有任何报错**。
         // 传之前就拦住，比传完发现少一页强。
-        let nums = pages.filter { !$0.state.isDone }.map(\.page)
+        let nums = pages.filter { !$0.state.isUploaded }.map(\.page)
         if Set(nums).count != nums.count {
             banner = "有两张标了同一个页码 —— 先改掉再传"
             return
         }
 
-        for idx in pages.indices where !pages[idx].state.isDone {
+        for idx in pages.indices where !pages[idx].state.isUploaded {
             pages[idx].state = .uploading
             guard let d = PaperScan.jpeg(pages[idx].image) else {
                 // 压不下去不是「传失败」，是这张图本身太满 —— 说清楚该怎么办。
@@ -179,20 +216,77 @@ struct PaperScanView: View {
                 continue
             }
             do {
-                try await Api.paperPage(slug: slug.text, page: pages[idx].page,
-                                        jpeg: d, note: note)
-                pages[idx].state = .done
+                let r = try await Api.paperPage(slug: slug.text, page: pages[idx].page,
+                                                jpeg: d, note: note)
+                pages[idx].state = .uploaded(job: r.job)
+                if r.job == nil, let e = r.autoErr { pages[idx].log = e }
             } catch {
                 pages[idx].state = .failed(error.localizedDescription)
             }
         }
-        // 失败清单先拼好再放进字符串 —— 插值里塞多行闭包 Swift 解析不了
+        await readAll()
+
+        // 汇总只摘服务端算好的数（每页那句「录进题库 N 道」），不自己数题。
+        let got = pages.compactMap(\.got).reduce(0, +)
+        let skipped = pages.compactMap(\.skipped).reduce(0, +)
         let bad: [String] = pages.compactMap { p in
-            if case .failed(let m) = p.state { return "p\(p.page) \(m)" }
-            return nil
+            switch p.state {
+            case .failed(let m):     return "p\(p.page) 没传上：\(m)"
+            case .readFailed(let m): return "p\(p.page) 读图没成：\(m)"
+            default:                 return nil
+            }
         }
-        banner = bad.isEmpty
-            ? "✅ \(pages.count) 页都传上去了 —— 在 Mac 上跑 paper_ingest.py pull \(slug.text)"
-            : "\(bad.count) 页没传上去（其余已成功）：" + bad.joined(separator: "；")
+        var s = "录进题库 \(got) 道" + (skipped > 0 ? "，跳过 \(skipped) 道" : "")
+        if !bad.isEmpty { s += "；" + bad.joined(separator: "；") }
+        banner = (bad.isEmpty ? "✅ " : "") + s
+    }
+
+    /// 一页一页等读图结果。服务端读图是串行的（同时派只会互相等锁），所以这边也顺着来。
+    private func readAll() async {
+        for idx in pages.indices {
+            guard case .uploaded(let job?) = pages[idx].state else { continue }
+            var sec = 0
+            pages[idx].state = .reading(0)
+            poll: while true {
+                do {
+                    switch try await Api.job(job) {
+                    case .running:
+                        try? await Task.sleep(for: .seconds(3)); sec += 3
+                        pages[idx].state = .reading(sec)
+                    case .done(let ok, let log):
+                        pages[idx].log = log.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let (g, k) = Self.counts(in: log)
+                        pages[idx].got = g; pages[idx].skipped = k
+                        pages[idx].state = ok ? .done(Self.summary(log, got: g, skipped: k))
+                                              : .readFailed(String(log.suffix(120)))
+                        break poll
+                    }
+                } catch {
+                    // 网络抖一下不算失败 —— 作业在服务端照跑，等会儿再问
+                    try? await Task.sleep(for: .seconds(5)); sec += 5
+                    pages[idx].state = .reading(sec)
+                }
+            }
+        }
+    }
+
+    /// 从 `wrong_ingest.py auto` 的输出里摘数。**只摘不数**：那两句是服务端算的。
+    static func counts(in log: String) -> (got: Int?, skipped: Int?) {
+        func n(_ re: Regex<(Substring, Substring)>) -> Int? {
+            log.firstMatch(of: re).flatMap { Int($0.1) }
+        }
+        let got = n(/录进题库\s*(\d+)\s*道/)
+        let skipped = n(/跳过\s*(\d+)\s*道/)
+        if got == nil && log.contains("没读到做错的题") { return (0, 0) }
+        return (got, skipped)
+    }
+
+    static func summary(_ log: String, got: Int?, skipped: Int?) -> String {
+        if log.contains("没读到做错的题") { return "这页没读到错题（没有红叉/涂改的一律不收）" }
+        guard let got else { return "跑完了，详情见读图记录" }
+        var s = "录进题库 \(got) 道"
+        if let skipped, skipped > 0 { s += "，跳过 \(skipped) 道" }
+        if let m = log.firstMatch(of: /其中\s*(\d+)\s*道归不到现有的课/) { s += "（\(m.1) 道进了待归类）" }
+        return s
     }
 }
