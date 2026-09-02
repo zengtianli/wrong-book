@@ -1,7 +1,9 @@
 name: wrong-book
+bundle_id: cyou.tianli.wrongbook   # 派生自 project.yml（SSOT）；fleet_audit a/g 项与 app_registry gate-mac 按它对装机
 origin: own
 lifecycle: active
 form: ios
+platforms: [iphone, ipad, mac]   # 跑在哪（正交于 form=源码住哪）；multiplatform.py audit 与 project.yml 对账
 
 one_liner: >-
   错题本随身版 —— 装着 ~/Edu 的练习引擎离线做题,错题按「题型」复习出同类新题;另带「录卷子」:
