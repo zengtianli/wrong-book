@@ -1,0 +1,12 @@
+{
+  "colors": [
+    {
+      "color": {
+        "color-space": "srgb",
+        "components": { "red": "0xE5", "green": "0x48", "blue": "0x4D", "alpha": "1.000" }
+      },
+      "idiom": "universal"
+    }
+  ],
+  "info": { "author": "theme_sync.py (SSOT: products.yaml theme)", "version": 1 }
+}
