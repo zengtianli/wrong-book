@@ -98,7 +98,12 @@ enum Reminder {
             _ = try? await c.requestAuthorization(options: [.alert, .sound])
             status = await c.notificationSettings().authorizationStatus
         }
-        guard status == .authorized || status == .provisional || status == .ephemeral else {
+        #if os(iOS)
+        let granted = status == .authorized || status == .provisional || status == .ephemeral   // .ephemeral = App Clip 专属，Mac 没有
+        #else
+        let granted = status == .authorized || status == .provisional
+        #endif
+        guard granted else {
             return await permissionText()
         }
 

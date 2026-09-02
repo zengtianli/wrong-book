@@ -57,14 +57,20 @@ struct LessonWebView: UIViewRepresentable {
                                            forMainFrameOnly: true))
         }
         cfg.userContentController = ucc
+        #if os(iOS)
         // 做题要发声（practice.js 用 WebAudio 合成音效），别要求全屏手势
         cfg.allowsInlineMediaPlayback = true
+        #endif
 
         let wv = WKWebView(frame: .zero, configuration: cfg)
         context.coordinator.watchForBackground(wv)
-        wv.isOpaque = false
+        #if os(iOS)
+        wv.isOpaque = false                       // Mac 上 isOpaque 只读、无 backgroundColor、无 scrollView
         wv.backgroundColor = .clear
         wv.scrollView.contentInsetAdjustmentBehavior = .always
+        #else
+        wv.setValue(false, forKey: "drawsBackground")   // Mac 的透明底：WebKit 的私有但稳定的开关
+        #endif
         context.coordinator.load(into: wv, lesson: lesson)
         return wv
     }

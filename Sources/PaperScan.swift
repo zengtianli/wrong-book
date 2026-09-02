@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#endif
 import VisionKit
 
 /// 整卷扫描 —— 把一份卷子一页页传到学习库；服务端每收一页就自动读错题、入库。
@@ -87,13 +89,20 @@ enum PaperScan {
     /// 「扫描卷子」照样亮着）—— 而模拟器没有相机，点下去只有一片黑。所以显式排除
     /// 模拟器，让它退到相册选图这条路：一个点了没反应的按钮比没有这个按钮更糟。
     static var cameraAvailable: Bool {
-        #if targetEnvironment(simulator)
-        return false
+        #if targetEnvironment(simulator) || !os(iOS)
+        return false                    // 模拟器没相机；Mac 没有 VNDocumentCamera（走相册/文件选图那条路）
         #else
         return VNDocumentCameraViewController.isSupported
         #endif
     }
 
+    #if !os(iOS)
+    /// Mac 上没有文档扫描器 —— 保留同名类型让调用点不变，cameraAvailable=false 保证它永远不被弹出。
+    struct Camera: View {
+        var onDone: ([UIImage]) -> Void
+        var body: some View { EmptyView() }
+    }
+    #else
     struct Camera: UIViewControllerRepresentable {
         var onDone: ([UIImage]) -> Void
 
@@ -124,6 +133,7 @@ enum PaperScan {
             }
         }
     }
+    #endif
 }
 
 /// 一页待传的图。页码是**卷子上的真页码**，不是它在这一批里的序号 ——
