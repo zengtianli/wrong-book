@@ -16,6 +16,9 @@ struct MeView: View {
     @State private var remindHour = Reminder.hour
     @State private var notifyState = "—"
     @State private var planRows: [String] = []
+    @State private var askDelete = false
+    @State private var deletePw = ""
+    @State private var deleteErr: String?
 
     var body: some View {
         NavigationStack {
@@ -89,6 +92,7 @@ struct MeView: View {
                     if let s = session.status {
                         row("登录为", s.nick.isEmpty ? s.user : "\(s.nick)（\(s.user)）")
                         Button("退出登录", role: .destructive) { Task { await session.logout() } }
+                        Button("注销账号", role: .destructive) { deletePw = ""; askDelete = true }
                     } else {
                         // 没登录也能做题，但要说清代价 —— 不然「分怎么不涨」查不出来
                         Text("没有登录：题照做，但**刷题积分不记账、进度不跨设备**。")
@@ -106,6 +110,22 @@ struct MeView: View {
             .navigationTitle("我的")
         }
         .task { await load() }
+        // App Store 5.1.1(v)：能注册就必须能在 app 内删号。要密码，二次确认，文案说清删什么。
+        .alert("注销账号？", isPresented: $askDelete) {
+            SecureField("当前密码", text: $deletePw)
+            Button("永久删除", role: .destructive) {
+                Task {
+                    if await session.deleteAccount(password: deletePw) { deleteErr = nil }
+                    else { deleteErr = session.error }
+                }
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("账号、刷题积分、学习进度、拍过的错题与卷子会一起删除，不可恢复。输入当前密码确认。")
+        }
+        .alert("没删成", isPresented: Binding(get: { deleteErr != nil }, set: { if !$0 { deleteErr = nil } })) {
+            Button("好", role: .cancel) {}
+        } message: { Text(deleteErr ?? "") }
         .onChange(of: remindOn) { _, v in
             Reminder.enabled = v
             // ask: true 只在这儿 —— 用户自己拨了开关，这时问权限才不算打扰

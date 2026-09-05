@@ -10,6 +10,7 @@ struct LoginView: View {
     @EnvironmentObject var session: Session
     @State private var user = ""
     @State private var password = ""
+    @State private var showRegister = false
 
     var body: some View {
         ZStack {
@@ -27,7 +28,7 @@ struct LoginView: View {
                 }
 
                 VStack(spacing: 10) {
-                    field("用户名", text: $user, secure: false)
+                    field("用户名或邮箱", text: $user, secure: false)
                     field("密码", text: $password, secure: true)
                 }
 
@@ -50,8 +51,11 @@ struct LoginView: View {
                 .disabled(session.busy || user.isEmpty || password.isEmpty)
                 .opacity(user.isEmpty || password.isEmpty ? 0.45 : 1)
 
-                Button("先不登录，直接做题") { session.skipLogin() }
-                    .font(.footnote).foregroundStyle(Ink.blue)
+                HStack(spacing: 18) {
+                    Button("先不登录，直接做题") { session.skipLogin() }
+                    Button("邮箱注册") { showRegister = true }
+                }
+                .font(.footnote).foregroundStyle(Ink.blue)
 
                 Spacer()
                 Text("题和进度都在 edu.tianli.cyou，这里是它的离线随身版")
@@ -61,6 +65,7 @@ struct LoginView: View {
             .padding(.horizontal, 30)
         }
         .animation(.easeInOut(duration: 0.2), value: session.error)
+        .sheet(isPresented: $showRegister) { RegisterView() }
     }
 
     private var ruled: some View {

@@ -64,6 +64,16 @@ enum Api {
         _ = try? await request("api/logout", body: [:])
     }
 
+    /// 邮箱注册：`{email, p, nick}` → 服务端派生内部用户名并直接下发 cookie（注册即登录）。
+    static func register(email: String, password: String, nick: String) async throws {
+        _ = try await request("api/register", body: ["email": email, "p": password, "nick": nick])
+    }
+
+    /// 自助注销：要当前密码；服务端把账本/进度/错题图整体归档后清 cookie。
+    static func deleteAccount(password: String) async throws {
+        _ = try await request("api/account_del", body: ["p": password])
+    }
+
     /// 传一页卷子回来的东西：服务端顺手把这页登记成了一张错题图并派了自动读图，
     /// `job` 就是那件作业的号（拿它去 `job(_:)` 轮询）。`job == nil` 时看 `autoErr` ——
     /// 页是存下了，只是没派上读图（比如待录入积压到了上限）。
