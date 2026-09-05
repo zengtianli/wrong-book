@@ -23,7 +23,7 @@ targets:
         basedOnDependencyAnalysis: false
     sources:
       # 总部共享：macOS 侧给 iOS-only SwiftUI 修饰符提供同名 no-op，调用点不改（multiplatform.py 注入）
-      - path: /Users/tianli/Dev/tools/dev/lib/tools/macapp/swift-shared/PlatformCompat.swift
+      - path: Shared/PlatformCompat.swift
       - path: Sources
       # ⚠ 图标资产必须在这儿列出来。漏了的表现是**编译通过、装机通过、桌面白板**——
       #   ASSETCATALOG_COMPILER_APPICON_NAME 指向一个不在工程里的 catalog,

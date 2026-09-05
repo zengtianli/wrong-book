@@ -31,3 +31,11 @@ shots/
 
 # CC 本地覆盖(可能含机器专属路径/开关)
 .claude/settings.local.json
+
+# ── 公开仓不带的内部件（本地仍在，只是不跟踪；oss_prep.py 维护）──
+CLAUDE.md
+catalog.yaml
+.claude/
+handoffs/
+# README 截图白名单（git-template 的 info/exclude 默认拦 *.png）
+!docs/screenshots/*.png
