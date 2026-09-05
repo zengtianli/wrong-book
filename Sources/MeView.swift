@@ -84,8 +84,8 @@ struct MeView: View {
                     Text("整卷入档")
                 } footer: {
                     // 说清它到哪儿为止 —— 不然会以为拍完就自动进题库了
-                    Text("扫一份卷子传到学习库；识别与复盘在 Mac 上做（`paper_ingest pull` → `/exam`）。"
-                         + "单道错题不用走这儿，用网页版 wrong.html 更快。")
+                    Text("用系统扫描器把整份卷子一页页传到学习库，服务端自动识别错题入库。"
+                         + "单道错题在网页版上传一张图更快。")
                 }
 
                 Section("账号") {
@@ -102,7 +102,7 @@ struct MeView: View {
                 }
 
                 Section {
-                    Text("题、题库、学习路径的 SSOT 都在 edu.tianli.cyou；"
+                    Text("题、题库、学习路径都在 edu.tianli.cyou；"
                          + "这个 app 只是把它们装在身上，离线也能做。")
                         .font(.caption).foregroundStyle(Ink.dim)
                 }
