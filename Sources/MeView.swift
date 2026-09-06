@@ -89,6 +89,10 @@ struct MeView: View {
                 }
 
                 Section("账号") {
+                    if LessonPaths.offlineReadOnly {
+                        Text("离线模式：仅使用本机资料，未验证当前登录状态。")
+                            .font(.footnote).foregroundStyle(Ink.dim)
+                    }
                     if let s = session.status {
                         row("登录为", s.nick.isEmpty ? s.user : "\(s.nick)（\(s.user)）")
                         Button("退出登录", role: .destructive) { Task { await session.logout() } }

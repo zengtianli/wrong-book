@@ -32,7 +32,10 @@ final class FixtureProtocol: URLProtocol {
 @main struct PersonalLibraryTest {
     @MainActor static func main() async throws {
         URLProtocol.registerClass(FixtureProtocol.self)
-        let sync = LessonSync()
+        let suite = "personal-library-fixture-" + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let sync = LessonSync(defaults: defaults)
         let scopeA = "fixture-a-" + UUID().uuidString
         let scopeB = "fixture-b-" + UUID().uuidString
         defer {
@@ -51,6 +54,13 @@ final class FixtureProtocol: URLProtocol {
         let lessonA = LessonPack.load().lessons.first!
         assert(lessonA.resolvedURL != nil)
         let storeA = LessonPaths.webDataStore.identifier
+        LessonPaths.activeScope = nil // cold start, no in-memory account
+        let restarted = LessonSync(defaults: defaults)
+        let beforeOffline = FixtureProtocol.paths.count
+        assert(restarted.restoreOffline())
+        assert(LessonPaths.offlineReadOnly && LessonPack.load().lessons.count == 1)
+        await restarted.sync(force: true)
+        assert(FixtureProtocol.paths.count == beforeOffline, "Offline cache is not network authority")
         sync.setUser("b")
         assert(LessonPack.load().lessons.isEmpty && lessonA.resolvedURL == nil)
         await sync.sync(force: true) // stale owner A response must be rejected
@@ -72,9 +82,13 @@ final class FixtureProtocol: URLProtocol {
         FixtureProtocol.response = ["owner": "b", "scope": scopeB, "lessons": [["slug": "bad", "file": "bad.html", "sha256": String(repeating: "0", count: 64)]]]
         await sync.sync(force: true)
         assert(LessonPack.load().lessons.isEmpty)
+        try LessonPaths.removeFiles(scope: scopeA)
+        assert(!FileManager.default.fileExists(atPath: LessonPaths.directory(scope: scopeA).path))
+        assert(FileManager.default.fileExists(atPath: LessonPaths.directory(scope: scopeB).appendingPathComponent("manifest.json").path))
         sync.setUser(nil)
         assert(LessonPack.load().lessons.isEmpty && lessonA.resolvedURL == nil)
+        assert(!LessonSync(defaults: defaults).restoreOffline(), "Explicit logout must remove offline authority")
         assert(FixtureProtocol.paths.allSatisfy { $0 == "/api/lessons" || $0 == "/api/lesson" })
-        print("PASS: guest empty, account ownership, mandatory scope, separate WebKit stores, preserved old account cache, traversal/hash rejection, no global downloads")
+        print("PASS: guest empty; ownership/scope; WebKit isolation; offline restart without network authority; exact-scope deletion preserves other account; logout revokes offline cache; traversal/hash rejection")
     }
 }

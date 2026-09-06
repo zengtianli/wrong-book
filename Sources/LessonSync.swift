@@ -12,10 +12,39 @@ final class LessonSync: ObservableObject {
     private var owner: String?
     private var generation = UUID()
     private var lastRun: Date?
+    private let defaults: UserDefaults
+    private let offlineKey = "privateLibraryLastAuthenticatedV2"
+    init(defaults: UserDefaults = .standard) { self.defaults = defaults }
+
+    func scopeForCurrentUser(_ user: String) -> String? {
+        if owner == user { return LessonPaths.activeScope }
+        let pointer = defaults.dictionary(forKey: offlineKey)
+        return pointer?["owner"] as? String == user ? pointer?["scope"] as? String : nil
+    }
+
+    /// Restores only the last authenticated account's local cache, never network authority.
+    func restoreOffline() -> Bool {
+        guard let pointer = defaults.dictionary(forKey: offlineKey),
+              let user = pointer["owner"] as? String,
+              let scope = pointer["scope"] as? String,
+              let data = try? Data(contentsOf: LessonPaths.directory(scope: scope).appendingPathComponent("manifest.json")),
+              let manifest = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              manifest["owner"] as? String == user, manifest["scope"] as? String == scope else { return false }
+        owner = nil
+        LessonPaths.activeScope = scope
+        LessonPaths.offlineReadOnly = true
+        note = "离线模式：仅使用本机资料；登录联网后可上传和同步。"
+        revision += 1
+        return true
+    }
 
     func setUser(_ user: String?) {
-        guard owner != user else { return }
+        if user == nil { defaults.removeObject(forKey: offlineKey) }
+        guard owner != user || LessonPaths.offlineReadOnly else { return }
+        // A new authenticated session must confirm its instance before offline reuse.
+        defaults.removeObject(forKey: offlineKey)
         owner = user
+        LessonPaths.offlineReadOnly = false
         note = nil
         generation = UUID()
         lastRun = nil
@@ -65,6 +94,7 @@ final class LessonSync: ObservableObject {
             try data.write(to: dir.appendingPathComponent("manifest.json"), options: .atomic)
             if LessonPaths.activeScope != scope { EduArchive.shared.resetAfterAccountDeletion() }
             LessonPaths.activeScope = scope
+            defaults.set(["owner": user, "scope": scope], forKey: offlineKey)
             revision += 1
             lastRun = Date()
             note = lessons.isEmpty ? nil : "个人课程已同步"
@@ -76,6 +106,7 @@ final class LessonSync: ObservableObject {
     func reset() {
         // Keep personal files; disable the active copy until authenticated sync.
         LessonPaths.activeScope = nil
+        defaults.removeObject(forKey: offlineKey)
         lastRun = nil
         EduArchive.shared.resetAfterAccountDeletion()
         revision += 1
@@ -96,6 +127,7 @@ final class LessonSync: ObservableObject {
 
 enum LessonPaths {
     static var activeScope: String?
+    static var offlineReadOnly = false
     static func valid(_ file: String) -> Bool {
         !file.isEmpty && !file.hasPrefix("/") && !file.contains("\\") &&
         !file.split(separator: "/", omittingEmptySubsequences: false).contains(where: { $0.isEmpty || $0 == "." || $0 == ".." }) &&
@@ -109,9 +141,16 @@ enum LessonPaths {
     // Never read the historical default localStorage/cookies.
     static var webDataStore: WKWebsiteDataStore {
         guard let scope = activeScope else { return guestStore }
+        return webDataStore(scope: scope)
+    }
+    static func webDataStore(scope: String) -> WKWebsiteDataStore {
         let chars = Array(String(Data(("wrong-book:" + scope).utf8).sha256Hex.prefix(32)))
         let uuid = [String(chars[0..<8]), String(chars[8..<12]), String(chars[12..<16]), String(chars[16..<20]), String(chars[20..<32])].joined(separator: "-")
         return WKWebsiteDataStore(forIdentifier: UUID(uuidString: uuid)!)
+    }
+    static func removeFiles(scope: String) throws {
+        let directory = directory(scope: scope)
+        if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
     }
     private static let guestStore = WKWebsiteDataStore.nonPersistent()
 }

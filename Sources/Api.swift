@@ -108,6 +108,7 @@ enum Api {
     /// 返回值里带作业号。`auto: false` 只给自检通道用 —— 合成的噪点图不该烧一次读图。
     static func paperPage(slug: String, page: Int, jpeg: Data, note: String = "",
                           auto: Bool = true) async throws -> PaperUpload {
+        guard !LessonPaths.offlineReadOnly else { throw Failure(message: "当前为离线模式，请联网登录后上传。") }
         var body: [String: Any] = [
             "slug": slug, "page": page, "note": note,
             "data": "data:image/jpeg;base64," + jpeg.base64EncodedString(),

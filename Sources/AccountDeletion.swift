@@ -9,6 +9,7 @@ struct DeletionReceipt: Codable {
     let status: String
     let expectedBy: String
     var owner: String = ""
+    var scope: String? = nil
 
     init(json: [String: Any], id: String = "") throws {
         self.id = json["receipt_id"] as? String ?? id

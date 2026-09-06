@@ -30,8 +30,8 @@ final class Session: ObservableObject {
         }
     }
 
-    private func finishLocalDeletion() async {
-        let deletedStore = LessonPaths.webDataStore
+    private func finishLocalDeletion(scope: String?) async {
+        let deletedStore = scope.map { LessonPaths.webDataStore(scope: $0) }
         LessonSync.shared.setUser(nil)
         status = nil
         phase = .loggedOut
@@ -39,8 +39,15 @@ final class Session: ObservableObject {
         for cookie in HTTPCookieStorage.shared.cookies ?? [] where cookie.domain.contains(Api.base.host ?? "edu.tianli.cyou") {
             HTTPCookieStorage.shared.deleteCookie(cookie)
         }
-        await deletedStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
-        deletionNotice = "账号注销已完成。此设备保存的学习网页数据和登录信息也已清除。"
+        if let deletedStore {
+            await deletedStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
+        }
+        do {
+            if let scope { try LessonPaths.removeFiles(scope: scope) }
+            deletionNotice = "账号注销已完成，当前账号的本机课程副本、网页存档及登录信息已清除。"
+        } catch {
+            deletionNotice = "账号注销已完成，但本机课程副本清理失败。资料已停用，请联系支持协助清理。"
+        }
     }
 
     func refreshDeletion() async {
@@ -48,15 +55,28 @@ final class Session: ObservableObject {
         do {
             if deletionReceipt == nil, let user = status?.user, var receipt = try await Api.currentDeletion() {
                 receipt.owner = user
+                receipt.scope = LessonSync.shared.scopeForCurrentUser(user)
                 saveReceipt(receipt)
             }
             guard let old = deletionReceipt, old.status == "pending" else { return }
             var latest = try await Api.deletionProgress(receiptID: old.id)
             latest.owner = old.owner
+            latest.scope = old.scope
             saveReceipt(latest)
             if latest.status == "completed" {
-                if status == nil || status?.user == old.owner { await finishLocalDeletion() }
-                else { deletionNotice = "此前提交的账号注销申请已完成。" }
+                let currentScope = LessonPaths.activeScope
+                if (old.scope != nil && currentScope == old.scope) || (status == nil && currentScope == nil) {
+                    await finishLocalDeletion(scope: old.scope)
+                }
+                else {
+                    do {
+                        if let scope = old.scope {
+                            await LessonPaths.webDataStore(scope: scope).removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
+                            try LessonPaths.removeFiles(scope: scope)
+                        }
+                        deletionNotice = "此前提交的账号注销申请已完成，当前登录账号不受影响。"
+                    } catch { deletionNotice = "此前账号注销已完成，本机旧副本清理失败，请联系支持。" }
+                }
             }
         } catch {
             // Keep the durable receipt; a network error never means deletion succeeded.
@@ -86,7 +106,14 @@ final class Session: ObservableObject {
             LessonSync.shared.setUser(status?.user)
             phase = .loggedIn
         } catch {
-            phase = .loggedOut
+            // An explicit authentication rejection never unlocks a cached account.
+            if error is URLError, LessonSync.shared.restoreOffline() {
+                status = nil
+                phase = .loggedIn
+            } else {
+                LessonSync.shared.setUser(nil)
+                phase = .loggedOut
+            }
         }
     }
 
@@ -124,13 +151,15 @@ final class Session: ObservableObject {
         busy = true; error = nil
         defer { busy = false }
         do {
+            let scope = status.flatMap { LessonSync.shared.scopeForCurrentUser($0.user) }
             try await Api.deleteAccount(password: password)
-            await finishLocalDeletion()
+            await finishLocalDeletion(scope: scope)
             return true
         } catch let failure as Api.Failure where failure.statusCode == 409 {
             do {
                 var receipt = try await Api.requestAccountDeletion(password: password)
                 receipt.owner = status?.user ?? ""
+                receipt.scope = LessonSync.shared.scopeForCurrentUser(receipt.owner)
                 saveReceipt(receipt)
                 deletionNotice = "注销申请已受理，尚未完成删除。通常 30 天内完成；处理期间暂停新增数据。可在「我的」查看进度，超时请联系支持。"
                 return true
@@ -146,7 +175,12 @@ final class Session: ObservableObject {
 
     func refresh() async {
         guard phase == .loggedIn else { return }
-        if let s = try? await Api.status() { status = s }
+        if let s = try? await Api.status() {
+            let reconnecting = LessonPaths.offlineReadOnly
+            status = s
+            LessonSync.shared.setUser(s.user)
+            if reconnecting { await LessonSync.shared.sync(force: true) }
+        }
     }
 
     func logout() async {

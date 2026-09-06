@@ -167,7 +167,8 @@ struct LessonWebView: UIViewRepresentable {
             // origin 必须是账本那台机器：页面里的 /api/* 是相对路径，靠它解析。
             // Api.base 可被 launch 参数指向本地 server（验证用），这里跟着它走。
             let url = Api.base.appendingPathComponent(lesson.file)
-            wv.loadSimulatedRequest(URLRequest(url: url), responseHTML: html)
+            let offlinePolicy = "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; form-action 'none';\">"
+            wv.loadSimulatedRequest(URLRequest(url: url), responseHTML: LessonPaths.offlineReadOnly ? offlinePolicy + html : html)
         }
 
         func userContentController(_ c: WKUserContentController,
@@ -189,6 +190,7 @@ struct LessonWebView: UIViewRepresentable {
 /// 页面照常能做题，只是积分徽章不出现、分不涨、存档不同步，**一句报错都没有**。
 enum WebSession {
     static func handOff() async {
+        guard !LessonPaths.offlineReadOnly else { return }
         guard let host = Api.base.host,
               let cookies = HTTPCookieStorage.shared.cookies(for: Api.base) else { return }
         let store = LessonPaths.webDataStore.httpCookieStore
