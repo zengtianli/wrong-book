@@ -15,8 +15,9 @@ import SwiftUI
 /// 这里读的就是它写的那一份（`EduArchive`）。原生要是也能改，两边迟早说不同的话。
 struct WrongBookView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject var sync: LessonSync
 
-    private let pack = LessonPack.load()
+    private var pack: LessonPack { LessonPack.load() }
     @State private var book = WrongBook.unread
     @State private var loading = true
     @State private var problem: String?
@@ -50,6 +51,7 @@ struct WrongBookView: View {
         }
         .refreshable { await reload() }
         .task { await reload() }
+        .onChange(of: sync.revision) { _, _ in Task { await reload() } }
         .onChange(of: scenePhase) { _, p in if p == .active { Task { await reload() } } }
         .fullScreenCover(item: $open, onDismiss: { Task { await reload() } }) { t in
             LessonScreen(lesson: t.lesson, entry: t.entry, subtitle: t.subtitle)
@@ -57,16 +59,19 @@ struct WrongBookView: View {
     }
 
     private var tip: some View {
-        Text("复习出的是**同类新题**，不是原题 —— 连着一次做对 2 回才划掉。")
+        Text("复习自己收集的错题，连着订正 2 次后划掉。")
             .font(.footnote).foregroundStyle(Ink.dim)
     }
 
     private var empty: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if pack.lessons.isEmpty { PersonalLibraryStart() }
+            else {
             Text("错题本是空的").font(.headline).foregroundStyle(Ink.text)
             Text("做题时同一道连错两次会自动收进来；也可以在题目页点「☆ 收进错题本」手动收一类。\n"
                  + "连着订正 2 次才划掉 —— 一次蒙对不算学会。")
                 .font(.footnote).foregroundStyle(Ink.dim)
+            }
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading)
         .background(Ink.card, in: RoundedRectangle(cornerRadius: 14))
@@ -140,7 +145,7 @@ struct WrongBookView: View {
                         .font(.caption)
                     }
                     // 说清这里为什么点不动 —— 不然看着像个坏掉的列表
-                    Text("只回看，不重做 —— 重做的是上面那颗「复习」，出的是同类新题")
+                    Text("这里查看错题记录，点上方「复习」开始练习。")
                         .font(.caption2).foregroundStyle(Ink.dim.opacity(0.75))
                         .padding(.top, 2)
                 }

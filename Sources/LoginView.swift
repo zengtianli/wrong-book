@@ -1,11 +1,6 @@
 import SwiftUI
 
-/// 登录页。
-///
-/// **有一条「先不登录，直接做题」** —— 这不是偷懒的兜底，是这个 app 的真实语义：
-/// 练习页是自包含的，没网没账号照样能做完一套。登录只决定两件事：
-/// 刷题积分记不记得上、学习进度跨不跨设备。把它做成硬门就会在没网时把 app 变砖，
-/// 而没网恰恰是最需要它的时候。
+/// Account login, email registration, and an empty guest preview.
 struct LoginView: View {
     @EnvironmentObject var session: Session
     @State private var user = ""
@@ -23,7 +18,7 @@ struct LoginView: View {
                     Text("错题本")
                         .font(.system(size: 36, weight: .heavy, design: .rounded))
                         .foregroundStyle(Ink.text)
-                    Text("错过的那一类题，换道新的再考你一次")
+                    Text("导入自己的错题照片，整理复习")
                         .font(.footnote).foregroundStyle(Ink.dim)
                 }
 
@@ -52,13 +47,13 @@ struct LoginView: View {
                 .opacity(user.isEmpty || password.isEmpty ? 0.45 : 1)
 
                 HStack(spacing: 18) {
-                    Button("先不登录，直接做题") { session.skipLogin() }
+                    Button("先看看") { session.skipLogin() }
                     Button("邮箱注册") { showRegister = true }
                 }
                 .font(.footnote).foregroundStyle(Ink.blue)
 
                 Spacer()
-                Text("题和进度都在 edu.tianli.cyou，这里是它的离线随身版")
+                Text("从自己的错题照片开始，登录后导入和同步")
                     .font(.caption2).foregroundStyle(Ink.dim.opacity(0.8))
                     .multilineTextAlignment(.center)
             }

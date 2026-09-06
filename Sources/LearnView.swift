@@ -1,10 +1,6 @@
 import SwiftUI
 
-/// 学习路径 —— 学科 → 课，从 bundle/下载来的 manifest 派生
-///（manifest 又从 `~/Edu/curriculum.yaml` 经 `curriculum.py` 派生）。
-///
-/// **这一屏不判断哪一课该不该出现。** curriculum 说有几课就是几课。
-/// 在这里再筛一遍就是第二份判据，而两份判据迟早说不同的话。
+/// Personal learning path supplied by the authenticated library.
 struct LearnView: View {
     @EnvironmentObject var session: Session
     @EnvironmentObject var sync: LessonSync
@@ -18,6 +14,7 @@ struct LearnView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     if let p = pack.problem { banner(p, Ink.red) }
                     if let n = sync.note { banner(n, Ink.blue) }
+                    if pack.lessons.isEmpty { PersonalLibraryStart() }
                     ForEach(pack.tree) { g in
                         VStack(alignment: .leading, spacing: 14) {
                             Text(g.name)
@@ -34,7 +31,7 @@ struct LearnView: View {
                             }
                         }
                     }
-                    Text("\(pack.lessons.count) 课 · 每天目标 \(pack.dailyGoal) 题 · 没网也能做")
+                    Text(pack.lessons.isEmpty ? "导入的资料仅用于自己的学习" : "\(pack.lessons.count) 课 · 已下载内容可离线练习")
                         .font(.caption).foregroundStyle(Ink.dim)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 6)
@@ -48,6 +45,8 @@ struct LearnView: View {
         .fullScreenCover(item: $open, onDismiss: { pack = LessonPack.load() }) { l in
             LessonScreen(lesson: l)
         }
+        .onChange(of: sync.revision) { _, _ in pack = LessonPack.load() }
+        .task { pack = LessonPack.load() }
     }
 
     private func card(_ l: Lesson) -> some View {
@@ -88,6 +87,29 @@ struct LearnView: View {
             .font(.footnote).foregroundStyle(c)
             .padding(12).frame(maxWidth: .infinity, alignment: .leading)
             .background(c.opacity(0.10), in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct PersonalLibraryStart: View {
+    @EnvironmentObject var session: Session
+    @EnvironmentObject var sync: LessonSync
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("从自己的错题开始", systemImage: "doc.viewfinder")
+                .font(.headline).foregroundStyle(Ink.text)
+            Text("这里还没有学习资料。扫描试卷或导入错题照片，识别完成后同步自己的练习。")
+                .font(.footnote).foregroundStyle(Ink.dim)
+            if session.status != nil {
+                NavigationLink { PaperScanView().environmentObject(sync) } label: {
+                    Label("导入错题照片", systemImage: "camera")
+                }
+            } else {
+                Button("登录或邮箱注册后导入") { session.phase = .loggedOut }
+            }
+        }
+        .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+        .background(Ink.card, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Ink.line, lineWidth: 1))
     }
 }
 

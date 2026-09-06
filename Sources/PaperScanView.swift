@@ -232,6 +232,7 @@ struct PaperScanView: View {
             }
         }
         await readAll()
+        await sync.sync(force: true)
 
         // 汇总只摘服务端算好的数（每页那句「录进题库 N 道」），不自己数题。
         let got = pages.compactMap(\.got).reduce(0, +)

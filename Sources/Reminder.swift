@@ -60,7 +60,7 @@ enum Reminder {
                 body = "今天还差 \(r) 题就完成任务了，补完 +50 经验"
             } else {
                 // 往后几天的进度还没发生，说不出数字就别说数字
-                body = "今天的 \(goal) 题做了吗？错过的那几类正等着换新题考你"
+                body = "今天的 \(goal) 题做了吗？来复习自己收集的错题吧"
             }
             out.append((day, fire, body))
         }

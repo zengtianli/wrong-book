@@ -51,6 +51,7 @@ final class EduArchive {
     /// 取一份快照：所有 `edu:` 开头的键。拿不到就抛，**不返回空字典** ——
     /// 「读失败」和「档案是空的」长得一模一样，混起来就永远查不出是哪种。
     func snapshot() async throws -> [String: String] {
+        guard LessonPaths.activeScope != nil else { return [:] }
         let wv = try await host()
         let js = """
         (function () {
@@ -77,7 +78,7 @@ final class EduArchive {
 
         let t = Task { () throws -> WKWebView in
             let cfg = WKWebViewConfiguration()
-            cfg.websiteDataStore = .default()          // 和练习页同一个存储分区
+            cfg.websiteDataStore = LessonPaths.webDataStore          // 和练习页同一个存储分区
             let wv = WKWebView(frame: .zero, configuration: cfg)
             wv.navigationDelegate = nav
             try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, Error>) in

@@ -31,13 +31,15 @@ final class Session: ObservableObject {
     }
 
     private func finishLocalDeletion() async {
+        let deletedStore = LessonPaths.webDataStore
+        LessonSync.shared.setUser(nil)
         status = nil
         phase = .loggedOut
         EduArchive.shared.resetAfterAccountDeletion()
         for cookie in HTTPCookieStorage.shared.cookies ?? [] where cookie.domain.contains(Api.base.host ?? "edu.tianli.cyou") {
             HTTPCookieStorage.shared.deleteCookie(cookie)
         }
-        await WKWebsiteDataStore.default().removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
+        await deletedStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
         deletionNotice = "账号注销已完成。此设备保存的学习网页数据和登录信息也已清除。"
     }
 
@@ -81,6 +83,7 @@ final class Session: ObservableObject {
         }
         do {
             status = try await Api.status(timeout: 6)
+            LessonSync.shared.setUser(status?.user)
             phase = .loggedIn
         } catch {
             phase = .loggedOut
@@ -93,6 +96,7 @@ final class Session: ObservableObject {
         do {
             try await Api.login(user: user, password: password)
             status = try await Api.status()
+            LessonSync.shared.setUser(status?.user)
             phase = .loggedIn
         } catch {
             self.error = error.localizedDescription
@@ -108,6 +112,7 @@ final class Session: ObservableObject {
         do {
             try await Api.register(email: email, password: password, nick: nick)
             status = try await Api.status()
+            LessonSync.shared.setUser(status?.user)
             phase = .loggedIn
         } catch {
             self.error = error.localizedDescription        // 邮箱已注册 / 格式不对 / 名额满，服务端文案原样
@@ -146,10 +151,11 @@ final class Session: ObservableObject {
 
     func logout() async {
         await Api.logout()
+        LessonSync.shared.setUser(nil)
         status = nil
         phase = .loggedOut
     }
 
-    /// 不登录直接用。做题、错题本、离线全都照常 —— 只是分不记、存档不跨设备。
-    func skipLogin() { phase = .loggedIn }
+    /// Guest preview has no personal courses or historic storage.
+    func skipLogin() { LessonSync.shared.setUser(nil); status = nil; phase = .loggedIn }
 }

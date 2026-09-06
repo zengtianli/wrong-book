@@ -10,7 +10,7 @@ struct MeView: View {
     @EnvironmentObject var session: Session
     @EnvironmentObject var sync: LessonSync
 
-    private let pack = LessonPack.load()
+    private var pack: LessonPack { LessonPack.load() }
     @State private var profile: GrowthProfile?
     @State private var remindOn = Reminder.enabled
     @State private var remindHour = Reminder.hour
@@ -29,7 +29,7 @@ struct MeView: View {
                         row("还差", p.remaining == 0 ? "做完了 ✅" : "\(p.remaining) 题")
                         row("等级 / 连续", "Lv.\(p.level) · 🔥 \(p.streakDays) 天")
                     } else {
-                        Text("还没做过题 —— 去「学习」挑一课")
+                        Text("从自己的错题照片开始，导入后再练习")
                             .font(.footnote).foregroundStyle(Ink.dim)
                     }
                     if let s = session.status {
@@ -71,7 +71,7 @@ struct MeView: View {
                     row("每日任务", "\(pack.dailyGoal) 题")
                     row("更新", sync.running ? "正在拉…" : (sync.note ?? "已是最新"))
                     Button("现在检查更新") { Task { await sync.sync(force: true) } }
-                    Button("回到随包发的那一版", role: .destructive) { sync.reset() }
+                    Button("停用本机课程副本", role: .destructive) { sync.reset() }
                 }
 
                 Section {
@@ -103,21 +103,21 @@ struct MeView: View {
                         }
                     } else {
                         // 没登录也能做题，但要说清代价 —— 不然「分怎么不涨」查不出来
-                        Text("没有登录：题照做，但**刷题积分不记账、进度不跨设备**。")
+                        Text("登录或邮箱注册后，导入自己的错题照片并同步学习资料。")
                             .font(.footnote).foregroundStyle(Ink.dim)
                         Button("去登录") { Task { await session.logout() } }
                     }
                 }
 
                 Section {
-                    Text("题、题库、学习路径都在 edu.tianli.cyou；"
-                         + "这个 app 只是把它们装在身上，离线也能做。")
+                    Text("App 不预装个人资料。登录后可导入自己的错题照片；已同步的个人课程支持离线练习。")
                         .font(.caption).foregroundStyle(Ink.dim)
                 }
             }
             .navigationTitle("我的")
         }
         .task { await load() }
+        .onChange(of: sync.revision) { _, _ in Task { await load() } }
         // App Store 5.1.1(v)：能注册就必须能在 app 内删号。要密码，二次确认，文案说清删什么。
         .alert("注销账号？", isPresented: $askDelete) {
             SecureField("当前密码", text: $deletePw)

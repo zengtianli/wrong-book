@@ -13,13 +13,10 @@ targets:
   WrongBook:
     type: application
     supportedDestinations: [iOS, macOS]
-    # 每次构建前从 ~/Edu 组装一次练习页。
-    # 页面的 SSOT 在 ~/Edu(curriculum.yaml + 题库 + 渲染门 + PII 门),仓里存一份就是第二份。
-    # 漏同步的表现是**编译通过、装上能跑、只是那一课点不开**,或者更坏 ——
-    # 做的是上一版的题。这种缺陷不报错,只会被当成「设计就这样」。缺源时脚本 exit 1。
+    # Public distributions contain an empty personal library, never a user's courses.
     preBuildScripts:
       - script: bash "$PROJECT_DIR/sync-lessons.sh"
-        name: 同步练习页
+        name: 验证公开包不含个人资料
         basedOnDependencyAnalysis: false
     sources:
       # 总部共享：macOS 侧给 iOS-only SwiftUI 修饰符提供同名 no-op，调用点不改（multiplatform.py 注入）

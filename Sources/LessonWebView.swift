@@ -43,6 +43,7 @@ struct LessonWebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let cfg = WKWebViewConfiguration()
+        cfg.websiteDataStore = LessonPaths.webDataStore
         let ucc = WKUserContentController()
         ucc.add(context.coordinator, name: "edu")
         ucc.addUserScript(WKUserScript(source: Self.probe,
@@ -63,6 +64,7 @@ struct LessonWebView: UIViewRepresentable {
         #endif
 
         let wv = WKWebView(frame: .zero, configuration: cfg)
+        wv.navigationDelegate = context.coordinator
         context.coordinator.watchForBackground(wv)
         #if os(iOS)
         wv.isOpaque = false                       // Mac 上 isOpaque 只读、无 backgroundColor、无 scrollView
@@ -102,10 +104,20 @@ struct LessonWebView: UIViewRepresentable {
     })();
     """
 
-    final class Coordinator: NSObject, WKScriptMessageHandler {
+    final class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate {
         var onSubmitted: () -> Void
         var onEntryResult: (String) -> Void
         private var loadedSlug: String?
+        private var currentLesson: Lesson?
+
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+                     decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            if navigationAction.navigationType == .reload, let lesson = currentLesson {
+                decisionHandler(.cancel)
+                loadedSlug = nil
+                load(into: webView, lesson: lesson)
+            } else { decisionHandler(.allow) }
+        }
 
         init(onSubmitted: @escaping () -> Void, onEntryResult: @escaping (String) -> Void) {
             self.onSubmitted = onSubmitted
@@ -138,11 +150,12 @@ struct LessonWebView: UIViewRepresentable {
         }
 
         func load(into wv: WKWebView, lesson: Lesson) {
+            currentLesson = lesson
             guard loadedSlug != lesson.slug else { return }
             guard let u = lesson.resolvedURL,
                   let html = try? String(contentsOf: u, encoding: .utf8) else {
                 // 静默白屏是最难查的一种 —— 明说是哪一课、缺在哪
-                let msg = "这一课的页面没在包里：\(lesson.file)\n重新构建会自动同步（sync-lessons.sh）"
+                let msg = "这份个人课程暂不可用，请返回学习页重新同步。"
                 wv.loadHTMLString(
                     "<meta name=viewport content='width=device-width,initial-scale=1'>"
                     + "<pre style='padding:24px;font:15px/1.7 -apple-system;white-space:pre-wrap'>"
@@ -178,7 +191,7 @@ enum WebSession {
     static func handOff() async {
         guard let host = Api.base.host,
               let cookies = HTTPCookieStorage.shared.cookies(for: Api.base) else { return }
-        let store = WKWebsiteDataStore.default().httpCookieStore
+        let store = LessonPaths.webDataStore.httpCookieStore
         for c in cookies where c.domain.contains(host) || host.contains(c.domain.dropFirst(c.domain.hasPrefix(".") ? 1 : 0)) {
             await store.setCookie(c)
         }
@@ -226,7 +239,7 @@ enum LessonEntry: Equatable {
         switch result {
         case "drill", "wrong": return nil
         case "mix":    return "错题本里没有还在题库里的题型 —— 给你出了一套常规的"
-        case "gone":   return "这一类题已经不在题库里了（题库改过），出不了同类新题"
+        case "gone":   return "这类题已不在当前个人课程中，请同步课程后重试"
         case "noentry":return "这一课的页面是旧版渲染的，没有复习入口 —— 重新构建一次就有了"
         case "threw":  return "引擎组卷时报错了"
         default:       return "复习入口没回话（\(result.isEmpty ? "空" : result)）"
