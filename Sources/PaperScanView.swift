@@ -22,6 +22,7 @@ struct PaperScanView: View {
     @State private var picked: [PhotosPickerItem] = []
     @State private var busy = false
     @State private var banner: String?
+    @State private var showUploadConsent = false
 
     private var subjects: [(key: String, name: String)] {
         // 学科从课程包的 manifest 派生（它带 subject / subject_name）——
@@ -106,7 +107,7 @@ struct PaperScanView: View {
 
             Section {
                 Button {
-                    Task { await upload() }
+                    showUploadConsent = true
                 } label: {
                     HStack {
                         if busy { ProgressView().padding(.trailing, 4) }
@@ -128,6 +129,12 @@ struct PaperScanView: View {
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
         .background(Ink.paper)
+        .alert("上传并使用 AI 识别", isPresented: $showUploadConsent) {
+            Button("取消", role: .cancel) {}
+            Button("同意并上传") { Task { await upload() } }
+        } message: {
+            Text("选中的试卷图片及备注将上传到学习服务器，图片会交给外部 Claude AI 服务识别。原图、识别结果与题库记录会保存用于复习。请先遮住姓名、学校等个人信息，并确认有权上传。可在「我的 → 注销账号」申请删除相关资料，需核验的申请通常 30 天内完成。")
+        }
         .fullScreenCover(isPresented: $showCamera) {
             PaperScan.Camera { imgs in
                 showCamera = false
