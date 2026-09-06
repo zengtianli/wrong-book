@@ -2,6 +2,7 @@
 .dd*/
 DerivedData/
 build/
+.build-inputs/
 *.xcuserstate
 xcuserdata/
 

@@ -28,7 +28,8 @@ struct RegisterView: View {
                     SecureField("再输一次", text: $pw2).textContentType(.newPassword)
                     if mismatch { Text("两次输入不一致").font(.caption).foregroundStyle(Ink.red) }
                 } footer: {
-                    Text("注册即同意隐私政策：只保存邮箱、昵称、做题记录与你上传的错题图，可随时在「我的 → 注销账号」整体删除。")
+                    Text("账号保存邮箱、昵称、做题记录与你上传的试卷及识别结果。" + AccountDeletionCopy.summary)
+                    Link("阅读隐私政策", destination: URL(string: "https://app-ios-wrong-book.tianli.cyou/privacy.html")!)
                 }
                 if let e = session.error {
                     Section { Text(e).foregroundStyle(Ink.red) }

@@ -93,6 +93,14 @@ struct MeView: View {
                         row("登录为", s.nick.isEmpty ? s.user : "\(s.nick)（\(s.user)）")
                         Button("退出登录", role: .destructive) { Task { await session.logout() } }
                         Button("注销账号", role: .destructive) { deletePw = ""; askDelete = true }
+                            .disabled(session.busy)
+                        if let receipt = session.deletionReceipt, receipt.owner == s.user, receipt.status == "pending" {
+                            Text("注销处理中 · 尚未完成删除").foregroundStyle(Ink.dim)
+                            Text("预计处理日期：\(receipt.expectedBy.prefix(10))").font(.footnote)
+                            Button("刷新注销进度") { Task { await session.refreshDeletion() } }
+                            if let error = session.deletionRefreshError { Text(error).font(.footnote).foregroundStyle(Ink.red) }
+                            Link("联系支持", destination: URL(string: "https://app-ios-wrong-book.tianli.cyou/support.html")!)
+                        }
                     } else {
                         // 没登录也能做题，但要说清代价 —— 不然「分怎么不涨」查不出来
                         Text("没有登录：题照做，但**刷题积分不记账、进度不跨设备**。")
@@ -113,7 +121,7 @@ struct MeView: View {
         // App Store 5.1.1(v)：能注册就必须能在 app 内删号。要密码，二次确认，文案说清删什么。
         .alert("注销账号？", isPresented: $askDelete) {
             SecureField("当前密码", text: $deletePw)
-            Button("永久删除", role: .destructive) {
+            Button("确认注销", role: .destructive) {
                 Task {
                     if await session.deleteAccount(password: deletePw) { deleteErr = nil }
                     else { deleteErr = session.error }
@@ -121,7 +129,7 @@ struct MeView: View {
             }
             Button("取消", role: .cancel) {}
         } message: {
-            Text("账号、刷题积分、学习进度、拍过的错题与卷子会一起删除，不可恢复。输入当前密码确认。")
+            Text(AccountDeletionCopy.summary + "删除完成后不可恢复。输入当前密码确认发起注销。")
         }
         .alert("没删成", isPresented: Binding(get: { deleteErr != nil }, set: { if !$0 { deleteErr = nil } })) {
             Button("好", role: .cancel) {}

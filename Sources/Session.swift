@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import WebKit
 
 /// 登录态。**只有登录态** —— 这个 app 的其它状态都在 WebView 里（练习引擎的存档）
 /// 或在盘上（下载来的课页），原生不再复制一份。
@@ -11,6 +12,57 @@ final class Session: ObservableObject {
     @Published var status: Status?
     @Published var error: String?
     @Published var busy = false
+    @Published var deletionReceipt: DeletionReceipt?
+    @Published var deletionNotice: String?
+    @Published var deletionRefreshError: String?
+    private let receiptKey = "accountDeletionReceipt"
+
+    init() {
+        if let data = UserDefaults.standard.data(forKey: receiptKey) {
+            deletionReceipt = try? JSONDecoder().decode(DeletionReceipt.self, from: data)
+        }
+    }
+
+    private func saveReceipt(_ receipt: DeletionReceipt) {
+        deletionReceipt = receipt
+        if let data = try? JSONEncoder().encode(receipt) {
+            UserDefaults.standard.set(data, forKey: receiptKey)
+        }
+    }
+
+    private func finishLocalDeletion() async {
+        status = nil
+        phase = .loggedOut
+        EduArchive.shared.resetAfterAccountDeletion()
+        for cookie in HTTPCookieStorage.shared.cookies ?? [] where cookie.domain.contains(Api.base.host ?? "edu.tianli.cyou") {
+            HTTPCookieStorage.shared.deleteCookie(cookie)
+        }
+        await WKWebsiteDataStore.default().removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
+        deletionNotice = "账号注销已完成。此设备保存的学习网页数据和登录信息也已清除。"
+    }
+
+    func refreshDeletion() async {
+        deletionRefreshError = nil
+        do {
+            if deletionReceipt == nil, let user = status?.user, var receipt = try await Api.currentDeletion() {
+                receipt.owner = user
+                saveReceipt(receipt)
+            }
+            guard let old = deletionReceipt, old.status == "pending" else { return }
+            var latest = try await Api.deletionProgress(receiptID: old.id)
+            latest.owner = old.owner
+            saveReceipt(latest)
+            if latest.status == "completed" {
+                if status == nil || status?.user == old.owner { await finishLocalDeletion() }
+                else { deletionNotice = "此前提交的账号注销申请已完成。" }
+            }
+        } catch {
+            // Keep the durable receipt; a network error never means deletion succeeded.
+            if deletionReceipt?.status == "pending" {
+                deletionRefreshError = "暂时无法刷新注销进度：" + error.localizedDescription
+            }
+        }
+    }
 
     /// 开屏先探一次：cookie 还在就直接进，不必再问一次密码。
     ///
@@ -62,15 +114,25 @@ final class Session: ObservableObject {
         }
     }
 
-    /// 注销账号。成功回 true 并落回登录页；失败把原因放进 error（密码不对 → 403 的那句）。
+    /// true 表示删除完成或申请已受理；deletionReceipt/notice 区分这两种结果。
     func deleteAccount(password: String) async -> Bool {
         busy = true; error = nil
         defer { busy = false }
         do {
             try await Api.deleteAccount(password: password)
-            status = nil
-            phase = .loggedOut
+            await finishLocalDeletion()
             return true
+        } catch let failure as Api.Failure where failure.statusCode == 409 {
+            do {
+                var receipt = try await Api.requestAccountDeletion(password: password)
+                receipt.owner = status?.user ?? ""
+                saveReceipt(receipt)
+                deletionNotice = "注销申请已受理，尚未完成删除。通常 30 天内完成；处理期间暂停新增数据。可在「我的」查看进度，超时请联系支持。"
+                return true
+            } catch {
+                self.error = error.localizedDescription
+                return false
+            }
         } catch {
             self.error = error.localizedDescription
             return false

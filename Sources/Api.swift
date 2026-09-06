@@ -24,6 +24,7 @@ enum Api {
 
     struct Failure: LocalizedError {
         let message: String
+        var statusCode: Int = 0
         var errorDescription: String? { message }
     }
 
@@ -51,7 +52,7 @@ enum Api {
         }
         if obj["ok"] as? Bool != true {
             // 服务端的 err 是给人看的中文，原样透出去比包一层「请求失败」有用
-            throw Failure(message: obj["err"] as? String ?? "学习库拒绝了这次请求(HTTP \(code))")
+            throw Failure(message: obj["err"] as? String ?? "学习库拒绝了这次请求(HTTP \(code))", statusCode: code)
         }
         return obj
     }
@@ -69,9 +70,23 @@ enum Api {
         _ = try await request("api/register", body: ["email": email, "p": password, "nick": nick])
     }
 
-    /// 自助注销：要当前密码；服务端把账本/进度/错题图整体归档后清 cookie。
+    /// 即时删除路径；需要跨系统核验时由服务端明确返回 409。
     static func deleteAccount(password: String) async throws {
         _ = try await request("api/account_del", body: ["p": password])
+    }
+
+    static func requestAccountDeletion(password: String) async throws -> DeletionReceipt {
+        try DeletionReceipt(json: await request("api/account_delete_request", body: ["password": password]))
+    }
+
+    static func deletionProgress(receiptID: String) async throws -> DeletionReceipt {
+        try DeletionReceipt(json: await request("api/account_delete_status", body: ["receipt_id": receiptID]), id: receiptID)
+    }
+
+    static func currentDeletion() async throws -> DeletionReceipt? {
+        let json = try await request("api/account_delete_request")
+        if json["status"] as? String == "none" { return nil }
+        return try DeletionReceipt(json: json)
     }
 
     /// 传一页卷子回来的东西：服务端顺手把这页登记成了一张错题图并派了自动读图，

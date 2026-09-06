@@ -13,12 +13,26 @@
 set -euo pipefail
 
 EDU="${EDU_HOME:-$HOME/Edu}"
-DST="$(cd "$(dirname "$0")" && pwd)/Resources/Lessons"
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+DST="$ROOT/Resources/Lessons"
 PACK="$EDU/engine/app_pack.py"
 
-[ -f "$PACK" ] || { echo "❌ 找不到组装器 $PACK —— ~/Edu 不在？" >&2; exit 1; }
-
-python3 "$PACK" "$DST"
+if [ -f "$PACK" ] && [ "${CI:-}" != "TRUE" ]; then
+  python3 "$PACK" "$DST"
+else
+  # This export was built by app_pack.py and passed its PII gate.
+  # Pin the bytes so the cloud cannot accidentally consume different content.
+  mkdir -p "$ROOT/.build-inputs" "$DST"
+  read -r digest url < "$ROOT/ci_scripts/lessons.lock"
+  archive="$ROOT/.build-inputs/lessons.tar.gz"
+  if [ ! -f "$archive" ]; then
+    curl --fail --location --retry 2 "$url" -o "$archive.part"
+    printf '%s  %s\n' "$digest" "$archive.part" | shasum -a 256 -c -
+    mv "$archive.part" "$archive"
+  fi
+  printf '%s  %s\n' "$digest" "$archive" | shasum -a 256 -c -
+  tar -xzf "$archive" -C "$DST"
+fi
 
 # 组装器会先 rmtree 目标目录 —— 连这个 README 一起清掉。
 # 它必须在：clone 之后 Resources/Lessons/ 若不存在，xcodegen 会因
@@ -58,7 +72,16 @@ n=$(python3 -c "import json;print(len(json.load(open('$DST/manifest.json'))['les
 # 清单里哪几页要查，由 manifest 说了算，不在这儿再写一份判据。
 files=$(python3 - "$DST/manifest.json" <<'PYEOF'
 import json, sys
+import hashlib
+from pathlib import Path
 m = json.load(open(sys.argv[1]))
+root = Path(sys.argv[1]).parent.resolve()
+for lesson in m.get('lessons', []):
+    page = (root / lesson['file']).resolve()
+    if root not in page.parents or not page.is_file():
+        sys.exit('✘ 课页路径无效或缺失')
+    if hashlib.sha256(page.read_bytes()).hexdigest() != lesson['sha256']:
+        sys.exit('✘ 课页摘要与 manifest 不符：' + lesson['file'])
 ps = [L["file"] for L in m["lessons"] if (L.get("kind") or "practice") == "practice"]
 if not ps:
     sys.exit("✘ manifest 里一个 practice 页都没有 —— 拒绝在空集上报绿")

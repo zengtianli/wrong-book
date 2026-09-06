@@ -45,7 +45,13 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: session.phase)
-        .task { await session.restore() }
+        .task { await session.restore(); await session.refreshDeletion() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await session.refreshDeletion() } }
+        }
+        .alert("注销处理结果", isPresented: Binding(get: { session.deletionNotice != nil }, set: { if !$0 { session.deletionNotice = nil } })) {
+            Button("好", role: .cancel) { session.deletionNotice = nil }
+        } message: { Text(session.deletionNotice ?? "") }
     }
 }
 

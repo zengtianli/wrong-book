@@ -40,6 +40,14 @@ final class EduArchive {
 
     private init() {}
 
+    func resetAfterAccountDeletion() {
+        loading?.cancel()
+        loading = nil
+        webView?.stopLoading()
+        webView = nil
+        hostedOrigin = nil
+    }
+
     /// 取一份快照：所有 `edu:` 开头的键。拿不到就抛，**不返回空字典** ——
     /// 「读失败」和「档案是空的」长得一模一样，混起来就永远查不出是哪种。
     func snapshot() async throws -> [String: String] {
