@@ -81,9 +81,7 @@ final class LessonSync: ObservableObject {
                 }
                 let target = dir.appendingPathComponent(file)
                 if let old = try? Data(contentsOf: target), old.sha256Hex == sha { continue }
-                var url = URLComponents(url: Api.base.appendingPathComponent("api/lesson"), resolvingAgainstBaseURL: false)!
-                url.queryItems = [URLQueryItem(name: "file", value: file)]
-                let page = try await fetchData(url.url!)
+                let page = try await fetchData(LessonPaths.remoteURL(file: file))
                 guard token == generation else { return }
                 guard page.sha256Hex == sha else { throw Api.Failure(message: "课程下载校验失败") }
                 try FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -128,6 +126,11 @@ final class LessonSync: ObservableObject {
 enum LessonPaths {
     static var activeScope: String?
     static var offlineReadOnly = false
+    static func remoteURL(file: String) -> URL {
+        var url = URLComponents(url: Api.base.appendingPathComponent("api/lesson"), resolvingAgainstBaseURL: false)!
+        url.queryItems = [URLQueryItem(name: "file", value: file)]
+        return url.url!
+    }
     static func valid(_ file: String) -> Bool {
         !file.isEmpty && !file.hasPrefix("/") && !file.contains("\\") &&
         !file.split(separator: "/", omittingEmptySubsequences: false).contains(where: { $0.isEmpty || $0 == "." || $0 == ".." }) &&

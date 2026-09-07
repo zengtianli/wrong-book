@@ -54,6 +54,16 @@ final class FixtureProtocol: URLProtocol {
         await sync.sync(force: true)
         let lessonA = LessonPack.load().lessons.first!
         assert(lessonA.resolvedURL != nil)
+        // WebKit restoration must use the same authenticated endpoint as download.
+        // Preserve arbitrary lesson filenames as one query value, never a route.
+        for file in [lessonA.file, "math/错题 & #1.html"] {
+            let remote = LessonPaths.remoteURL(file: file)
+            let components = URLComponents(url: remote, resolvingAgainstBaseURL: false)!
+            assert(remote.path == "/api/lesson")
+            assert(components.queryItems == [URLQueryItem(name: "file", value: file)])
+            let (data, response) = try await URLSession.shared.data(from: remote)
+            assert((response as? HTTPURLResponse)?.statusCode == 200 && data == FixtureProtocol.page)
+        }
         let activeWebStore = LessonPaths.webDataStore // retained by WKWebView in the app
         let storeA = activeWebStore.identifier
         // A detached caller must hop to MainActor before touching WebKit.

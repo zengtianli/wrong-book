@@ -166,7 +166,10 @@ struct LessonWebView: UIViewRepresentable {
             loadedSlug = lesson.slug
             // origin 必须是账本那台机器：页面里的 /api/* 是相对路径，靠它解析。
             // Api.base 可被 launch 参数指向本地 server（验证用），这里跟着它走。
-            let url = Api.base.appendingPathComponent(lesson.file)
+            // A restored WebKit page may navigate to this URL over the network.
+            // Personal files are served only by the authenticated lesson endpoint;
+            // /<file> is the unrelated shared-library route and returns 403.
+            let url = LessonPaths.remoteURL(file: lesson.file)
             let offlinePolicy = "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; form-action 'none';\">"
             wv.loadSimulatedRequest(URLRequest(url: url), responseHTML: LessonPaths.offlineReadOnly ? offlinePolicy + html : html)
         }
