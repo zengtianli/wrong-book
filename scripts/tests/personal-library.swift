@@ -1,4 +1,5 @@
-// Compile with Sources/{LessonSync,Lessons}.swift. No production HTTP or accounts.
+// Compile with Sources/{LessonSync,Lessons,LessonWebView}.swift and Shared/PlatformCompat.swift.
+// No production HTTP or accounts.
 import Foundation
 import WebKit
 
@@ -53,7 +54,20 @@ final class FixtureProtocol: URLProtocol {
         await sync.sync(force: true)
         let lessonA = LessonPack.load().lessons.first!
         assert(lessonA.resolvedURL != nil)
-        let storeA = LessonPaths.webDataStore.identifier
+        let activeWebStore = LessonPaths.webDataStore // retained by WKWebView in the app
+        let storeA = activeWebStore.identifier
+        // A detached caller must hop to MainActor before touching WebKit.
+        // Build 1.0(4) crashed here on a worker thread when opening a lesson.
+        let cookie = HTTPCookie(properties: [.domain: Api.base.host!, .path: "/",
+            .name: "wrongbook-thread-fixture", .value: UUID().uuidString])!
+        HTTPCookieStorage.shared.setCookies([cookie], for: Api.base, mainDocumentURL: Api.base)
+        assert(HTTPCookieStorage.shared.cookies(for: Api.base)?.contains { $0.name == cookie.name } == true)
+        await Task.detached { await WebSession.handOff() }.value
+        let handedOff = await activeWebStore.httpCookieStore.allCookies()
+        assert(handedOff.contains { $0.name == cookie.name && $0.value == cookie.value },
+               "Background callers must safely hand the session to the account WebKit store")
+        HTTPCookieStorage.shared.deleteCookie(cookie)
+        await activeWebStore.httpCookieStore.deleteCookie(cookie)
         LessonPaths.activeScope = nil // cold start, no in-memory account
         let restarted = LessonSync(defaults: defaults)
         let beforeOffline = FixtureProtocol.paths.count

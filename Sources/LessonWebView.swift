@@ -188,6 +188,7 @@ struct LessonWebView: UIViewRepresentable {
 /// 两边各有一套 cookie 存储：原生请求用 `URLSession.shared`（HttpOnly 会话就在那），
 /// WebView 用 `WKWebsiteDataStore`。不搬的话表现是：**app 里已登录，网页里没登录** ——
 /// 页面照常能做题，只是积分徽章不出现、分不涨、存档不同步，**一句报错都没有**。
+@MainActor
 enum WebSession {
     static func handOff() async {
         guard !LessonPaths.offlineReadOnly else { return }

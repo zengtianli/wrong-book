@@ -139,11 +139,11 @@ enum LessonPaths {
     }
     static var downloads: URL? { activeScope.map(directory(scope:)) }
     // Never read the historical default localStorage/cookies.
-    static var webDataStore: WKWebsiteDataStore {
+    @MainActor static var webDataStore: WKWebsiteDataStore {
         guard let scope = activeScope else { return guestStore }
         return webDataStore(scope: scope)
     }
-    static func webDataStore(scope: String) -> WKWebsiteDataStore {
+    @MainActor static func webDataStore(scope: String) -> WKWebsiteDataStore {
         let chars = Array(String(Data(("wrong-book:" + scope).utf8).sha256Hex.prefix(32)))
         let uuid = [String(chars[0..<8]), String(chars[8..<12]), String(chars[12..<16]), String(chars[16..<20]), String(chars[20..<32])].joined(separator: "-")
         return WKWebsiteDataStore(forIdentifier: UUID(uuidString: uuid)!)
@@ -152,7 +152,7 @@ enum LessonPaths {
         let directory = directory(scope: scope)
         if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
     }
-    private static let guestStore = WKWebsiteDataStore.nonPersistent()
+    @MainActor private static let guestStore = WKWebsiteDataStore.nonPersistent()
 }
 
 extension Data {
