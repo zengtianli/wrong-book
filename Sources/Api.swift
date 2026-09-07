@@ -47,10 +47,22 @@ enum Api {
         }
         let (data, resp) = try await URLSession.shared.data(for: req)
         let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        return try decodeResponse(data, statusCode: code)
+    }
+
+    static func decodeResponse(_ data: Data, statusCode code: Int) throws -> [String: Any] {
         guard let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
-            throw Failure(message: code == 200 ? "服务端返回的不是 JSON" : "连不上学习库(HTTP \(code))")
+            let message: String
+            switch code {
+            case 413: message = "上传内容超过服务器大小限制，请稍后重试或联系支持（HTTP 413）"
+            case 500...599: message = "学习服务器处理失败，请稍后重试（HTTP \(code)）"
+            case 401: message = "登录已失效，请重新登录（HTTP 401）"
+            case 200...299: message = "服务端返回的不是 JSON"
+            default: message = "学习库请求失败（HTTP \(code)）"
+            }
+            throw Failure(message: message, statusCode: code)
         }
-        if obj["ok"] as? Bool != true {
+        if !(200...299).contains(code) || obj["ok"] as? Bool != true {
             // 服务端的 err 是给人看的中文，原样透出去比包一层「请求失败」有用
             throw Failure(message: obj["err"] as? String ?? "学习库拒绝了这次请求(HTTP \(code))", statusCode: code)
         }
@@ -59,6 +71,12 @@ enum Api {
 
     static func login(user: String, password: String) async throws {
         _ = try await request("api/login", body: ["u": user, "p": password])
+    }
+
+    static func aiAccess(code: String? = nil) async throws -> (enabled: Bool, remaining: Int) {
+        let result = try await request(code == nil ? "api/ai_access" : "api/ai_activate",
+                                       body: code.map { ["code": $0] })
+        return (result["enabled"] as? Bool == true, result["remaining"] as? Int ?? 0)
     }
 
     static func logout() async {

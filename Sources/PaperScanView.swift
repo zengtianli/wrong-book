@@ -23,6 +23,7 @@ struct PaperScanView: View {
     @State private var busy = false
     @State private var banner: String?
     @State private var showUploadConsent = false
+    @State private var aiEnabled = false
 
     private var subjects: [(key: String, name: String)] {
         // 学科从课程包的 manifest 派生（它带 subject / subject_name）——
@@ -33,6 +34,7 @@ struct PaperScanView: View {
 
     var body: some View {
         List {
+            AIAccessSection(enabled: $aiEnabled)
             Section("这是哪份卷子") {
                 Picker("学年", selection: $slug.year) {
                     ForEach(thisYear - 2...thisYear + 1, id: \.self) {
@@ -114,7 +116,7 @@ struct PaperScanView: View {
                         Text(busy ? busyLabel : "传到学习库并自动录错题（\(pending) 页）")
                     }
                 }
-                .disabled(busy || pending == 0)
+                .disabled(busy || pending == 0 || !aiEnabled)
             } footer: {
                 if let banner {
                     Text(banner).foregroundStyle(hasBad ? Ink.red : Ink.green)
@@ -133,7 +135,7 @@ struct PaperScanView: View {
             Button("取消", role: .cancel) {}
             Button("同意并上传") { Task { await upload() } }
         } message: {
-            Text("选中的试卷图片及备注将上传到学习服务器，图片会交给外部 Claude AI 服务识别。原图、识别结果与题库记录会保存用于复习。请先遮住姓名、学校等个人信息，并确认有权上传。可在「我的 → 注销账号」申请删除相关资料，需核验的申请通常 30 天内完成。")
+            Text("选中的试卷图片及备注将上传到学习服务器，图片会交给 DeepSeek AI 服务识别。原图、识别结果与题库记录会保存用于复习。请先遮住姓名、学校等个人信息，并确认有权上传。可在「我的 → 注销账号」申请删除相关资料，需核验的申请通常 30 天内完成。")
         }
         .fullScreenCover(isPresented: $showCamera) {
             PaperScan.Camera { imgs in
@@ -209,7 +211,7 @@ struct PaperScanView: View {
 
         // 同一页码传两次 = 后一张把前一张覆盖掉，而且**不会有任何报错**。
         // 传之前就拦住，比传完发现少一页强。
-        let nums = pages.filter { !$0.state.isUploaded }.map(\.page)
+        let nums = pages.map(\.page)
         if Set(nums).count != nums.count {
             banner = "有两张标了同一个页码 —— 先改掉再传"
             return
@@ -225,8 +227,13 @@ struct PaperScanView: View {
             do {
                 let r = try await Api.paperPage(slug: slug.text, page: pages[idx].page,
                                                 jpeg: d, note: note)
-                pages[idx].state = .uploaded(job: r.job)
-                if r.job == nil, let e = r.autoErr { pages[idx].log = e }
+                if let job = r.job {
+                    pages[idx].state = .uploaded(job: job)
+                } else {
+                    let message = r.autoErr ?? "图片已存档，但未能创建识别任务，请联系支持。"
+                    pages[idx].state = .readFailed(message)
+                    pages[idx].log = message
+                }
             } catch {
                 pages[idx].state = .failed(error.localizedDescription)
             }
@@ -254,8 +261,13 @@ struct PaperScanView: View {
         for idx in pages.indices {
             guard case .uploaded(let job?) = pages[idx].state else { continue }
             var sec = 0
+            let deadline = Date().addingTimeInterval(15 * 60)
             pages[idx].state = .reading(0)
             poll: while true {
+                guard !Task.isCancelled, Date() < deadline else {
+                    pages[idx].state = .readFailed("等待识别结果超时，图片已保存。请稍后同步课程或联系支持。")
+                    break
+                }
                 do {
                     switch try await Api.job(job) {
                     case .running:
@@ -270,6 +282,11 @@ struct PaperScanView: View {
                         break poll
                     }
                 } catch {
+                    if let failure = error as? Api.Failure,
+                       [401, 403, 404, 410].contains(failure.statusCode) {
+                        pages[idx].state = .readFailed(failure.localizedDescription)
+                        break poll
+                    }
                     // 网络抖一下不算失败 —— 作业在服务端照跑，等会儿再问
                     try? await Task.sleep(for: .seconds(5)); sec += 5
                     pages[idx].state = .reading(sec)
