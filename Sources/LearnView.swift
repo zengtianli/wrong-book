@@ -4,51 +4,89 @@ import SwiftUI
 struct LearnView: View {
     @EnvironmentObject var session: Session
     @EnvironmentObject var sync: LessonSync
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var pack = LessonPack.load()
     @State private var open: Lesson?
+    #if DEBUG
+    @State private var openedLaunchLesson = false
+    #endif
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    if let p = pack.problem { banner(p, Ink.red) }
-                    if let n = sync.note { banner(n, Ink.blue) }
-                    if pack.lessons.isEmpty { PersonalLibraryStart() }
-                    ForEach(pack.tree) { g in
-                        VStack(alignment: .leading, spacing: 14) {
-                            Text(g.name)
-                                .font(.title2.weight(.heavy)).foregroundStyle(Ink.text)
-                            ForEach(g.units) { u in
-                                VStack(alignment: .leading, spacing: 9) {
-                                    Text(u.name)
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(Ink.dim)
-                                    ForEach(u.lessons) { l in
-                                        Button { open = l } label: { card(l) }.buttonStyle(.plain)
-                                    }
+        Group {
+            if sizeClass == .regular {
+                NavigationSplitView {
+                    library
+                        .navigationSplitViewColumnWidth(min: 260, ideal: 320, max: 400)
+                } detail: {
+                    if let lesson = open {
+                        LessonScreen(lesson: lesson, onClose: { open = nil; reloadPack() })
+                            .id(lesson.id)
+                    } else {
+                        ContentUnavailableView("选择学习资料", systemImage: "book",
+                                               description: Text("从左侧选择课程，在这里阅读和练习。"))
+                    }
+                }
+                .navigationSplitViewStyle(.balanced)
+            } else {
+                NavigationStack { library }
+                    .fullScreenCover(item: $open, onDismiss: reloadPack) { l in
+                        LessonScreen(lesson: l)
+                    }
+            }
+        }
+        .onChange(of: sync.revision) { _, _ in reloadPack() }
+        .task { reloadPack() }
+    }
+
+    private func reloadPack() {
+        pack = LessonPack.load()
+        if let selected = open {
+            open = pack.lessons.first { $0.id == selected.id }
+        }
+        #if DEBUG
+        // Exercise the real list/detail selection after authenticated sync in simulator QA.
+        if !openedLaunchLesson,
+           let slug = UserDefaults.standard.string(forKey: "learn.openLesson"),
+           let lesson = pack.lessons.first(where: { $0.slug == slug }) {
+            openedLaunchLesson = true
+            open = lesson
+        }
+        #endif
+    }
+
+    private var library: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                if let p = pack.problem { banner(p, Ink.red) }
+                if let n = sync.note { banner(n, Ink.blue) }
+                if pack.lessons.isEmpty { PersonalLibraryStart() }
+                ForEach(pack.tree) { g in
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text(g.name)
+                            .font(.title2.weight(.heavy)).foregroundStyle(Ink.text)
+                        ForEach(g.units) { u in
+                            VStack(alignment: .leading, spacing: 9) {
+                                Text(u.name)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Ink.dim)
+                                ForEach(u.lessons) { l in
+                                    Button { open = l } label: { card(l) }.buttonStyle(.plain)
                                 }
                             }
                         }
                     }
-                    Text(pack.lessons.isEmpty ? "导入的资料仅用于自己的学习" : "\(pack.lessons.count) 课 · 已下载内容可离线练习")
-                        .font(.caption).foregroundStyle(Ink.dim)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 6)
                 }
-                .padding(18)
+                Text(pack.lessons.isEmpty ? "导入的资料仅用于自己的学习" : "\(pack.lessons.count) 课 · 已下载内容可离线练习")
+                    .font(.caption).foregroundStyle(Ink.dim)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 6)
             }
-            .background(Ink.paper)
-            .navigationTitle("学习")
+            .padding(18)
         }
-        // 从课里出来可能下载了新版 / 存档变了，重读一次清单
-        .fullScreenCover(item: $open, onDismiss: { pack = LessonPack.load() }) { l in
-            LessonScreen(lesson: l)
-        }
-        .onChange(of: sync.revision) { _, _ in pack = LessonPack.load() }
-        .task { pack = LessonPack.load() }
+        .background(Ink.paper)
+        .navigationTitle("学习")
     }
-
     private func card(_ l: Lesson) -> some View {
         HStack(alignment: .top, spacing: 12) {
             // 图标跟着 curriculum 走（每一课自己的 icon），不在这儿写第二份
@@ -124,14 +162,16 @@ struct LessonScreen: View {
     var entry: LessonEntry = .normal
     /// 从错题本进来时顶栏的副标题（题型名），让孩子知道现在在练什么
     var subtitle: String = ""
+    var onClose: (() -> Void)? = nil
 
     @State private var complaint: String?
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Button { dismiss() } label: { Image(systemName: "xmark").font(.headline) }
+                Button { if let onClose { onClose() } else { dismiss() } } label: { Image(systemName: "xmark").font(.headline) }
                     .foregroundStyle(Ink.text)
+                    .accessibilityLabel("关闭练习")
                 VStack(alignment: .leading, spacing: 1) {
                     Text(lesson.title).font(.headline).foregroundStyle(Ink.text).lineLimit(1)
                     if !subtitle.isEmpty {
