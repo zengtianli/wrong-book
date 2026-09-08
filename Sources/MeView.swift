@@ -3,7 +3,8 @@ import UserNotifications
 
 /// 我的 —— 登录态、今日进度、每日提醒、课程包版本。
 ///
-/// 这一屏刻意很短。账本、兑换、走势、家长记账全在**另一个 app**（京宝积分）——
+/// 首屏只放常用入口，提醒、课程和账号管理各自在独立页面。
+/// 账本、兑换、走势、家长记账全在**另一个 app**（京宝积分）——
 /// 2026-08-28 用户拍板「分开2个app，一个关注错题，一个关注积分」。
 /// 在这儿再放一个余额大字，就是把那件事又做了半遍。
 struct MeView: View {
@@ -19,10 +20,30 @@ struct MeView: View {
     @State private var askDelete = false
     @State private var deletePw = ""
     @State private var deleteErr: String?
+    @State private var path: [Destination] = []
+
+    private enum Destination: Hashable {
+        case account, scan, reminders, downloads
+    }
+
+    private var accountName: String {
+        guard let s = session.status else { return "登录或注册，开始导入错题" }
+        return s.nick.isEmpty ? s.user : "\(s.nick)（\(s.user)）"
+    }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
+                Section {
+                    entry("账号与隐私", detail: accountName, icon: "person.crop.circle",
+                          destination: .account, key: "a")
+                    entry("录卷子", detail: "扫描或导入照片，整理自己的错题", icon: "doc.viewfinder",
+                          destination: .scan, key: "s")
+                    entry("每日提醒", detail: remindOn ? "每天 \(remindHour):00" : "未开启",
+                          icon: "bell", destination: .reminders, key: "r")
+                    entry("离线课程", detail: "\(pack.lessons.count) 课 · \(sync.note ?? "已下载内容可离线练习")",
+                          icon: "arrow.down.circle", destination: .downloads, key: "d")
+                }
                 Section("今天") {
                     if let p = profile {
                         row("已经做了", "\(p.doneToday) / \(p.goal) 题")
@@ -37,7 +58,52 @@ struct MeView: View {
                     }
                 }
 
-                Section {
+            }
+            .navigationTitle("我的")
+            .navigationDestination(for: Destination.self) { destination in
+                switch destination {
+                case .account: accountPage
+                case .scan: PaperScanView().environmentObject(sync)
+                case .reminders: remindersPage
+                case .downloads: downloadsPage
+                }
+            }
+        }
+        .task { await load() }
+        .onChange(of: sync.revision) { _, _ in Task { await load() } }
+        .onChange(of: remindOn) { _, v in
+            Reminder.enabled = v
+            Task { notifyState = await Reminder.reschedule(ask: true); await refreshPlan() }
+        }
+        .onChange(of: remindHour) { _, v in
+            Reminder.hour = v
+            Task { notifyState = await Reminder.reschedule(); await refreshPlan() }
+        }
+    }
+
+    private func entry(_ title: String, detail: String, icon: String,
+                       destination: Destination, key: KeyEquivalent) -> some View {
+        Button { path.append(destination) } label: {
+            HStack(spacing: 12) {
+                Image(systemName: icon).font(.title3).frame(width: 28).foregroundStyle(Ink.red)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).foregroundStyle(Ink.text)
+                    Text(detail).font(.caption).foregroundStyle(Ink.dim)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(Ink.dim)
+            }
+            .padding(.vertical, 5)
+            .contentShape(Rectangle())
+        }
+        .keyboardShortcut(key, modifiers: [.command, .shift])
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("me.\(destination)")
+    }
+
+    private var remindersPage: some View {
+        List {
+            Section {
                     Toggle("每天提醒我做完任务", isOn: $remindOn)
                     if remindOn {
                         Picker("提醒时间", selection: $remindHour) {
@@ -66,7 +132,14 @@ struct MeView: View {
                     Text("只在当天还没做够 \(pack.dailyGoal) 题时才响；做完了当天就不再提醒。")
                 }
 
-                Section("课程包") {
+        }
+        .navigationTitle("每日提醒")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var downloadsPage: some View {
+        List {
+            Section("课程包") {
                     row("课数", "\(pack.lessons.count) 课")
                     row("每日任务", "\(pack.dailyGoal) 题")
                     row("更新", sync.running ? "正在拉…" : (sync.note ?? "已是最新"))
@@ -74,21 +147,18 @@ struct MeView: View {
                     Button("停用本机课程副本", role: .destructive) { sync.reset() }
                 }
 
-                Section {
-                    NavigationLink {
-                        PaperScanView().environmentObject(sync)
-                    } label: {
-                        Label("录卷子", systemImage: "doc.viewfinder")
-                    }
-                } header: {
-                    Text("整卷入档")
-                } footer: {
-                    // 说清它到哪儿为止 —— 不然会以为拍完就自动进题库了
-                    Text("用系统扫描器把整份卷子一页页传到学习库，服务端自动识别错题入库。"
-                         + "单道错题在网页版上传一张图更快。")
-                }
+            Section {
+                Text("App 不预装个人资料。登录后可导入自己的错题照片；已同步的个人课程支持离线练习。")
+                    .font(.caption).foregroundStyle(Ink.dim)
+            }
+        }
+        .navigationTitle("离线课程")
+        .navigationBarTitleDisplayMode(.inline)
+    }
 
-                Section("账号") {
+    private var accountPage: some View {
+        List {
+            Section("账号") {
                     if LessonPaths.offlineReadOnly {
                         Text("离线模式：仅使用本机资料，未验证当前登录状态。")
                             .font(.footnote).foregroundStyle(Ink.dim)
@@ -113,15 +183,9 @@ struct MeView: View {
                     }
                 }
 
-                Section {
-                    Text("App 不预装个人资料。登录后可导入自己的错题照片；已同步的个人课程支持离线练习。")
-                        .font(.caption).foregroundStyle(Ink.dim)
-                }
-            }
-            .navigationTitle("我的")
         }
-        .task { await load() }
-        .onChange(of: sync.revision) { _, _ in Task { await load() } }
+        .navigationTitle("账号与隐私")
+        .navigationBarTitleDisplayMode(.inline)
         // App Store 5.1.1(v)：能注册就必须能在 app 内删号。要密码，二次确认，文案说清删什么。
         .alert("注销账号？", isPresented: $askDelete) {
             SecureField("当前密码", text: $deletePw)
@@ -138,15 +202,6 @@ struct MeView: View {
         .alert("没删成", isPresented: Binding(get: { deleteErr != nil }, set: { if !$0 { deleteErr = nil } })) {
             Button("好", role: .cancel) {}
         } message: { Text(deleteErr ?? "") }
-        .onChange(of: remindOn) { _, v in
-            Reminder.enabled = v
-            // ask: true 只在这儿 —— 用户自己拨了开关，这时问权限才不算打扰
-            Task { notifyState = await Reminder.reschedule(ask: true); await refreshPlan() }
-        }
-        .onChange(of: remindHour) { _, v in
-            Reminder.hour = v
-            Task { notifyState = await Reminder.reschedule(); await refreshPlan() }
-        }
     }
 
     private var hourOptions: [Int] {
