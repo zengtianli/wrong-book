@@ -31,7 +31,7 @@ struct HomeView: View {
             Divider()
             TabView(selection: $tab) {
                 FocusLibraryView().tabItem { Label("错题本", systemImage: "book.closed") }.tag(0)
-                NavigationStack { PaperScanView() }.tabItem { Label("导入", systemImage: "square.and.arrow.down") }.tag(1)
+                PaperScanView().tabItem { Label("导入", systemImage: "square.and.arrow.down") }.tag(1)
                 FocusLibraryView(reviewOnly: true).tabItem { Label("复习", systemImage: "arrow.clockwise") }.tag(2)
             }
         }

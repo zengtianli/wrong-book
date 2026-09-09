@@ -38,6 +38,7 @@ struct PaperScanView: View {
     var body: some View {
         List {
             Section {
+                VStack(alignment: .leading, spacing: 10) {
                 Text("图片导入").font(.system(size: 24, weight: .semibold)).foregroundStyle(Ink.text)
                 Text("选择错题图片，识别后对照原图核对，再开始复习。")
                     .font(.caption).foregroundStyle(Ink.dim)
@@ -50,6 +51,7 @@ struct PaperScanView: View {
                     }
                 }.disabled(busy)
                 TextField("备注（选填）", text: $note).disabled(busy)
+                }
             }
             AIAccessSection(enabled: $aiEnabled)
             Section {
@@ -128,6 +130,9 @@ struct PaperScanView: View {
             }
         }
         .navigationTitle("导入")
+        .listStyle(.plain)
+        .font(.system(size: 14))
+        .environment(\.defaultMinListRowHeight, 36)
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
         .background(Ink.paper)
