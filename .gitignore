@@ -36,3 +36,6 @@ catalog.yaml
 handoffs/
 # README 截图白名单（git-template 的 info/exclude 默认拦 *.png）
 !docs/screenshots/*.png
+
+# Local App Review evidence; may contain private recordings.
+/review/
