@@ -10,13 +10,12 @@ struct LoginView: View {
     var body: some View {
         ZStack {
             Ink.paper.ignoresSafeArea()
-            ruled                                   // 横格纸底纹：这是一个本子
 
             VStack(spacing: 22) {
                 Spacer()
                 VStack(spacing: 8) {
-                    Text("错题本")
-                        .font(.system(size: 36, weight: .heavy, design: .rounded))
+                    Text("wrongbook")
+                        .font(.system(size: 30, weight: .bold))
                         .foregroundStyle(Ink.text)
                     Text("导入自己的错题照片，整理复习")
                         .font(.footnote).foregroundStyle(Ink.dim)
@@ -39,8 +38,8 @@ struct LoginView: View {
                         if session.busy { ProgressView().tint(.white) }
                         Text(session.busy ? "登录中" : "登录").fontWeight(.semibold)
                     }
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(Ink.red, in: RoundedRectangle(cornerRadius: 14))
+                    .frame(maxWidth: .infinity, minHeight: 40)
+                    .background(Ink.accent, in: RoundedRectangle(cornerRadius: 7))
                     .foregroundStyle(.white)
                 }
                 .disabled(session.busy || user.isEmpty || password.isEmpty)
@@ -57,7 +56,7 @@ struct LoginView: View {
                     .font(.caption2).foregroundStyle(Ink.dim.opacity(0.8))
                     .multilineTextAlignment(.center)
             }
-            .padding(.horizontal, 30)
+            .padding(.horizontal, 30).frame(maxWidth: 450)
         }
         .animation(.easeInOut(duration: 0.2), value: session.error)
         .sheet(isPresented: $showRegister) { RegisterView() }

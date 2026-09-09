@@ -37,8 +37,6 @@ struct MeView: View {
                 Section {
                     entry("账号与隐私", detail: accountName, icon: "person.crop.circle",
                           destination: .account, key: "a")
-                    entry("录卷子", detail: "扫描或导入照片，整理自己的错题", icon: "doc.viewfinder",
-                          destination: .scan, key: "s")
                     entry("每日提醒", detail: remindOn ? "每天 \(remindHour):00" : "未开启",
                           icon: "bell", destination: .reminders, key: "r")
                     entry("离线课程", detail: "\(pack.lessons.count) 课 · \(sync.note ?? "已下载内容可离线练习")",
@@ -48,18 +46,16 @@ struct MeView: View {
                     if let p = profile {
                         row("已经做了", "\(p.doneToday) / \(p.goal) 题")
                         row("还差", p.remaining == 0 ? "做完了 ✅" : "\(p.remaining) 题")
-                        row("等级 / 连续", "Lv.\(p.level) · 🔥 \(p.streakDays) 天")
                     } else {
                         Text("从自己的错题照片开始，导入后再练习")
                             .font(.footnote).foregroundStyle(Ink.dim)
                     }
-                    if let s = session.status {
-                        row("今天刷题还能挣", "\(s.practiceLeft) 分")
-                    }
                 }
 
             }
-            .navigationTitle("我的")
+            .navigationTitle("设置")
+            .scrollContentBackground(.hidden)
+            .background(Ink.paper)
             .navigationDestination(for: Destination.self) { destination in
                 switch destination {
                 case .account: accountPage
@@ -85,7 +81,7 @@ struct MeView: View {
                        destination: Destination, key: KeyEquivalent) -> some View {
         Button { path.append(destination) } label: {
             HStack(spacing: 12) {
-                Image(systemName: icon).font(.title3).frame(width: 28).foregroundStyle(Ink.red)
+                Image(systemName: icon).font(.title3).frame(width: 28).foregroundStyle(Ink.accent)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title).foregroundStyle(Ink.text)
                     Text(detail).font(.caption).foregroundStyle(Ink.dim)

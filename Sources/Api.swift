@@ -22,6 +22,15 @@ enum Api {
         return URL(string: "https://edu.tianli.cyou")!
     }
 
+    /// Read-only fallback before a lesson has initialized its local engine archive.
+    static func archiveSnapshot() async throws -> [String: String] {
+        let result = try await request("api/archive")
+        guard let data = result["data"] as? [String: String] else {
+            throw Failure(message: "复习进度返回格式不正确")
+        }
+        return data
+    }
+
     struct Failure: LocalizedError {
         let message: String
         var statusCode: Int = 0

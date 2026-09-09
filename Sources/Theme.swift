@@ -9,12 +9,14 @@ import SwiftUI
 /// 京宝积分那个 app 是另一套视觉（时代插画 + 深色压底），两个 app 在桌面上、
 /// 在屏幕上都应该一眼分得开 —— 它们本来就是两件事。
 enum Ink {
-    static let paper      = Color(hex: 0xFBF7F0)   // 页底：暖白纸
+    static let paper      = Color(hex: 0xF7F8F5)
     static let card       = Color.white
-    static let line       = Color(hex: 0xE7DFD2)
-    static let text       = Color(hex: 0x2B2620)
-    static let dim        = Color(hex: 0x7A7169)
-    static let red        = Color(hex: 0xD62D2A)   // 老师的红笔 = 错题
+    static let line       = Color(hex: 0xE3E8E1)
+    static let text       = Color(hex: 0x24332E)
+    static let dim        = Color(hex: 0x7A847E)
+    static let accent     = Color(hex: 0x2B6653)
+    static let accentSoft = Color(hex: 0xEDF3ED)
+    static let red        = Color(hex: 0xAB5448)
     static let redSoft    = Color(hex: 0xFBEAE8)
     static let green      = Color(hex: 0x2E7D5B)   // 订正好了
     static let blue       = Color(hex: 0x3B6EA5)   // 学科/链接

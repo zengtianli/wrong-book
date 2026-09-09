@@ -6,8 +6,14 @@ struct WrongBookApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView().environmentObject(session)
+            RootView().environmentObject(session).preferredColorScheme(.light).tint(Ink.accent)
+                #if os(macOS)
+                .frame(minWidth: 760, minHeight: 620)
+                #endif
         }
+        #if os(macOS)
+        .defaultSize(width: 1050, height: 780)
+        #endif
     }
 }
 

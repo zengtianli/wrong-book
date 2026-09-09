@@ -1,5 +1,6 @@
 import PhotosUI
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// 录卷子 —— 扫描 → 定页码 → 传到学习库 → **等服务端把这页的错题读完、入库**。
 ///
@@ -9,8 +10,7 @@ import SwiftUI
 /// 扫描件同时留在 `papers/` —— 想做整卷复盘（失分归轴）再在 Mac 上
 /// `paper_ingest.py pull <slug>` + `/exam`，那是可选的，不再是必经的门。
 ///
-/// 放在「我的」里而不是单开一个 tab：拍卷子是**家长**偶尔做的事，
-/// 学习/错题本是孩子每天做的事。为它加第四个 tab，会让每天用的那两屏各挤窄一点。
+/// 导入是与 Web 一致的一级入口；Mac 文件选图，iOS 同时保留系统扫描器。
 struct PaperScanView: View {
     @EnvironmentObject var sync: LessonSync
 
@@ -24,6 +24,9 @@ struct PaperScanView: View {
     @State private var banner: String?
     @State private var showUploadConsent = false
     @State private var aiEnabled = false
+    @State private var showFiles = false
+    @State private var detailsExpanded = false
+    @State private var preview: ScanPage?
 
     private var subjects: [(key: String, name: String)] {
         // 学科从课程包的 manifest 派生（它带 subject / subject_name）——
@@ -34,8 +37,23 @@ struct PaperScanView: View {
 
     var body: some View {
         List {
+            Section {
+                Text("图片导入").font(.system(size: 24, weight: .semibold)).foregroundStyle(Ink.text)
+                Text("选择错题图片，识别后对照原图核对，再开始复习。")
+                    .font(.caption).foregroundStyle(Ink.dim)
+                HStack(spacing: 12) {
+                    Button { showFiles = true } label: { Label("选择图片", systemImage: "photo.badge.plus") }
+                        .buttonStyle(.borderedProminent).keyboardShortcut("o", modifiers: .command)
+                    PhotosPicker(selection: $picked, matching: .images) { Label("相册", systemImage: "photo.on.rectangle") }
+                    if PaperScan.cameraAvailable {
+                        Button { showCamera = true } label: { Label("扫描", systemImage: "doc.viewfinder") }
+                    }
+                }.disabled(busy)
+                TextField("备注（选填）", text: $note).disabled(busy)
+            }
             AIAccessSection(enabled: $aiEnabled)
-            Section("这是哪份卷子") {
+            Section {
+                DisclosureGroup("试卷信息与页码（选填）", isExpanded: $detailsExpanded) {
                 Picker("学年", selection: $slug.year) {
                     ForEach(thisYear - 2...thisYear + 1, id: \.self) {
                         // verbatim：`Text("\(2026)")` 会走本地化数字格式，显示成 **2,026**。
@@ -55,37 +73,20 @@ struct PaperScanView: View {
                 Picker("卷种", selection: $slug.kind) {
                     ForEach(PaperScan.kinds, id: \.key) { Text($0.name).tag($0.key) }
                 }
-                LabeledContent("档案目录") {
-                    Text(slug.text).font(.footnote.monospaced()).foregroundStyle(Ink.dim)
-                }
-                TextField("备注（比如「p1–p2 没拍」）", text: $note)
-            }
-
-            Section {
                 Stepper("下一张算第 \(nextPage) 页", value: $nextPage, in: 1...40)
-                if PaperScan.cameraAvailable {
-                    Button { showCamera = true } label: {
-                        Label("扫描卷子（自动找边、去畸变）", systemImage: "doc.viewfinder")
-                    }
                 }
-                PhotosPicker(selection: $picked, matching: .images) {
-                    Label(PaperScan.cameraAvailable ? "从相册选" : "从相册选（这台设备没有扫描器）",
-                          systemImage: "photo.on.rectangle")
-                }
-            } header: {
-                Text("拍/选")
-            } footer: {
-                Text("页码是**卷子上的**页码，不是这一批的第几张 —— 只拍了 p3–p6 就从 3 开始。")
-            }
+            }.disabled(busy || pages.contains { $0.state.isUploaded })
 
             if !pages.isEmpty {
                 Section(pagesTitle) {
                     ForEach($pages) { $p in
                         VStack(alignment: .leading, spacing: 6) {
                             HStack(spacing: 12) {
-                                Image(uiImage: p.image).resizable().scaledToFill()
-                                    .frame(width: 44, height: 58).clipped()
-                                    .overlay(Rectangle().stroke(Ink.line))
+                                Button { preview = p } label: {
+                                    Image(uiImage: p.image).resizable().scaledToFill()
+                                        .frame(width: 44, height: 58).clipped()
+                                        .overlay(Rectangle().stroke(Ink.line))
+                                }.buttonStyle(.plain).accessibilityLabel("查看第 \(p.page) 页原图")
                                 Stepper("第 \(p.page) 页", value: $p.page, in: 1...40)
                                     .disabled(busy || p.state.isUploaded)
                                 statusIcon(p.state)
@@ -103,7 +104,7 @@ struct PaperScanView: View {
                             }
                         }
                     }
-                    .onDelete { idx in pages.remove(atOffsets: idx) }
+                    .onDelete { idx in if !busy { pages.remove(atOffsets: idx) } }
                 }
             }
 
@@ -113,7 +114,7 @@ struct PaperScanView: View {
                 } label: {
                     HStack {
                         if busy { ProgressView().padding(.trailing, 4) }
-                        Text(busy ? busyLabel : "传到学习库并自动录错题（\(pending) 页）")
+                        Text(busy ? busyLabel : "开始识别 · \(pending) 张")
                     }
                 }
                 .disabled(busy || pending == 0 || !aiEnabled)
@@ -121,16 +122,39 @@ struct PaperScanView: View {
                 if let banner {
                     Text(banner).foregroundStyle(hasBad ? Ink.red : Ink.green)
                 } else {
-                    Text("传完服务端自动读每一页的错题、录进题库（一页一两分钟，可以先放着）。"
-                         + "读不准的题自动跳过；扫描件同时留档，想做整卷复盘再在 Mac 上 /exam。")
+                    Text("识别完成后在错题本中查看。读不清的题会在结果里说明，请对照原图核对。")
                         .font(.footnote)
                 }
             }
         }
-        .navigationTitle("录卷子")
+        .navigationTitle("导入")
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
         .background(Ink.paper)
+        .tint(Ink.accent)
+        .sheet(item: $preview) { page in
+            VStack(spacing: 12) {
+                HStack { Text("第 \(page.page) 页原图").font(.headline); Spacer(); Button("完成") { preview = nil } }
+                ScrollView([.horizontal, .vertical]) {
+                    Image(uiImage: page.image).resizable().scaledToFit().frame(width: 900)
+                }
+                if !page.log.isEmpty { ScrollView { Text(page.log).font(.caption).textSelection(.enabled) }.frame(maxHeight: 140) }
+            }.padding(16).frame(minWidth: 320, minHeight: 420).background(Ink.paper)
+        }
+        .fileImporter(isPresented: $showFiles, allowedContentTypes: [.image], allowsMultipleSelection: true) { result in
+            do {
+                let urls = try result.get()
+                var images: [UIImage] = []
+                for url in urls {
+                    let accessed = url.startAccessingSecurityScopedResource()
+                    defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+                    let data = try Data(contentsOf: url)
+                    guard let image = UIImage(data: data) else { throw Api.Failure(message: "图片无法读取：\(url.lastPathComponent)") }
+                    images.append(image)
+                }
+                add(images)
+            } catch { banner = error.localizedDescription }
+        }
         .alert("上传并使用 AI 识别", isPresented: $showUploadConsent) {
             Button("取消", role: .cancel) {}
             Button("同意并上传") { Task { await upload() } }

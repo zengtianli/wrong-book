@@ -45,6 +45,7 @@ struct LessonWebView: UIViewRepresentable {
         let cfg = WKWebViewConfiguration()
         cfg.websiteDataStore = LessonPaths.webDataStore
         let ucc = WKUserContentController()
+        ucc.addUserScript(WKUserScript(source: Self.focusStyle, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
         ucc.add(context.coordinator, name: "edu")
         ucc.addUserScript(WKUserScript(source: Self.probe,
                                        injectionTime: .atDocumentEnd,
@@ -87,6 +88,28 @@ struct LessonWebView: UIViewRepresentable {
     ///
     /// 和 `points_client.js` 同一种接法 —— document 上的**捕获**监听。
     /// 绑在按钮上会失效：引擎重绘题卡时按钮整个被换掉。
+    // Presentation only: the shared page still owns grading, grouping and storage.
+    private static let focusStyle = """
+    (() => {
+      document.body.classList.add('embedded');
+      const style = document.createElement('style');
+      style.textContent = `:root{--red:#2b6653;--brand:#2b6653;--brand-d:#204e40;--brand-w:#edf3ed;--bg:#f7f8f5;--ink:#24332e;--line:#e3e8e1}
+      body{background:#f7f8f5!important;color:#24332e}
+      .top,#quest,header,footer,details.panel:has(#badges){display:none!important}
+      main{display:block!important;max-width:1100px;margin:auto;padding:14px!important}
+      .card{border:1px solid #e3e8e1!important;border-radius:8px!important;box-shadow:none!important}
+      button{border-radius:6px!important} .qbody{font-size:20px}
+      #nav,.nav{position:sticky;bottom:0;background:#fff;z-index:3;padding:10px 0}
+      details.panel{margin-top:14px} `;
+      style.textContent += `body[data-practice-private="1"] details.panel{display:none!important}
+      body[data-practice-private="1"] #qhd .nm,body[data-practice-private="1"] #qhd .rv,body[data-practice-private="1"] #toMix{display:none!important}
+      #qhd .book{font-size:12px;padding:5px 9px;border:1px solid #e3e8e1;background:#f7f8f5;color:#2b6653}
+      #qhd{padding:10px 14px}.setbar{padding:10px 14px}.qn.cur{box-shadow:none!important}
+      .chip.rv{background:#edf3ed;color:#2b6653} `;
+      document.head.appendChild(style);
+    })();
+    """
+
     private static let probe = """
     (function () {
       document.addEventListener('click', function (e) {
