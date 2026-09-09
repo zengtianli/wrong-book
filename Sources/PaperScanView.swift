@@ -64,6 +64,12 @@ struct PaperScanView: View {
                         .buttonStyle(.borderedProminent).keyboardShortcut("o", modifiers: .command)
                     #endif
                 }.disabled(busy)
+                Picker("科目", selection: $slug.subject) {
+                    ForEach(subjects, id: \.key) { Text($0.name).tag($0.key) }
+                }
+                .disabled(busy || pages.contains { $0.state.isUploaded })
+                Text("上传前请确认科目，识别后的题目将按此归类。")
+                    .font(.caption).foregroundStyle(Ink.dim)
                 TextField("备注（选填）", text: $note).disabled(busy)
                 }
             }
@@ -82,9 +88,6 @@ struct PaperScanView: View {
                 }
                 Picker("年级", selection: $slug.grade) {
                     ForEach(1...6, id: \.self) { Text("\($0) 年级").tag($0) }
-                }
-                Picker("科目", selection: $slug.subject) {
-                    ForEach(subjects, id: \.key) { Text($0.name).tag($0.key) }
                 }
                 Picker("卷种", selection: $slug.kind) {
                     ForEach(PaperScan.kinds, id: \.key) { Text($0.name).tag($0.key) }

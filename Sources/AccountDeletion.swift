@@ -1,7 +1,7 @@
 import Foundation
 
 enum AccountDeletionCopy {
-    static let summary = "可在「我的 → 注销账号」发起删除。无扫描历史的普通账号可即时删除；涉及试卷、识别归档或旧数据的申请需核验处理，通常 30 天内完成。申请受理后暂停新增数据，受理不代表已删除，可在 App 内查看进度。"
+    static let summary = "可在「右上角账号与设置 → 账号与隐私 → 注销账号」发起删除。无扫描历史的普通账号可即时删除；涉及试卷、识别归档或旧数据的申请需核验处理，通常 30 天内完成。申请受理后暂停新增数据，受理不代表已删除，可在 App 内查看进度。"
 }
 
 struct DeletionReceipt: Codable {
