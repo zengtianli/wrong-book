@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 /// 扫描件同时留在 `papers/` —— 想做整卷复盘（失分归轴）再在 Mac 上
 /// `paper_ingest.py pull <slug>` + `/exam`，那是可选的，不再是必经的门。
 ///
-/// 导入是与 Web 一致的一级入口；Mac 文件选图，iOS 同时保留系统扫描器。
+/// iPhone/iPad 只提供拍照和相册；Mac 使用文件选图。
 struct PaperScanView: View {
     @EnvironmentObject var sync: LessonSync
 
@@ -40,15 +40,29 @@ struct PaperScanView: View {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
                 Text("图片导入").font(.system(size: 24, weight: .semibold)).foregroundStyle(Ink.text)
-                Text("选择错题图片，识别后对照原图核对，再开始复习。")
+                #if os(iOS)
+                Text("拍下错题或从相册选择，识别后核对原图，再开始复习。")
                     .font(.caption).foregroundStyle(Ink.dim)
+                #else
+                Text("选择错题图片，识别后核对原图，再开始复习。")
+                    .font(.caption).foregroundStyle(Ink.dim)
+                #endif
                 HStack(spacing: 12) {
+                    #if os(iOS)
+                    Button {
+                        Task {
+                            if await PaperScan.requestCameraAccess() { showCamera = true }
+                            else { banner = "无法使用相机。请在系统设置中允许错题本访问相机，或从相册选择。" }
+                        }
+                    } label: { Label("拍照", systemImage: "camera") }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(!PaperScan.cameraAvailable)
+                    PhotosPicker(selection: $picked, matching: .images) { Label("相册", systemImage: "photo.on.rectangle") }
+                        .buttonStyle(.bordered)
+                    #else
                     Button { showFiles = true } label: { Label("选择图片", systemImage: "photo.badge.plus") }
                         .buttonStyle(.borderedProminent).keyboardShortcut("o", modifiers: .command)
-                    PhotosPicker(selection: $picked, matching: .images) { Label("相册", systemImage: "photo.on.rectangle") }
-                    if PaperScan.cameraAvailable {
-                        Button { showCamera = true } label: { Label("扫描", systemImage: "doc.viewfinder") }
-                    }
+                    #endif
                 }.disabled(busy)
                 TextField("备注（选填）", text: $note).disabled(busy)
                 }
@@ -146,6 +160,7 @@ struct PaperScanView: View {
                 if !page.log.isEmpty { ScrollView { Text(page.log).font(.caption).textSelection(.enabled) }.frame(maxHeight: 140) }
             }.padding(16).frame(minWidth: 320, minHeight: 420).background(Ink.paper)
         }
+        #if !os(iOS)
         .fileImporter(isPresented: $showFiles, allowedContentTypes: [.image], allowsMultipleSelection: true) { result in
             do {
                 let urls = try result.get()
@@ -160,11 +175,12 @@ struct PaperScanView: View {
                 add(images)
             } catch { banner = error.localizedDescription }
         }
+        #endif
         .alert("上传并使用 AI 识别", isPresented: $showUploadConsent) {
             Button("取消", role: .cancel) {}
             Button("同意并上传") { Task { await upload() } }
         } message: {
-            Text("选中的试卷图片及备注将上传到学习服务器，图片会交给 DeepSeek AI 服务识别。原图、识别结果与题库记录会保存用于复习。请先遮住姓名、学校等个人信息，并确认有权上传。可在「我的 → 注销账号」申请删除相关资料，需核验的申请通常 30 天内完成。")
+            Text("选中的试卷图片及备注将上传到学习服务器，图片会交给 DeepSeek AI 服务识别。原图、识别结果与题库记录会保存用于复习。请先遮住姓名、学校等个人信息，并确认有权上传。可在「右上角账号与设置 → 账号与隐私 → 注销账号」申请删除相关资料，需核验的申请通常 30 天内完成。")
         }
         .fullScreenCover(isPresented: $showCamera) {
             PaperScan.Camera { imgs in
@@ -181,6 +197,7 @@ struct PaperScanView: View {
                        let i = UIImage(data: d) { imgs.append(i) }
                 }
                 add(imgs)
+                if imgs.count != items.count { banner = "部分照片未能读取，请重新从相册选择。" }
                 picked = []
             }
         }

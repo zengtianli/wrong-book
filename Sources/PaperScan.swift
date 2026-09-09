@@ -2,15 +2,11 @@ import Foundation
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
+import AVFoundation
 #endif
-import VisionKit
 
-/// 整卷扫描 —— 把一份卷子一页页传到学习库；服务端每收一页就自动读错题、入库。
-///
-/// **这一屏为什么值得做成原生**，就一条：`VNDocumentCameraViewController`。
-/// 卷子是文档不是风景 —— 手机浏览器只能调普通相机，拍出来是斜的、有阴影、边不齐，
-/// 而读图那步要认的是密密麻麻的题干和红笔批改，畸变直接变成「读出一道错的题」。
-/// 系统这个扫描器白送：自动找边 + 去透视 + 多页 + 当场重拍 + 拍完排序。
+/// 拍照或相册选图后逐张上传，服务端读错题、入库。
+/// 2026-09-09 用户明确收敛手机入口为普通拍照与相册，不再使用文档扫描器。
 ///
 /// **它自己不读图、不判题、不入库** —— 那些在服务端，和网页 `wrong.html` 是同一条链
 /// （`points/server.py::paper_page` → `engine/wrong_worker.py` → `wrong_ingest.py auto`）。
@@ -83,21 +79,27 @@ enum PaperScan {
 
     // MARK: - 系统文档扫描器
 
-    /// 真机上有没有这个能力。
-    ///
-    /// ⚠ **`isSupported` 在模拟器上也返回 true**（2026-08-31 截图实测：模拟器里
-    /// 「扫描卷子」照样亮着）—— 而模拟器没有相机，点下去只有一片黑。所以显式排除
-    /// 模拟器，让它退到相册选图这条路：一个点了没反应的按钮比没有这个按钮更糟。
+    /// 模拟器与 Mac 不提供手机拍照入口。
     static var cameraAvailable: Bool {
         #if targetEnvironment(simulator) || !os(iOS)
-        return false                    // 模拟器没相机；Mac 没有 VNDocumentCamera（走相册/文件选图那条路）
+        return false
         #else
-        return VNDocumentCameraViewController.isSupported
+        return UIImagePickerController.isSourceTypeAvailable(.camera)
         #endif
     }
 
+    #if os(iOS)
+    static func requestCameraAccess() async -> Bool {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized: return true
+        case .notDetermined: return await AVCaptureDevice.requestAccess(for: .video)
+        default: return false
+        }
+    }
+    #endif
+
     #if !os(iOS)
-    /// Mac 上没有文档扫描器 —— 保留同名类型让调用点不变，cameraAvailable=false 保证它永远不被弹出。
+    /// Mac 使用文件选图，不弹出手机相机。
     struct Camera: View {
         var onDone: ([UIImage]) -> Void
         var body: some View { EmptyView() }
@@ -107,28 +109,26 @@ enum PaperScan {
         var onDone: ([UIImage]) -> Void
 
         func makeCoordinator() -> Coordinator { Coordinator(onDone: onDone) }
-        func makeUIViewController(context: Context) -> VNDocumentCameraViewController {
-            let vc = VNDocumentCameraViewController()
+        func makeUIViewController(context: Context) -> UIImagePickerController {
+            let vc = UIImagePickerController()
+            vc.sourceType = .camera
+            vc.cameraCaptureMode = .photo
+            vc.allowsEditing = false
             vc.delegate = context.coordinator
             return vc
         }
-        func updateUIViewController(_ v: VNDocumentCameraViewController, context: Context) {}
+        func updateUIViewController(_ v: UIImagePickerController, context: Context) {}
 
-        final class Coordinator: NSObject, VNDocumentCameraViewControllerDelegate {
+        final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
             let onDone: ([UIImage]) -> Void
             init(onDone: @escaping ([UIImage]) -> Void) { self.onDone = onDone }
 
-            func documentCameraViewController(_ c: VNDocumentCameraViewController,
-                                              didFinishWith scan: VNDocumentCameraScan) {
-                onDone((0..<scan.pageCount).map { scan.imageOfPage(at: $0) })
+            func imagePickerController(_ picker: UIImagePickerController,
+                                       didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+                onDone((info[.originalImage] as? UIImage).map { [$0] } ?? [])
             }
-            // 取消和出错都要回一个空数组：不回的话界面永远停在「扫描中」，
-            // 表现是「点了没反应」——而实际上是我们没收场。
-            func documentCameraViewControllerDidCancel(_ c: VNDocumentCameraViewController) {
-                onDone([])
-            }
-            func documentCameraViewController(_ c: VNDocumentCameraViewController,
-                                              didFailWithError error: Error) {
+            // 取消只关闭相机，不增加待上传图片。
+            func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
                 onDone([])
             }
         }
