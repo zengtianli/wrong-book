@@ -13,7 +13,7 @@ struct AIAccessSection: View {
                 Label("DeepSeek AI 已开通", systemImage: "checkmark.circle")
                 Text("今日剩余 \(remaining) 页识别额度").font(.footnote)
             } else {
-                TextField("输入推广邀请码", text: $code)
+                TextField("输入免费推广邀请码", text: $code)
                     .autocorrectionDisabled()
                 Button(busy ? "正在验证…" : "开通 AI 识别") {
                     Task { await refresh(activate: true) }
@@ -23,7 +23,7 @@ struct AIAccessSection: View {
         } header: {
             Text("AI 识别")
         } footer: {
-            Text("邀请码用于开通试卷识别。AI 可能读错，请对照原图核对结果。")
+            Text("邀请码用于免费开通试卷识别，由开发者提供并承担 AI 服务费用，无需购买邀请码或填写 API 密钥。AI 可能读错，请对照原图核对结果。")
         }
         .task { await refresh(activate: false) }
     }
