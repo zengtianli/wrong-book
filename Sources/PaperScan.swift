@@ -183,6 +183,7 @@ struct ScanPage: Identifiable, Equatable {
 /// 它跑的是 `PaperScan.jpeg` + `Api.paperPage` 本身，不是照着它们重写一遍 ——
 /// 重写的那种「实测」测的是替身，会假绿。
 struct PaperSelfTest: View {
+    @EnvironmentObject private var session: Session
     @State private var lines: [String] = ["准备…"]
 
     var body: some View {
@@ -198,15 +199,22 @@ struct PaperSelfTest: View {
         .task { await run() }
     }
 
-    private func run() async {
+    @MainActor private func run() async {
         let d = UserDefaults.standard
         let user = d.string(forKey: "papertest_user") ?? ""
         let pw = d.string(forKey: "papertest_pw") ?? ""
         let slug = d.string(forKey: "papertest_slug") ?? "2026s1-g3-chinese-final"
         lines = ["base = \(Api.base.absoluteString)", "user = \(user)"]
 
+        let account: PaperRequestSession
         do {
-            try await Api.login(user: user, password: pw)
+            guard !session.busy else { throw Api.Failure(message: "已有登录操作，请等待完成后重新运行自检。") }
+            await session.login(user: user, password: pw)
+            guard session.phase == .loggedIn, session.status != nil else {
+                throw Api.Failure(message: session.error ?? "自检登录未完成。")
+            }
+            await LessonSync.shared.sync(force: true)
+            account = try PaperRequestSession.capture()
             lines.append("✅ 登录")
         } catch {
             lines.append("❌ 登录：\(error.localizedDescription)"); return
@@ -230,7 +238,7 @@ struct PaperSelfTest: View {
 
         // ① 传输层 + 字段：auto:false —— 噪点图不该为这一步烧读图
         do {
-            let r = try await Api.paperPage(slug: slug, page: 7, jpeg: jpg, note: "papertest", auto: false)
+            let r = try await Api.paperPage(slug: slug, page: 7, jpeg: jpg, note: "papertest", auto: false, account: account)
             lines.append(r.job == nil ? "✅ 上传 \(slug) p7（auto:false，未派读图）"
                                       : "❌ auto:false 还是派了作业 \(r.job!)")
         } catch {
@@ -240,7 +248,7 @@ struct PaperSelfTest: View {
         //    ⚠ 只有服务端那句「卷子编号不对」才算被拒 —— 超时/断网也是 error，
         //    2026-09-01 实测模拟器上行慢到 90s 超时，这条曾把超时当成「被拒」报了绿。
         do {
-            _ = try await Api.paperPage(slug: "../etc", page: 1, jpeg: jpg, auto: false)
+            _ = try await Api.paperPage(slug: "../etc", page: 1, jpeg: jpg, auto: false, account: account)
             lines.append("❌ 坏 slug 竟然被收了")
         } catch {
             let m = error.localizedDescription
@@ -253,7 +261,7 @@ struct PaperSelfTest: View {
         var wrongId: String?
         if !d.bool(forKey: "papertest_noauto") {
             do {
-                let r = try await Api.paperPage(slug: slug, page: 8, jpeg: jpg, note: "papertest")
+                let r = try await Api.paperPage(slug: slug, page: 8, jpeg: jpg, note: "papertest", account: account)
                 guard let job = r.job else {
                     lines.append("❌ 没派上自动读图：\(r.autoErr ?? "无说明")"); return
                 }
@@ -262,7 +270,7 @@ struct PaperSelfTest: View {
                 lines.append("⏳ 读图中 0s")
                 var sec = 0
                 poll: while true {
-                    switch try await Api.job(job) {
+                    switch try await Api.job(job, account: account) {
                     case .running:
                         try? await Task.sleep(for: .seconds(3)); sec += 3
                         lines[lines.count - 1] = "⏳ 读图中 \(sec)s"
@@ -281,8 +289,8 @@ struct PaperSelfTest: View {
         }
         // ④ 收尾：自己留下的东西自己删（批次 + 错题图），别让生产上攒 papertest 垃圾
         do {
-            try await Api.paperDel(slug: slug)
-            if let wrongId { try await Api.wrongDel(id: wrongId) }
+            try await Api.paperDel(slug: slug, account: account)
+            if let wrongId { try await Api.wrongDel(id: wrongId, account: account) }
             lines.append("✅ 收尾：批次与错题图已删")
         } catch {
             lines.append("⚠️ 收尾没删干净：\(error.localizedDescription)")

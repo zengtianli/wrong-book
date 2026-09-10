@@ -50,6 +50,7 @@ struct LoginView: View {
                     Button("邮箱注册") { showRegister = true }
                 }
                 .font(.footnote).foregroundStyle(Ink.blue)
+                .disabled(session.busy)
 
                 Spacer()
                 Text("从自己的错题照片开始，登录后导入和同步")

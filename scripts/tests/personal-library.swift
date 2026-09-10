@@ -1,4 +1,4 @@
-// Compile with Sources/{LessonSync,Lessons,LessonWebView}.swift and Shared/PlatformCompat.swift.
+// Compile with Sources/{LessonSync,Lessons,LessonWebView,PaperRequestSession}.swift and Shared/PlatformCompat.swift.
 // No production HTTP or accounts.
 import Foundation
 import WebKit
@@ -18,11 +18,13 @@ final class FixtureProtocol: URLProtocol {
     static var response: [String: Any] = [:]
     static let page = Data("<!doctype html><title>Original synthetic fixture</title>".utf8)
     static var paths: [String] = []
+    static var cookieHeaders: [String] = []
     override class func canInit(with request: URLRequest) -> Bool { request.url?.host == Api.base.host }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
         let path = request.url!.path
         Self.paths.append(path)
+        Self.cookieHeaders.append(request.value(forHTTPHeaderField: "Cookie") ?? "")
         let data = path == "/api/lessons" ? try! JSONSerialization.data(withJSONObject: Self.response) : Self.page
         client!.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!, cacheStoragePolicy: .notAllowed)
         client!.urlProtocol(self, didLoad: data)
@@ -78,6 +80,15 @@ final class FixtureProtocol: URLProtocol {
                "Background callers must safely hand the session to the account WebKit store")
         HTTPCookieStorage.shared.deleteCookie(cookie)
         await activeWebStore.httpCookieStore.deleteCookie(cookie)
+        let importCookie = HTTPCookie(properties: [.domain: Api.base.host!, .path: "/",
+            .name: "edu_sess", .value: "synthetic-import-account-a"])!
+        HTTPCookieStorage.shared.setCookie(importCookie)
+        defer { HTTPCookieStorage.shared.deleteCookie(importCookie) }
+        let importAccount = try PaperRequestSession.capture()
+        try FileManager.default.removeItem(at: lessonA.resolvedURL!)
+        await sync.sync(force: true, account: importAccount)
+        assert(FixtureProtocol.cookieHeaders.suffix(2).allSatisfy { $0 == "edu_sess=synthetic-import-account-a" },
+               "Post-import manifest and lesson downloads must use the same bound account")
         LessonPaths.activeScope = nil // cold start, no in-memory account
         let restarted = LessonSync(defaults: defaults)
         let beforeOffline = FixtureProtocol.paths.count
@@ -87,6 +98,10 @@ final class FixtureProtocol: URLProtocol {
         assert(FixtureProtocol.paths.count == beforeOffline, "Offline cache is not network authority")
         sync.setUser("b")
         assert(LessonPack.load().lessons.isEmpty && lessonA.resolvedURL == nil)
+        let beforeWrongAccountSync = FixtureProtocol.paths.count
+        await sync.sync(force: true, account: importAccount)
+        assert(FixtureProtocol.paths.count == beforeWrongAccountSync,
+               "An old import must not synchronize using a newly selected account")
         await sync.sync(force: true) // stale owner A response must be rejected
         assert(LessonPaths.activeScope == nil)
         FixtureProtocol.response = ["owner": "b", "lessons": [row]]

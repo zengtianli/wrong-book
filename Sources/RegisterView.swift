@@ -51,7 +51,13 @@ struct RegisterView: View {
             }
             .navigationTitle("邮箱注册")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("取消") { session.error = nil; dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") { session.error = nil; dismiss() }
+                        .disabled(session.busy)
+                }
+            }
         }
+        .interactiveDismissDisabled(session.busy)
     }
 }

@@ -162,6 +162,7 @@ struct MeView: View {
                     if let s = session.status {
                         row("登录为", s.nick.isEmpty ? s.user : "\(s.nick)（\(s.user)）")
                         Button("退出登录", role: .destructive) { Task { await session.logout() } }
+                            .disabled(session.busy)
                         Button("注销账号", role: .destructive) { deletePw = ""; askDelete = true }
                             .disabled(session.busy)
                         if let receipt = session.deletionReceipt, receipt.owner == s.user, receipt.status == "pending" {

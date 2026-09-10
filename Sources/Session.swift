@@ -16,6 +16,9 @@ final class Session: ObservableObject {
     @Published var deletionNotice: String?
     @Published var deletionRefreshError: String?
     private let receiptKey = "accountDeletionReceipt"
+    // A delayed read from the previous login must never restore its user/scope.
+    // Cookie-changing operations are also serialized with busy below.
+    private var identityGeneration = UUID()
 
     init() {
         if let data = UserDefaults.standard.data(forKey: receiptKey) {
@@ -31,6 +34,7 @@ final class Session: ObservableObject {
     }
 
     private func finishLocalDeletion(scope: String?) async {
+        identityGeneration = UUID()
         let deletedStore = scope.map { LessonPaths.webDataStore(scope: $0) }
         LessonSync.shared.setUser(nil)
         status = nil
@@ -51,15 +55,22 @@ final class Session: ObservableObject {
     }
 
     func refreshDeletion() async {
+        guard !busy else { return }
+        let generation = identityGeneration
         deletionRefreshError = nil
         do {
-            if deletionReceipt == nil, let user = status?.user, var receipt = try await Api.currentDeletion() {
-                receipt.owner = user
-                receipt.scope = LessonSync.shared.scopeForCurrentUser(user)
-                saveReceipt(receipt)
+            if deletionReceipt == nil, let user = status?.user {
+                let fetched = try await Api.currentDeletion()
+                guard generation == identityGeneration, !busy else { return }
+                if var receipt = fetched {
+                    receipt.owner = user
+                    receipt.scope = LessonSync.shared.scopeForCurrentUser(user)
+                    saveReceipt(receipt)
+                }
             }
             guard let old = deletionReceipt, old.status == "pending" else { return }
             var latest = try await Api.deletionProgress(receiptID: old.id)
+            guard generation == identityGeneration, !busy else { return }
             latest.owner = old.owner
             latest.scope = old.scope
             saveReceipt(latest)
@@ -79,6 +90,7 @@ final class Session: ObservableObject {
                 }
             }
         } catch {
+            guard generation == identityGeneration, !busy else { return }
             // Keep the durable receipt; a network error never means deletion succeeded.
             if deletionReceipt?.status == "pending" {
                 deletionRefreshError = "暂时无法刷新注销进度：" + error.localizedDescription
@@ -95,17 +107,22 @@ final class Session: ObservableObject {
     /// 注意：**没登录照样能做题**。页面是自包含的，登录只决定分记不记得上、
     /// 存档同不同步。所以登录页上有一条「先不登录，直接做题」。
     func restore() async {
+        guard !busy else { return }
         // 验证通道：只有显式传了 launch 参数才生效，生产路径上这两个 key 永远是 nil
         let d = UserDefaults.standard
         if let u = d.string(forKey: "dev_user"), let pw = d.string(forKey: "dev_pw") {
             await login(user: u, password: pw)
             return
         }
+        let generation = identityGeneration
         do {
-            status = try await Api.status(timeout: 6)
-            LessonSync.shared.setUser(status?.user)
+            let restored = try await Api.status(timeout: 6)
+            guard generation == identityGeneration, !busy else { return }
+            status = restored
+            LessonSync.shared.setUser(restored.user)
             phase = .loggedIn
         } catch {
+            guard generation == identityGeneration, !busy else { return }
             // An explicit authentication rejection never unlocks a cached account.
             if error is URLError, LessonSync.shared.restoreOffline() {
                 status = nil
@@ -118,14 +135,23 @@ final class Session: ObservableObject {
     }
 
     func login(user: String, password: String) async {
+        guard !busy else { return }
+        identityGeneration = UUID()
+        let generation = identityGeneration
         busy = true; error = nil
         defer { busy = false }
+        LessonSync.shared.setUser(nil)
+        status = nil
         do {
             try await Api.login(user: user, password: password)
-            status = try await Api.status()
-            LessonSync.shared.setUser(status?.user)
+            guard generation == identityGeneration else { return }
+            let signedIn = try await Api.status()
+            guard generation == identityGeneration else { return }
+            status = signedIn
+            LessonSync.shared.setUser(signedIn.user)
             phase = .loggedIn
         } catch {
+            guard generation == identityGeneration else { return }
             self.error = error.localizedDescription
             // ⚠ 必须落回 loggedOut：从 restore() 的 dev 分支进来时 phase 还是 .checking，
             // 不落回就永远停在开屏转圈上 —— 界面不动，也没有任何错误可看。
@@ -134,48 +160,70 @@ final class Session: ObservableObject {
     }
 
     func register(email: String, password: String, nick: String) async {
+        guard !busy else { return }
+        identityGeneration = UUID()
+        let generation = identityGeneration
         busy = true; error = nil
         defer { busy = false }
+        LessonSync.shared.setUser(nil)
+        status = nil
         do {
             try await Api.register(email: email, password: password, nick: nick)
-            status = try await Api.status()
-            LessonSync.shared.setUser(status?.user)
+            guard generation == identityGeneration else { return }
+            let signedIn = try await Api.status()
+            guard generation == identityGeneration else { return }
+            status = signedIn
+            LessonSync.shared.setUser(signedIn.user)
             phase = .loggedIn
         } catch {
+            guard generation == identityGeneration else { return }
             self.error = error.localizedDescription        // 邮箱已注册 / 格式不对 / 名额满，服务端文案原样
         }
     }
 
     /// true 表示删除完成或申请已受理；deletionReceipt/notice 区分这两种结果。
     func deleteAccount(password: String) async -> Bool {
+        guard !busy else { return false }
+        identityGeneration = UUID()
+        let generation = identityGeneration
         busy = true; error = nil
         defer { busy = false }
+        let owner = status?.user ?? ""
+        let scope = status.flatMap { LessonSync.shared.scopeForCurrentUser($0.user) }
         do {
-            let scope = status.flatMap { LessonSync.shared.scopeForCurrentUser($0.user) }
             try await Api.deleteAccount(password: password)
+            guard generation == identityGeneration else { return false }
             await finishLocalDeletion(scope: scope)
             return true
         } catch let failure as Api.Failure where failure.statusCode == 409 {
+            guard generation == identityGeneration else { return false }
             do {
                 var receipt = try await Api.requestAccountDeletion(password: password)
-                receipt.owner = status?.user ?? ""
-                receipt.scope = LessonSync.shared.scopeForCurrentUser(receipt.owner)
+                guard generation == identityGeneration else { return false }
+                receipt.owner = owner
+                receipt.scope = scope
                 saveReceipt(receipt)
-                deletionNotice = "注销申请已受理，尚未完成删除。通常 30 天内完成；处理期间暂停新增数据。可在「我的」查看进度，超时请联系支持。"
+                deletionNotice = "注销申请已受理，尚未完成删除。通常 30 天内完成；处理期间暂停新增数据。可在「右上角账号与设置 → 账号与隐私」查看进度，超时请联系支持。"
                 return true
             } catch {
+                guard generation == identityGeneration else { return false }
                 self.error = error.localizedDescription
                 return false
             }
         } catch {
+            guard generation == identityGeneration else { return false }
             self.error = error.localizedDescription
             return false
         }
     }
 
     func refresh() async {
-        guard phase == .loggedIn else { return }
+        // A guest preview must stay a guest even if an earlier login cookie still exists.
+        // Offline libraries may probe again to reconnect their previously confirmed user.
+        guard phase == .loggedIn, !busy, status != nil || LessonPaths.offlineReadOnly else { return }
+        let generation = identityGeneration
         if let s = try? await Api.status() {
+            guard generation == identityGeneration, phase == .loggedIn, !busy else { return }
             let reconnecting = LessonPaths.offlineReadOnly
             status = s
             LessonSync.shared.setUser(s.user)
@@ -184,12 +232,26 @@ final class Session: ObservableObject {
     }
 
     func logout() async {
-        await Api.logout()
+        guard !busy else { return }
+        identityGeneration = UUID()
+        let generation = identityGeneration
+        busy = true
+        defer { busy = false }
+        // Stop pending import batches before waiting for the logout response. Keep the login
+        // screen closed until it returns, so an old Set-Cookie cannot clear a new login.
         LessonSync.shared.setUser(nil)
+        await Api.logout()
+        guard generation == identityGeneration else { return }
         status = nil
         phase = .loggedOut
     }
 
     /// Guest preview has no personal courses or historic storage.
-    func skipLogin() { LessonSync.shared.setUser(nil); status = nil; phase = .loggedIn }
+    func skipLogin() {
+        guard !busy else { return }
+        identityGeneration = UUID()
+        LessonSync.shared.setUser(nil)
+        status = nil
+        phase = .loggedIn
+    }
 }

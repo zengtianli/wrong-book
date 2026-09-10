@@ -53,17 +53,20 @@ final class LessonSync: ObservableObject {
         revision += 1
     }
 
-    func sync(force: Bool = false) async {
+    func sync(force: Bool = false, account: PaperRequestSession? = nil) async {
         guard let user = owner, !running else { return }
         if !force, let date = lastRun, Date().timeIntervalSince(date) < 600 { return }
         let token = generation
         running = true
         defer {
             running = false
-            if token != generation { Task { await self.sync(force: true) } }
+            // A bound import may not turn into work for a later account. Normal home/foreground
+            // synchronization still follows the existing current-account retry behavior.
+            if token != generation, account == nil { Task { await self.sync(force: true) } }
         }
         do {
-            let data = try await fetchData(Api.base.appendingPathComponent("api/lessons"))
+            try account?.requireCurrent()
+            let data = try await fetchData(Api.base.appendingPathComponent("api/lessons"), account: account)
             guard let remote = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                   remote["owner"] as? String == user,
                   let scope = remote["scope"] as? String, !scope.isEmpty,
@@ -81,7 +84,7 @@ final class LessonSync: ObservableObject {
                 }
                 let target = dir.appendingPathComponent(file)
                 if let old = try? Data(contentsOf: target), old.sha256Hex == sha { continue }
-                let page = try await fetchData(LessonPaths.remoteURL(file: file))
+                let page = try await fetchData(LessonPaths.remoteURL(file: file), account: account)
                 guard token == generation else { return }
                 guard page.sha256Hex == sha else { throw Api.Failure(message: "课程下载校验失败") }
                 try FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -111,11 +114,14 @@ final class LessonSync: ObservableObject {
         note = "已停用本机课程副本，可重新同步个人课程"
     }
 
-    private func fetchData(_ url: URL) async throws -> Data {
+    private func fetchData(_ url: URL, account: PaperRequestSession? = nil) async throws -> Data {
         var request = URLRequest(url: url)
         request.timeoutInterval = 20
         request.cachePolicy = .reloadIgnoringLocalCacheData
+        try Task.checkCancellation()
+        if let account { request = try account.bound(request) }
         let (data, response) = try await URLSession.shared.data(for: request)
+        try account?.requireCurrent()
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {
             throw Api.Failure(message: "请检查网络与登录状态")
         }

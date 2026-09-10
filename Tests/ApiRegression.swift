@@ -1,7 +1,10 @@
 import Foundation
 
 // Network parsing uses the production Api.swift; only offline storage is stubbed.
-enum LessonPaths { static let offlineReadOnly = false }
+enum LessonPaths {
+    static let offlineReadOnly = false
+    static let activeScope: String? = nil
+}
 
 @main
 struct ApiRegression {

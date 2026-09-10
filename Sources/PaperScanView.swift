@@ -29,10 +29,8 @@ struct PaperScanView: View {
     @State private var preview: ScanPage?
 
     private var subjects: [(key: String, name: String)] {
-        // 学科从课程包的 manifest 派生（它带 subject / subject_name）——
-        // 在这儿手写一份 chinese/math 的对照表，就是 ~/Edu domains.yaml 之外的第二份。
-        let g = LessonPack.load().tree.map { (key: $0.key, name: $0.name) }
-        return g.isEmpty ? [("chinese", "语文"), ("math", "数学")] : g
+        // 已有课程只提供名称，不能把尚未导入过的学科从入口中移除。
+        ImportSubjectOptions.merging(LessonPack.load().tree.map { (key: $0.key, name: $0.name) })
     }
 
     var body: some View {
@@ -253,7 +251,15 @@ struct PaperScanView: View {
 
     /// 逐页传，传完逐页等读图结果。**已经传成功的不重传** —— 中途断网重按一次只补没传上去的那几页，
     /// 而不是把服务端上已有的页再覆盖一遍（覆盖本身是允许的，只是白烧流量、白烧一次读图）。
+    @MainActor
     private func upload() async {
+        guard !busy else { return }
+        let account: PaperRequestSession
+        do { account = try PaperRequestSession.capture() }
+        catch {
+            banner = error.localizedDescription
+            return
+        }
         busy = true
         banner = nil
         defer { busy = false }
@@ -267,6 +273,8 @@ struct PaperScanView: View {
         }
 
         for idx in pages.indices where !pages[idx].state.isUploaded {
+            do { try account.requireCurrent() }
+            catch { stopAfterAccountChange(); return }
             pages[idx].state = .uploading
             guard let d = PaperScan.jpeg(pages[idx].image) else {
                 // 压不下去不是「传失败」，是这张图本身太满 —— 说清楚该怎么办。
@@ -275,7 +283,7 @@ struct PaperScanView: View {
             }
             do {
                 let r = try await Api.paperPage(slug: slug.text, page: pages[idx].page,
-                                                jpeg: d, note: note)
+                                                jpeg: d, note: note, account: account)
                 if let job = r.job {
                     pages[idx].state = .uploaded(job: job)
                 } else {
@@ -283,12 +291,25 @@ struct PaperScanView: View {
                     pages[idx].state = .readFailed(message)
                     pages[idx].log = message
                 }
+            } catch is PaperRequestSession.Changed {
+                stopAfterAccountChange()
+                return
             } catch {
                 pages[idx].state = .failed(error.localizedDescription)
             }
+            do { try account.requireCurrent() }
+            catch { stopAfterAccountChange(); return }
         }
-        await readAll()
-        await sync.sync(force: true)
+        do {
+            try account.requireCurrent()
+            try await readAll(account: account)
+            try account.requireCurrent()
+            await sync.sync(force: true, account: account)
+            try account.requireCurrent()
+        } catch {
+            stopAfterAccountChange()
+            return
+        }
 
         // 汇总只摘服务端算好的数（每页那句「录进题库 N 道」），不自己数题。
         let got = pages.compactMap(\.got).reduce(0, +)
@@ -305,20 +326,38 @@ struct PaperScanView: View {
         banner = (bad.isEmpty ? "✅ " : "") + s
     }
 
-    /// 一页一页等读图结果。服务端读图是串行的（同时派只会互相等锁），所以这边也顺着来。
-    private func readAll() async {
+    private func stopAfterAccountChange() {
         for idx in pages.indices {
+            switch pages[idx].state {
+            case .idle, .uploading:
+                pages[idx].state = .failed("账号已变化，本页未发送。请回到原账号后重新导入。")
+            case .uploaded, .reading:
+                pages[idx].state = .readFailed("图片已上传到原账号；已停止获取结果，请回到原账号核对。")
+            default:
+                break
+            }
+        }
+        banner = "账号已变化，已停止本批次。剩余页面请回原账号重新选择；已上传的图片可在原账号核对。"
+    }
+
+    /// 一页一页等读图结果。服务端读图是串行的（同时派只会互相等锁），所以这边也顺着来。
+    @MainActor private func readAll(account: PaperRequestSession) async throws {
+        for idx in pages.indices {
+            try account.requireCurrent()
             guard case .uploaded(let job?) = pages[idx].state else { continue }
             var sec = 0
             let deadline = Date().addingTimeInterval(15 * 60)
             pages[idx].state = .reading(0)
             poll: while true {
+                try account.requireCurrent()
                 guard !Task.isCancelled, Date() < deadline else {
                     pages[idx].state = .readFailed("等待识别结果超时，图片已保存。请稍后同步课程或联系支持。")
                     break
                 }
                 do {
-                    switch try await Api.job(job) {
+                    let result = try await Api.job(job, account: account)
+                    try account.requireCurrent()
+                    switch result {
                     case .running:
                         try? await Task.sleep(for: .seconds(3)); sec += 3
                         pages[idx].state = .reading(sec)
@@ -330,6 +369,8 @@ struct PaperScanView: View {
                                               : .readFailed(String(log.suffix(120)))
                         break poll
                     }
+                } catch is PaperRequestSession.Changed {
+                    throw PaperRequestSession.Changed()
                 } catch {
                     if let failure = error as? Api.Failure,
                        [401, 403, 404, 410].contains(failure.statusCode) {

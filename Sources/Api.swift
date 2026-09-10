@@ -37,11 +37,13 @@ enum Api {
         var errorDescription: String? { message }
     }
 
-    /// 服务端发的是 HttpOnly cookie，URLSession 的共享存储会自己带上并持久化。
-    /// 我们**不碰** cookie 的值 —— 碰了就等于在 app 里复制一份会话状态。
+    /// 普通请求由共享 cookie jar 管登录。导入批次只借用开始时的短生命周期会话快照，
+    /// 避免异步上传/轮询中途切换账号后，后续请求借用新账号；不另存一套登录状态。
     private static func request(_ path: String, body: [String: Any]? = nil,
                                 query: [String: String]? = nil,
-                                timeout: TimeInterval = 20) async throws -> [String: Any] {
+                                timeout: TimeInterval = 20,
+                                account: PaperRequestSession? = nil,
+                                transport: URLSession = .shared) async throws -> [String: Any] {
         var url = base.appendingPathComponent(path)
         if let query, var c = URLComponents(url: url, resolvingAgainstBaseURL: false) {
             c.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
@@ -54,7 +56,9 @@ enum Api {
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
             req.httpBody = try JSONSerialization.data(withJSONObject: body)
         }
-        let (data, resp) = try await URLSession.shared.data(for: req)
+        try Task.checkCancellation()
+        if let account { req = try await account.bound(req) }
+        let (data, resp) = try await transport.data(for: req)
         let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
         return try decodeResponse(data, statusCode: code)
     }
@@ -134,14 +138,16 @@ enum Api {
     /// 2026-09-01 起服务端收到一页就走网页单题那条**全自动**链（读整页错题 → 逐道入库），
     /// 返回值里带作业号。`auto: false` 只给自检通道用 —— 合成的噪点图不该烧一次读图。
     static func paperPage(slug: String, page: Int, jpeg: Data, note: String = "",
-                          auto: Bool = true) async throws -> PaperUpload {
+                          auto: Bool = true, account: PaperRequestSession,
+                          transport: URLSession = .shared) async throws -> PaperUpload {
         guard !LessonPaths.offlineReadOnly else { throw Failure(message: "当前为离线模式，请联网登录后上传。") }
         var body: [String: Any] = [
             "slug": slug, "page": page, "note": note,
             "data": "data:image/jpeg;base64," + jpeg.base64EncodedString(),
         ]
         if !auto { body["auto"] = false }
-        let r = try await request("api/paper_page", body: body, timeout: 90)  // 3MB 走手机网络，20 秒不够
+        let r = try await request("api/paper_page", body: body, timeout: 90,
+                                  account: account, transport: transport)  // 3MB 走手机网络，20 秒不够
         return PaperUpload(wrongId: r["wrong_id"] as? String, job: r["job"] as? String,
                            autoErr: r["auto_err"] as? String)
     }
@@ -154,8 +160,9 @@ enum Api {
     /// 轮询一件读图/入库作业。读图在服务端要 30~120 秒，这里只问「完了没」，
     /// 结果那段 `log` 是 `wrong_ingest.py auto` 的原样输出 —— 「录进题库 N 道」那句
     /// 是它算的，界面只摘不数（两处各数一遍迟早对不上，和 wrong.html 同一条原则）。
-    static func job(_ id: String) async throws -> JobState {
-        let r = try await request("api/job", query: ["id": id])
+    static func job(_ id: String, account: PaperRequestSession,
+                    transport: URLSession = .shared) async throws -> JobState {
+        let r = try await request("api/job", query: ["id": id], account: account, transport: transport)
         guard (r["state"] as? String) == "done", let res = r["res"] as? [String: Any] else {
             return .running
         }
@@ -163,15 +170,15 @@ enum Api {
     }
 
     /// 撤一张登记过的错题图（自检通道收尾用；真删，服务端不留底）。
-    static func wrongDel(id: String) async throws {
-        _ = try await request("api/wrong_del", body: ["id": id])
+    static func wrongDel(id: String, account: PaperRequestSession) async throws {
+        _ = try await request("api/wrong_del", body: ["id": id], account: account)
     }
 
     /// 撤卷子的一页（不给 page 就撤整批）。同上，自检收尾用。
-    static func paperDel(slug: String, page: Int? = nil) async throws {
+    static func paperDel(slug: String, page: Int? = nil, account: PaperRequestSession) async throws {
         var body: [String: Any] = ["slug": slug]
         if let page { body["page"] = page }
-        _ = try await request("api/paper_del", body: body)
+        _ = try await request("api/paper_del", body: body, account: account)
     }
 
     /// 会话探活 + 顺带取几个**回显**用的数。
