@@ -24,6 +24,7 @@ struct PaperScanView: View {
     @State private var banner: String?
     @State private var showUploadConsent = false
     @State private var aiEnabled = false
+    @State private var accessRevision = 0
     @State private var showFiles = false
     @State private var detailsExpanded = false
     @State private var preview: ScanPage?
@@ -71,7 +72,7 @@ struct PaperScanView: View {
                 TextField("备注（选填）", text: $note).disabled(busy)
                 }
             }
-            AIAccessSection(enabled: $aiEnabled)
+            AIAccessSection(enabled: $aiEnabled, refreshID: accessRevision)
             Section {
                 DisclosureGroup("试卷信息与页码（选填）", isExpanded: $detailsExpanded) {
                 Picker("学年", selection: $slug.year) {
@@ -262,7 +263,7 @@ struct PaperScanView: View {
         }
         busy = true
         banner = nil
-        defer { busy = false }
+        defer { busy = false; accessRevision += 1 }
 
         // 同一页码传两次 = 后一张把前一张覆盖掉，而且**不会有任何报错**。
         // 传之前就拦住，比传完发现少一页强。

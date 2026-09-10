@@ -52,9 +52,16 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: session.phase)
         .task { await session.restore(); await session.refreshDeletion() }
+        .task { await AISubscription.shared.listen() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await session.refreshDeletion() } }
+            if phase == .active {
+                Task {
+                    await session.refreshDeletion()
+                    if session.phase == .loggedIn { await AISubscription.shared.refresh() }
+                }
+            }
         }
+        .onChange(of: session.status?.user) { _, _ in AISubscription.shared.clearAccess() }
         .alert("注销处理结果", isPresented: Binding(get: { session.deletionNotice != nil }, set: { if !$0 { session.deletionNotice = nil } })) {
             Button("好", role: .cancel) { session.deletionNotice = nil }
         } message: { Text(session.deletionNotice ?? "") }

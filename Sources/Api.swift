@@ -86,10 +86,28 @@ enum Api {
         _ = try await request("api/login", body: ["u": user, "p": password])
     }
 
-    static func aiAccess(code: String? = nil) async throws -> (enabled: Bool, remaining: Int) {
-        let result = try await request(code == nil ? "api/ai_access" : "api/ai_activate",
-                                       body: code.map { ["code": $0] })
-        return (result["enabled"] as? Bool == true, result["remaining"] as? Int ?? 0)
+    struct AIAccess {
+        let enabled: Bool
+        let remaining: Int
+        let subscribed: Bool
+        let token: UUID?
+        let expires: Date?
+
+        init(_ result: [String: Any]) {
+            enabled = result["enabled"] as? Bool == true
+            remaining = result["remaining"] as? Int ?? 0
+            subscribed = result["subscribed"] as? Bool == true
+            token = (result["app_account_token"] as? String).flatMap(UUID.init(uuidString:))
+            expires = (result["subscription_expires"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) }
+        }
+    }
+
+    static func aiAccess(account: PaperRequestSession) async throws -> AIAccess {
+        AIAccess(try await request("api/ai_access", account: account))
+    }
+
+    static func appleTransaction(_ signed: String, account: PaperRequestSession) async throws -> AIAccess {
+        AIAccess(try await request("api/apple_transaction", body: ["signed_transaction": signed], account: account))
     }
 
     static func logout() async {

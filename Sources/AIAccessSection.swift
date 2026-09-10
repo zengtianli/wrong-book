@@ -1,42 +1,54 @@
+import StoreKit
 import SwiftUI
 
 struct AIAccessSection: View {
     @Binding var enabled: Bool
-    @State private var code = ""
-    @State private var remaining = 0
-    @State private var busy = false
-    @State private var error: String?
+    var refreshID = 0
+    @EnvironmentObject private var session: Session
+    @ObservedObject private var store = AISubscription.shared
 
     var body: some View {
         Section {
-            if enabled {
-                Label("DeepSeek AI 已开通", systemImage: "checkmark.circle")
-                Text("今日剩余 \(remaining) 页识别额度").font(.footnote)
+            if let access = store.access {
+                if access.subscribed {
+                    Label("AI 识别订阅有效", systemImage: "checkmark.circle")
+                    if let expires = access.expires {
+                        Text("当前有效期至 \(expires.formatted(date: .numeric, time: .omitted))").font(.footnote)
+                    }
+                } else {
+                    Text("免费识别剩余 \(access.remaining) / 10 张")
+                    Text("前 10 张免费，之后订阅继续识别。已导入的题目可继续复习。")
+                        .font(.footnote)
+                }
             } else {
-                TextField("输入免费推广邀请码", text: $code)
-                    .autocorrectionDisabled()
-                Button(busy ? "正在验证…" : "开通 AI 识别") {
-                    Task { await refresh(activate: true) }
-                }.disabled(busy || code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Text(store.busy ? "正在查询识别额度…" : "登录后可免费识别前 10 张")
             }
-            if let error { Text(error).font(.footnote).foregroundStyle(.red) }
+            if store.access?.subscribed != true {
+                ForEach(store.products) { product in
+                    Button {
+                        Task { await store.purchase(product) }
+                    } label: {
+                        Text(product.id.hasSuffix(".monthly")
+                             ? "月订阅 · \(product.displayPrice) / 月"
+                             : "年订阅 · \(product.displayPrice) / 年")
+                    }.disabled(store.busy || store.access?.token == nil)
+                }
+            }
+            Button("恢复购买") { Task { await store.restore() } }.disabled(store.busy)
+            Button("刷新额度") { Task { await store.refresh() } }.disabled(store.busy)
+            Link("管理或取消订阅", destination: URL(string: "https://apps.apple.com/account/subscriptions")!)
+            if let message = store.message { Text(message).font(.footnote).foregroundStyle(.secondary) }
+            Link("隐私政策", destination: URL(string: "https://app-ios-wrong-book.tianli.cyou/privacy.html")!)
+            Link("使用条款", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
         } header: {
-            Text("AI 识别")
+            Text("AI 识别与订阅")
         } footer: {
-            Text("邀请码用于免费开通试卷识别，由开发者提供并承担 AI 服务费用，无需购买邀请码或填写 API 密钥。AI 可能读错，请对照原图核对结果。")
+            Text("月订阅和年订阅均可在有效期内继续识别。订阅由 Apple 收费并自动续期，可在系统订阅设置中取消。免费 10 张为账号一次性额度，识别失败不扣次数。AI 可能读错，请对照原图核对结果。")
         }
-        .task { await refresh(activate: false) }
-    }
-
-    private func refresh(activate: Bool) async {
-        busy = true
-        defer { busy = false }
-        do {
-            let access = try await Api.aiAccess(code: activate ? code : nil)
-            enabled = access.enabled
-            remaining = access.remaining
-            error = nil
-            if enabled { code = "" }
-        } catch { self.error = error.localizedDescription }
+        .task(id: "\(session.status?.user ?? "")-\(refreshID)") { await store.refresh() }
+        .onChange(of: store.access?.enabled) { _, value in enabled = value == true }
+        .onChange(of: store.busy) { _, busy in
+            if !busy, store.access == nil { enabled = false }
+        }
     }
 }

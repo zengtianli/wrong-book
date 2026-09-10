@@ -21,9 +21,10 @@ struct MeView: View {
     @State private var deletePw = ""
     @State private var deleteErr: String?
     @State private var path: [Destination] = []
+    @State private var aiEnabled = false
 
     private enum Destination: Hashable {
-        case account, scan, reminders, downloads
+        case account, scan, reminders, downloads, subscription
     }
 
     private var accountName: String {
@@ -37,6 +38,8 @@ struct MeView: View {
                 Section {
                     entry("账号与隐私", detail: accountName, icon: "person.crop.circle",
                           destination: .account, key: "a")
+                    entry("AI 识别与订阅", detail: "前 10 张免费 · 月订阅或年订阅",
+                          icon: "sparkles", destination: .subscription, key: "s")
                     entry("每日提醒", detail: remindOn ? "每天 \(remindHour):00" : "未开启",
                           icon: "bell", destination: .reminders, key: "r")
                     entry("离线课程", detail: "\(pack.lessons.count) 课 · \(sync.note ?? "已下载内容可离线练习")",
@@ -59,6 +62,7 @@ struct MeView: View {
             .navigationDestination(for: Destination.self) { destination in
                 switch destination {
                 case .account: accountPage
+                case .subscription: List { AIAccessSection(enabled: $aiEnabled) }.navigationTitle("AI 识别与订阅")
                 case .scan: PaperScanView().environmentObject(sync)
                 case .reminders: remindersPage
                 case .downloads: downloadsPage
@@ -194,7 +198,7 @@ struct MeView: View {
             }
             Button("取消", role: .cancel) {}
         } message: {
-            Text(AccountDeletionCopy.summary + "删除完成后不可恢复。输入当前密码确认发起注销。")
+            Text(AccountDeletionCopy.summary + "删除完成后不可恢复。注销不会自动取消 Apple 订阅，请先在系统订阅设置中取消续期。输入当前密码确认发起注销。")
         }
         .alert("没删成", isPresented: Binding(get: { deleteErr != nil }, set: { if !$0 { deleteErr = nil } })) {
             Button("好", role: .cancel) {}
