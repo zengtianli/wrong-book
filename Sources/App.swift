@@ -19,6 +19,7 @@ struct WrongBookApp: App {
 
 struct RootView: View {
     @EnvironmentObject var session: Session
+    @ObservedObject private var subscriptions = AISubscription.shared
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -53,6 +54,7 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.3), value: session.phase)
         .task { await session.restore(); await session.refreshDeletion() }
         .task { await AISubscription.shared.listen() }
+        .task { await subscriptions.listenForPurchaseIntents() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 Task {
@@ -62,6 +64,17 @@ struct RootView: View {
             }
         }
         .onChange(of: session.status?.user) { _, _ in AISubscription.shared.clearAccess() }
+        .alert("继续订阅", isPresented: Binding(
+            get: { subscriptions.purchaseIntent != nil && session.phase == .loggedIn },
+            set: { if !$0 { subscriptions.purchaseIntent = nil } }), presenting: subscriptions.purchaseIntent) { product in
+            Button("继续") {
+                subscriptions.purchaseIntent = nil
+                Task { await subscriptions.purchase(product) }
+            }
+            Button("取消", role: .cancel) { subscriptions.purchaseIntent = nil }
+        } message: { product in
+            Text("订阅将绑定当前错题本账号 \(session.status?.nick ?? "")。\(product.displayName)，价格 \(product.displayPrice)。请在 Apple 购买确认页核对周期和金额。")
+        }
         .alert("注销处理结果", isPresented: Binding(get: { session.deletionNotice != nil }, set: { if !$0 { session.deletionNotice = nil } })) {
             Button("好", role: .cancel) { session.deletionNotice = nil }
         } message: { Text(session.deletionNotice ?? "") }

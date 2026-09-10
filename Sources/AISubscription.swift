@@ -10,10 +10,17 @@ final class AISubscription: ObservableObject {
     @Published private(set) var products: [Product] = []
     @Published private(set) var busy = false
     @Published var message: String?
+    @Published var purchaseIntent: Product?
 
     func clearAccess() {
         access = nil
         message = nil
+    }
+
+    func listenForPurchaseIntents() async {
+        for await intent in PurchaseIntent.intents where Self.productIDs.contains(intent.product.id) {
+            purchaseIntent = intent.product
+        }
     }
 
     func listen() async {
@@ -35,7 +42,7 @@ final class AISubscription: ObservableObject {
         guard Self.productIDs.contains(tx.productID) else { return }
         let current = try await Api.aiAccess(account: account)
         try account.requireCurrent()
-        guard tx.appAccountToken == current.token, current.token != nil else {
+        guard current.token != nil, tx.appAccountToken == nil || tx.appAccountToken == current.token else {
             throw Api.Failure(message: "这笔订阅属于另一个错题本账号，请登录购买时的账号后恢复购买。")
         }
         let updated = try await Api.appleTransaction(result.jwsRepresentation, account: account)
@@ -57,7 +64,7 @@ final class AISubscription: ObservableObject {
             access = current
             for await result in Transaction.currentEntitlements {
                 if case .verified(let tx) = result, Self.productIDs.contains(tx.productID),
-                   tx.appAccountToken == current.token {
+                   (tx.appAccountToken == nil || tx.appAccountToken == current.token) {
                     try await accept(result, account: account)
                 }
             }
