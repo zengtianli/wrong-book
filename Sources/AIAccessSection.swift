@@ -21,7 +21,7 @@ struct AIAccessSection: View {
                         .font(.footnote)
                 }
             } else {
-                Text(store.busy ? "正在查询识别额度…" : "登录后可免费识别前 10 张")
+                Text(store.refreshingAccess ? "正在查询识别额度…" : "识别额度尚未同步，请登录后刷新。")
             }
             if store.access?.subscribed != true {
                 ForEach(store.products) { product in
@@ -31,11 +31,17 @@ struct AIAccessSection: View {
                         Text(product.id.hasSuffix(".monthly")
                              ? "月订阅 · \(product.displayPrice) / 月"
                              : "年订阅 · \(product.displayPrice) / 年")
-                    }.disabled(store.busy || store.access?.token == nil)
+                    }.disabled(store.busy || store.loadingProducts || store.access?.token == nil)
+                }
+                if store.loadingProducts { ProgressView("正在加载订阅方案…") }
+                if let message = store.productMessage {
+                    Text(message).font(.footnote).foregroundStyle(.secondary)
+                    Button("重新加载订阅方案") { Task { await store.loadProducts() } }
+                        .disabled(store.loadingProducts || store.processingPurchase)
                 }
             }
             Button("恢复购买") { Task { await store.restore() } }.disabled(store.busy)
-            Button("刷新额度") { Task { await store.refresh() } }.disabled(store.busy)
+            Button("刷新额度与订阅") { Task { await store.refresh() } }.disabled(store.busy || store.loadingProducts)
             Link("管理或取消订阅", destination: URL(string: "https://apps.apple.com/account/subscriptions")!)
             if let message = store.message { Text(message).font(.footnote).foregroundStyle(.secondary) }
             Link("隐私政策", destination: URL(string: "https://app-ios-wrong-book.tianli.cyou/privacy.html")!)

@@ -55,6 +55,7 @@ struct RootView: View {
         .task { await session.restore(); await session.refreshDeletion() }
         .task { await AISubscription.shared.listen() }
         .task { await subscriptions.listenForPurchaseIntents() }
+        .task { await subscriptions.listenForStorefrontChanges() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 Task {
