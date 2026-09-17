@@ -5,7 +5,7 @@ import WebKit
 ///
 /// ## 数据在哪
 ///
-/// 练习引擎 `~/Edu/engine/practice.js` 把「这一课练得怎么样」写进 localStorage 的
+/// 练习引擎 `~/Apps/edu/web/engine/practice.js` 把「这一课练得怎么样」写进 localStorage 的
 /// `edu:<slug>`（掌握度 / 错题本 / 今日计数），把「这孩子整体走到哪」写进
 /// `edu:@profile`（经验 / 等级 / 连续天数 / 勋章 / 今日任务）。那是它的 SSOT。
 ///

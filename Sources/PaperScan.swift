@@ -16,7 +16,7 @@ enum PaperScan {
 
     // MARK: - 卷子的身份 = 档案目录名
 
-    /// slug 就是 `~/Edu/archive/` 下的目录名，服务端按同一条白名单正则收
+    /// slug 就是 `~/Apps/edu/web/archive/` 下的目录名，服务端按同一条白名单正则收
     /// （`points/server.py` 的 `PAPER_SLUG_RE`）。**两边必须能对上**：
     /// 这边拼错了，表现是传的时候报「卷子编号不对」，而不是传上去落错地方。
     struct Slug: Equatable {
@@ -41,7 +41,7 @@ enum PaperScan {
         }
     }
 
-    /// 卷种。**这是这一屏独有的词表** —— ~/Edu 侧没有它的 SSOT（archive 目录名里才第一次出现），
+    /// 卷种。**这是这一屏独有的词表** —— ~/Apps/edu/web 侧没有它的 SSOT（archive 目录名里才第一次出现），
     /// 所以在这儿定义，不是从别处抄来的第二份。加一种就在这儿加一行。
     static let kinds: [(key: String, name: String)] = [
         ("final", "期末卷"), ("mid", "期中卷"),
@@ -52,7 +52,7 @@ enum PaperScan {
 
     /// 上传前压到服务端收得下（`WRONG_MAX` 3MB）。
     ///
-    /// **阶梯有地板，宁可传不了也不压糊**（照搬 ~/Edu 2026-08-16 拿真扫描件量出来的结论）：
+    /// **阶梯有地板，宁可传不了也不压糊**（照搬 ~/Apps/edu/web 2026-08-16 拿真扫描件量出来的结论）：
     /// 1200px/q55 那一档实测已经把字典框小字压到崩边缘，而压糊的题不会报错，
     /// 只会让读图那步读出一道**错的**题。所以到底装不下就明说，让人把这一页单独拍一张。
     static func jpeg(_ img: UIImage, limit: Int = 2_900_000) -> Data? {

@@ -202,7 +202,7 @@ enum Api {
     /// 会话探活 + 顺带取几个**回显**用的数。
     ///
     /// ⚠ 这里的 `practiceLeft` / `balance` 一律**原样回显服务端算好的值**，
-    /// 原生不做任何加减。~/Edu 的口径：分值一律服务端算，请求里报什么都不算数。
+    /// 原生不做任何加减。~/Apps/edu/web 的口径：分值一律服务端算，请求里报什么都不算数。
     static func status(timeout: TimeInterval = 20) async throws -> Status {
         Status(json: try await request("api/state", timeout: timeout))
     }

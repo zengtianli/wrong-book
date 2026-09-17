@@ -19,7 +19,7 @@ iPhone、iPad 与 Mac 共用的个人错题工具。公开包不带课程、试�
 
 `PaperScan.Camera` 使用普通系统相机，不提供文档自动找边、透视校正或扫描排序。
 图片由 `Api.paperPage` 逐页发往 <https://edu.tianli.cyou>，与网页导入使用同一条服务端识别链。
-AI 识别需要免费邀请资格、有效额度和用户确认；费用由开发者承担，识别失败或跳过应如实显示。
+AI 识别需要前 10 张免费额度或有效 Apple 订阅，以及用户事前确认。月订阅人民币 9.9 元、年订阅 99.9 元，展示价格来自 StoreKit。后端验证 Apple 签名交易并绑定账号实例；失败作业退回免费额度，重试不得重复扣费。订阅取消后当前有效期内可继续使用，到期不重置免费额度。订阅不限制旧资料复习。
 
 `LessonSync` 按账号隔离下载内容与网页存储。导入批次通过 `PaperRequestSession` 绑定开始时的账号和登录 cookie；换账号后停止剩余上传、轮询与绑定同步。已经提交的图片仍属于原账号，不把停止本地任务说成撤回服务器数据。
 
@@ -60,11 +60,11 @@ xcrun --sdk macosx swiftc Sources/ImportSubjectOptions.swift Tests/ImportSubject
 xcrun --sdk macosx swiftc Sources/Api.swift Sources/AccountDeletion.swift Sources/PaperRequestSession.swift Tests/PaperSessionRegression.swift -o /tmp/wrongbook-paper-test
 /tmp/wrongbook-paper-test
 
-xcrun --sdk macosx swiftc Sources/Api.swift Sources/AccountDeletion.swift Sources/PaperRequestSession.swift Sources/Session.swift Tests/SessionIdentityRegression.swift -o /tmp/wrongbook-identity-test
+xcrun --sdk macosx swiftc -target "$(uname -m)-apple-macos15.0" Sources/Api.swift Sources/AccountDeletion.swift Sources/PaperRequestSession.swift Sources/Session.swift Tests/SessionIdentityRegression.swift -o /tmp/wrongbook-identity-test
 /tmp/wrongbook-identity-test
 ```
 
-个人课程同步及网页存储隔离的回归入口是 `scripts/tests/personal-library.swift`，编译参数见文件头。
+个人课程同步及网页存储隔离的回归入口是 `scripts/tests/personal-library.swift`，编译依赖见文件头。
 `-papertest` 是独立的真实上传自检入口，使用生产登录、压图和上传函数，会创建并清理测试页面；只在指定的隔离测试账号及后端运行。
 
 编译和隔离回归只验证代码路径。正式发布仍需核对 Cloud 源提交、构建 ID、商店资格，以及最终包上的拍照、登录、导入、练习、同步、离线、提醒和注销；审核资料与账号凭证不进入公开仓。

@@ -3,15 +3,15 @@ import WebKit
 
 /// 练习引擎的承载层 —— **不重写 practice.js，原样跑它**。
 ///
-/// `~/Edu/engine/practice.js` 1271 行里装着判题 verify()、组卷权重 nextGen()、
+/// `~/Apps/edu/web/engine/practice.js` 1271 行里装着判题 verify()、组卷权重 nextGen()、
 /// 错题本两层结构、勋章判定 PRED、上瘾机制五件套；题库是**内联进每个 HTML** 的。
 /// 用 SwiftUI 重写 = 第二份判题逻辑，和 bank.db / badges.json 必然漂移，
-/// 而 ~/Edu 那些硬约束（「改了 badges.json 必须全量重渲」「页面内联题数必须等于库里的数」）
+/// 而 ~/Apps/edu/web 那些硬约束（「改了 badges.json 必须全量重渲」「页面内联题数必须等于库里的数」）
 /// 在 Swift 侧根本继承不了。
 ///
 /// ## 为什么用 loadSimulatedRequest 而不是 loadFileURL
 ///
-/// 页面是**完全自包含**的（JS/CSS/题库全内联，零 CDN —— ~/Edu 的既定设计），
+/// 页面是**完全自包含**的（JS/CSS/题库全内联，零 CDN —— ~/Apps/edu/web 的既定设计），
 /// 唯一的外部依赖是三个相对请求：`/api/state` `/api/practice` `/api/archive`，
 /// 由内联的 `points_client.js` 自己发。
 ///
@@ -231,7 +231,7 @@ enum WebSession {
 ///
 /// **不是**由原生去点页面上的按钮实现的 —— 那等于拿 `#gens` 里的第几个当参数传，
 /// 改一次版面排序就悄悄点到别的题型上，而且不报错。走引擎自己的显式入口
-/// `window.__PRACTICE__.review(gid)`（`~/Edu/engine/practice.js`），
+/// `window.__PRACTICE__.review(gid)`（`~/Apps/edu/web/engine/practice.js`），
 /// 由引擎组卷、由引擎决定出什么题。
 enum LessonEntry: Equatable {
     /// 正常做题，引擎按自己的权重组一套混合卷
