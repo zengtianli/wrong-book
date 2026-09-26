@@ -50,5 +50,8 @@
     "api_doc": "https://developer.apple.com/documentation/appstoreconnectapi/get-v1-buildbundles-_id_-buildbundlefilesizes"
   },
   "why": "按具体发行构建回读体积；内存、CPU 和启动时间仍明确保留未测状态。",
-  "why_en": "Sizes are read back for this exact distribution build. Memory, CPU and launch time remain explicitly unmeasured."
+  "why_en": "Sizes are read back for this exact distribution build. Memory, CPU and launch time remain explicitly unmeasured.",
+  "runtime_measurement": {
+    "simulator": "perf/simulator.json"
+  }
 }

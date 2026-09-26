@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "product": "wrong-book-ios",
+  "platform": "ios",
+  "version": "1.0 (11)",
+  "configuration": "Release",
+  "measured_at": "2026-09-27T00:04:46.594153+08:00",
+  "device": "iPhone 17 Pro / iOS 27.0 Simulator / Mac16,12 / Apple M4 / macOS 27.2",
+  "input_sha256": "e3ce21c6a477ce9c173aec5f92008b4742a4dbea69aca4045fe2767436896d23",
+  "data": "Fresh app container on isolated simulator; default first-run data; no production user data imported",
+  "size": {
+    "download_bytes": 2990799,
+    "installed_bytes": 7122944,
+    "kind": "Local simulator .app ZIP; not an App Store IPA or device slice"
+  },
+  "idle": {
+    "process": "69238",
+    "footprint_mb": 23.0,
+    "cpu_pct": 0.02,
+    "window_s": 60,
+    "settle_s": 45,
+    "method": "Shared measure.py: CPU time delta / 60s wall; 3 phys_footprint samples after CPU window, maximum reported",
+    "scope": "Simulator App process only; excludes CoreSimulator, Simulator GUI, system services and inactive extensions",
+    "limitations": "Post-launch simulator process sampling; simctl requested foreground by default; UIApplication/RunningBoard activation state was not observed and this is not a complete foreground business test."
+  },
+  "speed_gui": [
+    {
+      "key": "process_launch_ms",
+      "label": "simctl launch 返回 PID（非首屏可交互）",
+      "label_en": "simctl launch PID acknowledgement (not interactive readiness)",
+      "median_ms": 121.17,
+      "runs": 3,
+      "method": "simctl launch wall time through process PID acknowledgement after terminate; includes CLI overhead and warm filesystem cache; not first-frame or interactive-ready time",
+      "limitations": "Process acknowledgement only, not first-frame/interactive readiness; host load is included in raw evidence."
+    }
+  ],
+  "runtime_measurement": {
+    "environment": "simulator",
+    "device": "iPhone 17 Pro",
+    "os": "iOS 27.0",
+    "version": "1.0 (11)",
+    "evidence": "perf/raw/simulator-20260927.json",
+    "evidence_sha256": "bd75a904df328ff360463cc18084f27085003412edc456618e29385176ca64a0"
+  },
+  "build": {
+    "configuration": "Release",
+    "binary_sha256": "8f8c048512cb4d28932e4efd1408b999caebf9edae6f4c41bcb88cc16813f05d",
+    "input_sha256": "e3ce21c6a477ce9c173aec5f92008b4742a4dbea69aca4045fe2767436896d23",
+    "actual_build": true
+  },
+  "scope": "Simulator App process only; excludes CoreSimulator, Simulator GUI, system services and inactive extensions",
+  "limitations": "模拟器应用进程占用，排除 Simulator/CoreSimulator 系统开销；此 ZIP 不是 App Store 下载包。后台与业务任务峰值未在本次测量。"
+}

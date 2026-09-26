@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "app_id": "wrong-book-ios",
+  "environment": "simulator",
+  "measured_at": "2026-09-27T00:04:46.594153+08:00",
+  "version": "1.0 (11)",
+  "configuration": "Release",
+  "bundle_id": "cyou.tianli.wrongbook",
+  "binary_sha256": "8f8c048512cb4d28932e4efd1408b999caebf9edae6f4c41bcb88cc16813f05d",
+  "source": {
+    "input_globs": [
+      "Sources/**",
+      "Shared/**",
+      "Resources/**",
+      "Widget/**",
+      "ShareExtension/**",
+      "project.yml",
+      "*.entitlements"
+    ],
+    "sha256": "e3ce21c6a477ce9c173aec5f92008b4742a4dbea69aca4045fe2767436896d23",
+    "file_count": 49,
+    "commit": "a35037779e2fcb918f71061e4b512d344c09d158",
+    "dirty_scope": "组件当前 Git 工作树；跨仓/软链输入的实际内容由 sha256 核验",
+    "dirty": false
+  },
+  "app_path": "~/Apps/edu/ios/wrong-book/01-源程序/.dd-iphone/Build/Products/Release-iphonesimulator/WrongBook.app",
+  "simulator_udid": "C6F5D655-20E3-4CEE-89FF-3C8C20AB6D3B",
+  "simulator_device": "iPhone 17 Pro",
+  "simulator_os": "iOS 27.0",
+  "host": "Mac16,12 / Apple M4 / macOS 27.2",
+  "load_average_at_start": [
+    3.861328125,
+    11.5859375,
+    24.10205078125
+  ],
+  "host_memory_pressure_level": "2",
+  "host_swap_usage": "total = 10240.00M  used = 9078.31M  free = 1161.69M  (encrypted)",
+  "measurement_tool_sha256": "0393a632f3e0a2d2551ecb173704f195c3f9da743d0a49bad0492c1e0b669698",
+  "scope": "Simulator App process only; excludes CoreSimulator, Simulator GUI, system services and inactive extensions",
+  "data": "Fresh app container on isolated simulator; default first-run data; no production user data imported",
+  "build_receipt": {
+    "exit": 0,
+    "configuration": "Release",
+    "command": [
+      "xcrun",
+      "xcodebuild",
+      "-project",
+      "WrongBook.xcodeproj",
+      "-scheme",
+      "WrongBook",
+      "-configuration",
+      "Release",
+      "-sdk",
+      "iphonesimulator",
+      "-destination",
+      "id=C6F5D655-20E3-4CEE-89FF-3C8C20AB6D3B",
+      "-derivedDataPath",
+      "~/Apps/edu/ios/wrong-book/01-源程序/.dd-iphone",
+      "CODE_SIGNING_ALLOWED=NO",
+      "build"
+    ],
+    "seconds": 14.8,
+    "source_before_sha256": "e3ce21c6a477ce9c173aec5f92008b4742a4dbea69aca4045fe2767436896d23",
+    "source_after_sha256": "e3ce21c6a477ce9c173aec5f92008b4742a4dbea69aca4045fe2767436896d23",
+    "source_unchanged": true,
+    "load_average_after_build": [
+      3.861328125,
+      11.5859375,
+      24.10205078125
+    ]
+  },
+  "size": {
+    "download_bytes": 2990799,
+    "installed_bytes": 7122944,
+    "kind": "Local simulator .app ZIP; not an App Store IPA or device slice"
+  },
+  "installed_binary_sha256": "8f8c048512cb4d28932e4efd1408b999caebf9edae6f4c41bcb88cc16813f05d",
+  "launch": {
+    "samples": [
+      {
+        "ms": 1509.7225829995295,
+        "pid": 69091
+      },
+      {
+        "ms": 121.1677499995858,
+        "pid": 69114
+      },
+      {
+        "ms": 116.29883400019025,
+        "pid": 69238
+      }
+    ],
+    "median_ms": 121.1677499995858,
+    "runs": 3,
+    "command": [
+      "xcrun",
+      "simctl",
+      "launch",
+      "C6F5D655-20E3-4CEE-89FF-3C8C20AB6D3B",
+      "cyou.tianli.wrongbook"
+    ],
+    "foreground_request": "simctl default; --background not supplied",
+    "method": "simctl launch wall time through process PID acknowledgement after terminate; includes CLI overhead and warm filesystem cache; not first-frame or interactive-ready time",
+    "limitations": "Process acknowledgement only, not first-frame/interactive readiness; host load is included in raw evidence."
+  },
+  "process_before_cpu": "69238 43585 Sun Sep 27 00:04:52 2026     Ss   ~/Library/Developer/CoreSimulator/Devices/C6F5D655-20E3-4CEE-89FF-3C8C20AB6D3B/data/Containers/Bundle/Application/77A7DC26-5BF1-4C0A-B13A-05CF2A052358/WrongBook.app/WrongBook",
+  "idle": {
+    "process": "69238",
+    "footprint_mb": 23.0,
+    "cpu_pct": 0.02,
+    "window_s": 60,
+    "settle_s": 45,
+    "method": "Shared measure.py: CPU time delta / 60s wall; 3 phys_footprint samples after CPU window, maximum reported",
+    "scope": "Simulator App process only; excludes CoreSimulator, Simulator GUI, system services and inactive extensions",
+    "limitations": "Post-launch simulator process sampling; simctl requested foreground by default; UIApplication/RunningBoard activation state was not observed and this is not a complete foreground business test."
+  },
+  "process_after_cpu": "69238 43585 Sun Sep 27 00:04:52 2026     Ss   ~/Library/Developer/CoreSimulator/Devices/C6F5D655-20E3-4CEE-89FF-3C8C20AB6D3B/data/Containers/Bundle/Application/77A7DC26-5BF1-4C0A-B13A-05CF2A052358/WrongBook.app/WrongBook",
+  "source_unchanged_during_measurement": true,
+  "binary_unchanged_during_measurement": true,
+  "completed_at": "2026-09-27T00:06:42.441768+08:00"
+}
