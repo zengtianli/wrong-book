@@ -50,3 +50,17 @@ xcodebuild -scheme WrongBook -destination 'generic/platform=iOS Simulator' build
 ## License
 
 MIT © 2026 曾田力 (Tianli Zeng)
+
+<!-- lightweight:start -->
+## 资源占用
+
+| 安装包 | 空闲内存 | 空闲 CPU | 速度 |
+|---|---|---|---|
+| **2.2 MB**（装好后 3.0 MB） | **未测** | **未测** | **未测** |
+
+按具体发行构建回读体积；内存、CPU 和启动时间仍明确保留未测状态。
+
+未测项尚无本版本实测记录。
+
+<sub>v1.0 (18) · iPhone 17（iPhone18,3）；体积为 Apple 设备切片记录，运行性能尚未真机实测 · App Store；体积不含用户数据与后续缓存；手机实际安装版本尚未核验 · 2026-09-26。体积来自 Apple App Store Connect 对应构建的设备切片记录。运行性能未完成真机测量；未测项不代表零占用。大小按十进制 MB。原始数据见 [perf/lightweight.json](perf/lightweight.json)。</sub>
+<!-- lightweight:end -->

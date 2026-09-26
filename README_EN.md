@@ -52,3 +52,17 @@ See [DEVELOPING.md](DEVELOPING.md) for development details, including regression
 ## License
 
 MIT © 2026 Tianli Zeng
+
+<!-- lightweight:start -->
+## Resource use
+
+| Download | Idle memory | Idle CPU | Speed |
+|---|---|---|---|
+| **2.2 MB** (installed 3.0 MB) | **Not measured** | **Not measured** | **Not measured** |
+
+Sizes are read back for this exact distribution build. Memory, CPU and launch time remain explicitly unmeasured.
+
+Items marked Not measured have no measurement record for this version.
+
+<sub>v1.0 (18) · iPhone 17（iPhone18,3）；体积为 Apple 设备切片记录，运行性能尚未真机实测 · App Store; package sizes exclude user data and caches; installed phone version not verified · measured 2026-09-26. Sizes come from Apple App Store Connect device slices for this build. Physical-device performance measurement is incomplete; unmeasured does not mean zero use. sizes in decimal MB. Raw data: [perf/lightweight.json](perf/lightweight.json).</sub>
+<!-- lightweight:end -->

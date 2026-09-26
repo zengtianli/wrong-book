@@ -1,0 +1,42 @@
+{
+  "source": {
+    "kind": "app_store_connect",
+    "app_id": "6806626967",
+    "bundle_id": "cyou.tianli.wrongbook",
+    "build_id": "567bec28-e5a2-413a-bd02-7b2e04bf2586",
+    "queried_at": "2026-09-26T19:24:27.066277+08:00",
+    "distribution": "App Store",
+    "processing_state": "VALID",
+    "device_model": "iPhone18,3",
+    "os_variant": "Universal",
+    "api_doc": "https://developer.apple.com/documentation/appstoreconnectapi/get-v1-buildbundles-_id_-buildbundlefilesizes"
+  },
+  "build": {
+    "id": "567bec28-e5a2-413a-bd02-7b2e04bf2586",
+    "attributes": {
+      "version": "18",
+      "uploadedDate": "2026-09-11T23:43:21-07:00",
+      "expired": false,
+      "processingState": "VALID"
+    }
+  },
+  "selected_device_size": {
+    "type": "buildBundleFileSizes",
+    "id": "b44df036-ecd0-3d83-b5a5-8fd0432fa323",
+    "attributes": {
+      "deviceModel": "iPhone18,3",
+      "osVersion": "Universal",
+      "downloadBytes": 2156881,
+      "installBytes": 2957312
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/buildBundleFileSizes/b44df036-ecd0-3d83-b5a5-8fd0432fa323"
+    }
+  },
+  "latest_testflight_candidate": {
+    "version": "1.0",
+    "build": "19",
+    "id": "d6e8d9db-f287-4b5e-a757-b8edd3634c3d",
+    "is_primary_evidence": false
+  }
+}
