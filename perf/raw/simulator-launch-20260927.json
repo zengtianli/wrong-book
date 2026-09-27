@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "app_id": "wrong-book-ios",
+  "environment": "simulator",
+  "mode": "launch",
+  "measured_at": "2026-09-27T14:18:11.524322+08:00",
+  "version": "1.0 (11)",
+  "configuration": "Release",
+  "bundle_id": "cyou.tianli.wrongbook",
+  "binary_sha256": "1ab39e7a2cbc2e0a24db8e05272b32770871e2fc510643905814bbac8785c768",
+  "build_receipt": {
+    "configuration": "Release",
+    "seconds": 13.1,
+    "source_sha256": "e3ce21c6a477ce9c173aec5f92008b4742a4dbea69aca4045fe2767436896d23",
+    "source_unchanged": true,
+    "built_from": "working tree"
+  },
+  "git_head": "65019eae26bb4b6a9e2e08d864e9cd63e08c20f3",
+  "simulator_device": "iPhone 17 Pro",
+  "simulator_os": "iOS 27.0",
+  "host": "Mac16,12 / Apple M4 / macOS 27.2",
+  "load_average_at_start": [
+    4.65283203125,
+    13.720703125,
+    34.365234375
+  ],
+  "measurement_tool_sha256": "0393a632f3e0a2d2551ecb173704f195c3f9da743d0a49bad0492c1e0b669698",
+  "probe_sha256": "04e8e990c1a6c393d9b49bf91ac8b4f799588f181ea10657f38517cdf281c129",
+  "scope": "Simulator App process only; excludes CoreSimulator, Simulator GUI, system services and inactive extensions",
+  "launch": {
+    "samples": [
+      {
+        "run": 0,
+        "pid": 98350,
+        "host_call_epoch": 1790489894.699182,
+        "request_to_ready_ms": 3280.9,
+        "request_to_launch_complete_ms": 3547.2
+      },
+      {
+        "run": 1,
+        "pid": 98741,
+        "host_call_epoch": 1790489903.123553,
+        "request_to_ready_ms": 1434.5,
+        "request_to_launch_complete_ms": 2400.4
+      },
+      {
+        "run": 2,
+        "pid": 98825,
+        "host_call_epoch": 1790489911.286724,
+        "request_to_ready_ms": 1405.4,
+        "request_to_launch_complete_ms": 2386.8
+      },
+      {
+        "run": 3,
+        "pid": 98973,
+        "host_call_epoch": 1790489919.3955772,
+        "request_to_ready_ms": 1402.5,
+        "request_to_launch_complete_ms": 2380.7
+      },
+      {
+        "run": 4,
+        "pid": 99091,
+        "host_call_epoch": 1790489927.625338,
+        "request_to_ready_ms": 1426.1,
+        "request_to_launch_complete_ms": 2401.0
+      },
+      {
+        "run": 5,
+        "pid": 99296,
+        "host_call_epoch": 1790489935.737659,
+        "request_to_ready_ms": 1635.8,
+        "request_to_launch_complete_ms": 2584.0
+      }
+    ],
+    "discarded_runs": 1,
+    "runs": 5,
+    "ready_median_ms": 1426.1,
+    "launch_complete_median_ms": 2400.4,
+    "method": "Simulator unified log: CoreSimulator \"Requesting launch of <bundle>\" -> SpringBoard scene content state \"ready\" (app committed its first scene content) / FrontBoard \"Dropping launch assertion\" (launch finished). App process terminated 3 s before each run; system caches warm; first run after install discarded.",
+    "marker_lines": {
+      "0": [
+        {
+          "timestamp": "2026-09-27 14:18:14.818345+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Requesting launch of cyou.tianli.wrongbook with options: {\n    environment =     {\n    };\n}"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:14.975354+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Launch successful for 'cyou.tianli.wrongbook', pid: 98350"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:18.099227+0800",
+          "process": "SpringBoard",
+          "message": "[(FBSceneManager):sceneID:cyou.tianli.wrongbook-default] scene content state changed: ready"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:18.365578+0800",
+          "process": "SpringBoard",
+          "message": "[app<cyou.tianli.wrongbook>:98350] Dropping launch assertion."
+        },
+        {
+          "timestamp": "2026-09-27 14:18:18.789631+0800",
+          "process": "InputUI",
+          "message": "[app<cyou.tianli.wrongbook>:98350] Dropping launch assertion."
+        }
+      ],
+      "1": [
+        {
+          "timestamp": "2026-09-27 14:18:23.221921+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Requesting launch of cyou.tianli.wrongbook with options: {\n    environment =     {\n    };\n}"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:23.258074+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Launch successful for 'cyou.tianli.wrongbook', pid: 98741"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:24.656402+0800",
+          "process": "SpringBoard",
+          "message": "[(FBSceneManager):sceneID:cyou.tianli.wrongbook-default] scene content state changed: ready"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:25.622280+0800",
+          "process": "SpringBoard",
+          "message": "[app<cyou.tianli.wrongbook>:98741] Dropping launch assertion."
+        },
+        {
+          "timestamp": "2026-09-27 14:18:25.664386+0800",
+          "process": "InputUI",
+          "message": "[app<cyou.tianli.wrongbook>:98741] Dropping launch assertion."
+        }
+      ],
+      "2": [
+        {
+          "timestamp": "2026-09-27 14:18:31.397522+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Requesting launch of cyou.tianli.wrongbook with options: {\n    environment =     {\n    };\n}"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:31.431603+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Launch successful for 'cyou.tianli.wrongbook', pid: 98825"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:32.802909+0800",
+          "process": "SpringBoard",
+          "message": "[(FBSceneManager):sceneID:cyou.tianli.wrongbook-default] scene content state changed: ready"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:33.784322+0800",
+          "process": "SpringBoard",
+          "message": "[app<cyou.tianli.wrongbook>:98825] Dropping launch assertion."
+        },
+        {
+          "timestamp": "2026-09-27 14:18:33.805475+0800",
+          "process": "InputUI",
+          "message": "[app<cyou.tianli.wrongbook>:98825] Dropping launch assertion."
+        }
+      ],
+      "3": [
+        {
+          "timestamp": "2026-09-27 14:18:39.509191+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Requesting launch of cyou.tianli.wrongbook with options: {\n    environment =     {\n    };\n}"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:39.549227+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Launch successful for 'cyou.tianli.wrongbook', pid: 98973"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:40.911711+0800",
+          "process": "SpringBoard",
+          "message": "[(FBSceneManager):sceneID:cyou.tianli.wrongbook-default] scene content state changed: ready"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:41.889898+0800",
+          "process": "SpringBoard",
+          "message": "[app<cyou.tianli.wrongbook>:98973] Dropping launch assertion."
+        },
+        {
+          "timestamp": "2026-09-27 14:18:41.922795+0800",
+          "process": "InputUI",
+          "message": "[app<cyou.tianli.wrongbook>:98973] Dropping launch assertion."
+        }
+      ],
+      "4": [
+        {
+          "timestamp": "2026-09-27 14:18:47.737701+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Requesting launch of cyou.tianli.wrongbook with options: {\n    environment =     {\n    };\n}"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:47.775295+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Launch successful for 'cyou.tianli.wrongbook', pid: 99091"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:49.163808+0800",
+          "process": "SpringBoard",
+          "message": "[(FBSceneManager):sceneID:cyou.tianli.wrongbook-default] scene content state changed: ready"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:50.138670+0800",
+          "process": "SpringBoard",
+          "message": "[app<cyou.tianli.wrongbook>:99091] Dropping launch assertion."
+        },
+        {
+          "timestamp": "2026-09-27 14:18:50.173893+0800",
+          "process": "InputUI",
+          "message": "[app<cyou.tianli.wrongbook>:99091] Dropping launch assertion."
+        }
+      ],
+      "5": [
+        {
+          "timestamp": "2026-09-27 14:18:55.830680+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Requesting launch of cyou.tianli.wrongbook with options: {\n    environment =     {\n    };\n}"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:55.868636+0800",
+          "process": "CoreSimulatorBridge",
+          "message": "Launch successful for 'cyou.tianli.wrongbook', pid: 99296"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:57.466471+0800",
+          "process": "SpringBoard",
+          "message": "[(FBSceneManager):sceneID:cyou.tianli.wrongbook-default] scene content state changed: ready"
+        },
+        {
+          "timestamp": "2026-09-27 14:18:58.414695+0800",
+          "process": "SpringBoard",
+          "message": "[app<cyou.tianli.wrongbook>:99296] Dropping launch assertion."
+        },
+        {
+          "timestamp": "2026-09-27 14:18:58.464892+0800",
+          "process": "InputUI",
+          "message": "[app<cyou.tianli.wrongbook>:99296] Dropping launch assertion."
+        }
+      ]
+    }
+  },
+  "source_unchanged_during_measurement": true,
+  "completed_at": "2026-09-27T14:19:00.772694+08:00",
+  "calibration": {
+    "measured_at": "2026-09-27T14:04:00+08:00",
+    "device": "iPhone 17 Pro / iOS 27.0 Simulator (same device as app runs)",
+    "app": "com.apple.Preferences (system Settings)",
+    "settings_ready_samples_ms": [
+      3626.3,
+      2505.8,
+      2529.9,
+      2517.9,
+      2589.8,
+      2507.6
+    ],
+    "settings_launch_complete_samples_ms": [
+      3424.6,
+      2911.7,
+      2917.7,
+      2906.9,
+      2977.7,
+      2887.3
+    ],
+    "settings_ready_median_ms": 2517.9,
+    "settings_launch_complete_median_ms": 2911.7,
+    "note": "Same probe and markers as the app runs; first sample discarded. Shows the simulator's own launch overhead; not a physical-device figure."
+  },
+  "idle_evidence_kept": "perf/raw/simulator-20260927.json"
+}
