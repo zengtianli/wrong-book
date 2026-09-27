@@ -67,4 +67,17 @@ xcrun --sdk macosx swiftc -target "$(uname -m)-apple-macos15.0" Sources/Api.swif
 个人课程同步及网页存储隔离的回归入口是 `scripts/tests/personal-library.swift`，编译依赖见文件头。
 `-papertest` 是独立的真实上传自检入口，使用生产登录、压图和上传函数，会创建并清理测试页面；只在指定的隔离测试账号及后端运行。
 
+固定验收入口位于 `scripts/accept/`，均为非交互、临时数据的生产 Swift 组件测试：
+
+```bash
+bash scripts/accept/functionality.sh  # 本地题目读取、复习标识与学科选项
+bash scripts/accept/recovery.sh       # 故障注入、重试、取消及错误状态恢复
+bash scripts/accept/privacy.sh        # 上传账号绑定、旧响应隔离与游客边界
+```
+
+本机 Chapter 使用 `project.yaml` 的 `sop.accept` 登记以上命令，再由
+`app_sop.py accept --app wrong-book-ios --check functionality --check recovery --check privacy --json`
+运行并自动生成验收证据。脚本不启动界面，不使用真实账号或付费交易；通过范围不包括
+实体设备权限、线上 AI/判题、服务端删除保留策略及真实购买/恢复。这些仍需独立的产品验收。
+
 编译和隔离回归只验证代码路径。正式发布仍需核对 Cloud 源提交、构建 ID、商店资格，以及最终包上的拍照、登录、导入、练习、同步、离线、提醒和注销；审核资料与账号凭证不进入公开仓。
