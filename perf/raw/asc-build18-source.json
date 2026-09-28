@@ -1,0 +1,333 @@
+{
+  "schema_version": 1,
+  "queried_at": "2026-09-28T17:04:35.794697+00:00",
+  "source": "App Store Connect GET /ciBuildRuns/9f7f4285-bffa-45e8-890a-87865d0bd981?include=builds",
+  "api_response": {
+    "data": {
+      "type": "ciBuildRuns",
+      "id": "9f7f4285-bffa-45e8-890a-87865d0bd981",
+      "attributes": {
+        "number": 18,
+        "issueCounts": null,
+        "executionProgress": "COMPLETE",
+        "startReason": "GIT_REF_CHANGE",
+        "createdDate": "2026-09-12T06:40:07.937Z",
+        "isPullRequestBuild": false,
+        "startedDate": "2026-09-12T06:40:17.167Z",
+        "destinationCommit": null,
+        "completionStatus": "SUCCEEDED",
+        "sourceCommit": {
+          "commitSha": "7cf2e8492ddb99781d71dcb42d4580c8f77bf35c",
+          "message": "Fix subscription catalog loading and account-bound refresh races",
+          "author": {
+            "displayName": "tianli",
+            "avatarUrl": "https://avatars.githubusercontent.com/u/34931204?v=4"
+          },
+          "committer": {
+            "displayName": "tianli",
+            "avatarUrl": "https://avatars.githubusercontent.com/u/34931204?v=4"
+          },
+          "webUrl": "https://github.com/zengtianli/wrong-book/commit/7cf2e8492ddb99781d71dcb42d4580c8f77bf35c"
+        },
+        "cancelReason": null,
+        "finishedDate": "2026-09-12T06:44:14.475Z"
+      },
+      "relationships": {
+        "builds": {
+          "meta": {
+            "paging": {
+              "total": 1,
+              "limit": 10
+            }
+          },
+          "data": [
+            {
+              "type": "builds",
+              "id": "567bec28-e5a2-413a-bd02-7b2e04bf2586"
+            }
+          ],
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/ciBuildRuns/9f7f4285-bffa-45e8-890a-87865d0bd981/relationships/builds",
+            "related": "https://api.appstoreconnect.apple.com/v1/ciBuildRuns/9f7f4285-bffa-45e8-890a-87865d0bd981/builds"
+          }
+        },
+        "actions": {
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/ciBuildRuns/9f7f4285-bffa-45e8-890a-87865d0bd981/relationships/actions",
+            "related": "https://api.appstoreconnect.apple.com/v1/ciBuildRuns/9f7f4285-bffa-45e8-890a-87865d0bd981/actions"
+          }
+        }
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/ciBuildRuns/9f7f4285-bffa-45e8-890a-87865d0bd981"
+      }
+    },
+    "included": [
+      {
+        "type": "builds",
+        "id": "567bec28-e5a2-413a-bd02-7b2e04bf2586",
+        "attributes": {
+          "minOsVersion": "18.0",
+          "processingState": "VALID",
+          "buildAudienceType": "APP_STORE_ELIGIBLE",
+          "expired": false,
+          "lsMinimumSystemVersion": null,
+          "iconAssetToken": {
+            "templateUrl": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/d6/1e/43/d61e438b-4d4d-01e6-3968-2222e274d317/AppIcon76x76@2x_U007eipad.png/{w}x{h}bb.{f}",
+            "width": 152,
+            "height": 152
+          },
+          "usesNonExemptEncryption": false,
+          "uploadedDate": "2026-09-11T23:43:21-07:00",
+          "version": "18",
+          "computedMinVisionOsVersion": "2.0",
+          "computedMinMacOsVersion": "15.0",
+          "expirationDate": "2026-12-10T22:43:21-08:00"
+        },
+        "relationships": {
+          "individualTesters": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/individualTesters",
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/individualTesters"
+            }
+          },
+          "betaGroups": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/betaGroups"
+            }
+          },
+          "app": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/app",
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/app"
+            }
+          },
+          "preReleaseVersion": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/preReleaseVersion",
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/preReleaseVersion"
+            }
+          },
+          "betaAppReviewSubmission": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/betaAppReviewSubmission",
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/betaAppReviewSubmission"
+            }
+          },
+          "appStoreVersion": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/appStoreVersion",
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/appStoreVersion"
+            }
+          },
+          "perfPowerMetrics": {
+            "links": {
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/perfPowerMetrics"
+            }
+          },
+          "appEncryptionDeclaration": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/appEncryptionDeclaration",
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/appEncryptionDeclaration"
+            }
+          },
+          "buildBetaDetail": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/buildBetaDetail",
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/buildBetaDetail"
+            }
+          },
+          "icons": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/icons",
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/icons"
+            }
+          },
+          "diagnosticSignatures": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/diagnosticSignatures",
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/diagnosticSignatures"
+            }
+          },
+          "betaBuildLocalizations": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/relationships/betaBuildLocalizations",
+              "related": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586/betaBuildLocalizations"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/builds/567bec28-e5a2-413a-bd02-7b2e04bf2586"
+        }
+      }
+    ],
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/ciBuildRuns/9f7f4285-bffa-45e8-890a-87865d0bd981?include=builds"
+    }
+  },
+  "comparison": {
+    "head": "cc7d757d750dca56ddf7fb9435f6c64b6a78c729",
+    "release_source_commit": "7cf2e8492ddb99781d71dcb42d4580c8f77bf35c",
+    "scope": "tracked iOS build inputs and build scripts; generated empty library verified separately; no macOS equivalence claim",
+    "paths": [
+      "Sources",
+      "Shared",
+      "Resources",
+      "Widget",
+      "ShareExtension",
+      "project.yml",
+      "*.entitlements",
+      "ci_scripts",
+      "sync-lessons.sh"
+    ],
+    "tracked_files": {
+      "Resources/Assets.xcassets/AccentColor.colorset/Contents.json": {
+        "release_blob": "4ae434cc51d8ad7eda828931956cb3db943527cb",
+        "current_blob": "4ae434cc51d8ad7eda828931956cb3db943527cb"
+      },
+      "Resources/Assets.xcassets/AppIcon.appiconset/Contents.json": {
+        "release_blob": "7126516d79bbe55157fe61fb8252aa7060e8bb42",
+        "current_blob": "7126516d79bbe55157fe61fb8252aa7060e8bb42"
+      },
+      "Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png": {
+        "release_blob": "c94d60413d22fd1c37330419f3abed95123a255e",
+        "current_blob": "c94d60413d22fd1c37330419f3abed95123a255e"
+      },
+      "Resources/Assets.xcassets/Contents.json": {
+        "release_blob": "867ae4d176b558b2e7aaed08273a7c3dd1098b11",
+        "current_blob": "867ae4d176b558b2e7aaed08273a7c3dd1098b11"
+      },
+      "Resources/Lessons/README.md": {
+        "release_blob": "e59a0ffc5f82b30657cf7656ad3c65737883b5d4",
+        "current_blob": "e59a0ffc5f82b30657cf7656ad3c65737883b5d4"
+      },
+      "Resources/icon-1024.png": {
+        "release_blob": "c94d60413d22fd1c37330419f3abed95123a255e",
+        "current_blob": "c94d60413d22fd1c37330419f3abed95123a255e"
+      },
+      "Shared/PlatformCompat.swift": {
+        "release_blob": "dbd0c16f2be1768ee6635b5e0e5ffa7d4040694b",
+        "current_blob": "dbd0c16f2be1768ee6635b5e0e5ffa7d4040694b"
+      },
+      "Sources/AIAccessSection.swift": {
+        "release_blob": "777437ef6674887b4e06a0c75a0b03c4c0136c60",
+        "current_blob": "777437ef6674887b4e06a0c75a0b03c4c0136c60"
+      },
+      "Sources/AISubscription.swift": {
+        "release_blob": "e2882b021b752e5ffea6e5dfbe80b688cf6bf9d6",
+        "current_blob": "e2882b021b752e5ffea6e5dfbe80b688cf6bf9d6"
+      },
+      "Sources/AccountDeletion.swift": {
+        "release_blob": "e4193cdd3f484e7b86c54db092300d6bde138197",
+        "current_blob": "e4193cdd3f484e7b86c54db092300d6bde138197"
+      },
+      "Sources/Api.swift": {
+        "release_blob": "e9b4f3aeb33dba0f93454105e3d2dac84b6048f3",
+        "current_blob": "8615c47afd2e64ca9883f5c2bfa127d442c391f9"
+      },
+      "Sources/App.swift": {
+        "release_blob": "07dc62aec12199a529a806fa7479a967448ddd47",
+        "current_blob": "07dc62aec12199a529a806fa7479a967448ddd47"
+      },
+      "Sources/EduArchive.swift": {
+        "release_blob": "0292ade5339ea949d860ffaf31a409e856486ddd",
+        "current_blob": "a6f9c8bc7a8de69215cdb2432d148e41d754a11b"
+      },
+      "Sources/FocusLibraryView.swift": {
+        "release_blob": "923f8c84e3df70402b9cf23c25fa5fc7eb1d91e1",
+        "current_blob": "923f8c84e3df70402b9cf23c25fa5fc7eb1d91e1"
+      },
+      "Sources/HomeView.swift": {
+        "release_blob": "77cd19fba1fb7d27782b4de1547053dc71580a94",
+        "current_blob": "77cd19fba1fb7d27782b4de1547053dc71580a94"
+      },
+      "Sources/ImportSubjectOptions.swift": {
+        "release_blob": "1e149f4a7ecc67ab6b705352db64365877ed940a",
+        "current_blob": "1e149f4a7ecc67ab6b705352db64365877ed940a"
+      },
+      "Sources/LearnView.swift": {
+        "release_blob": "adde2cb04d2ee0b21720c4ca492e102565355637",
+        "current_blob": "adde2cb04d2ee0b21720c4ca492e102565355637"
+      },
+      "Sources/LessonSync.swift": {
+        "release_blob": "c783b6055f5ec5539ade079edeb5621392d83a8d",
+        "current_blob": "c783b6055f5ec5539ade079edeb5621392d83a8d"
+      },
+      "Sources/LessonWebView.swift": {
+        "release_blob": "8f873ffb016a5fda6f9c53c1681af528ce0e9432",
+        "current_blob": "b7add4d2f0fba677ecfa76910270270d9f146e24"
+      },
+      "Sources/Lessons.swift": {
+        "release_blob": "c6c07c44ba42a1fa0bd11d7e269bf9ded53f6631",
+        "current_blob": "c6c07c44ba42a1fa0bd11d7e269bf9ded53f6631"
+      },
+      "Sources/LoginView.swift": {
+        "release_blob": "d82c73e64c7ea0da5145c60dec2461eba4587a07",
+        "current_blob": "d82c73e64c7ea0da5145c60dec2461eba4587a07"
+      },
+      "Sources/MeView.swift": {
+        "release_blob": "3b9e9cd7488f614f660b272c21ce5671f9a58712",
+        "current_blob": "3b9e9cd7488f614f660b272c21ce5671f9a58712"
+      },
+      "Sources/PaperRequestSession.swift": {
+        "release_blob": "cf68b57891192065a6bd4bca94cea2312a5df797",
+        "current_blob": "cf68b57891192065a6bd4bca94cea2312a5df797"
+      },
+      "Sources/PaperScan.swift": {
+        "release_blob": "72f0bf9089c9fb0b1d6f6613aa97025646401a87",
+        "current_blob": "d8c8f108fff3605fb2d6185c48f3ab681f91e470"
+      },
+      "Sources/PaperScanView.swift": {
+        "release_blob": "1a0f1443acd52975ae9454b4971c18704e16f0a1",
+        "current_blob": "1a0f1443acd52975ae9454b4971c18704e16f0a1"
+      },
+      "Sources/QuestionIndex.swift": {
+        "release_blob": "82bdecaa0f4f8a05967ba8a0021578a09046d4a7",
+        "current_blob": "82bdecaa0f4f8a05967ba8a0021578a09046d4a7"
+      },
+      "Sources/RegisterView.swift": {
+        "release_blob": "51c095142da19f43e5874145c85c856850bc4127",
+        "current_blob": "51c095142da19f43e5874145c85c856850bc4127"
+      },
+      "Sources/Reminder.swift": {
+        "release_blob": "a2e572b786488128522c3fdf4b419dd42f149a34",
+        "current_blob": "a2e572b786488128522c3fdf4b419dd42f149a34"
+      },
+      "Sources/Session.swift": {
+        "release_blob": "3e4a382af99f07aa057fa679cfe16a7a694c8213",
+        "current_blob": "3e4a382af99f07aa057fa679cfe16a7a694c8213"
+      },
+      "Sources/SubscriptionCatalog.swift": {
+        "release_blob": "1e22e741fc728656b69984c9d8dc816a2c93c39f",
+        "current_blob": "1e22e741fc728656b69984c9d8dc816a2c93c39f"
+      },
+      "Sources/Theme.swift": {
+        "release_blob": "ee774e6ffbac5a5354852e2655a4dfbf3569f51e",
+        "current_blob": "2be06253ddea4dd9bfac0df00e5da9bc64d7e181"
+      },
+      "Sources/WrongBook.swift": {
+        "release_blob": "e4c05f195547c2b9ff84ef4dfde117a6d32e559f",
+        "current_blob": "0d0f651afefc74cc2a957ca9798b2518c15a3d6f"
+      },
+      "Sources/WrongBookView.swift": {
+        "release_blob": "4e099e5f7a3b1293d99bc35ba8c6966fd29033c7",
+        "current_blob": "4e099e5f7a3b1293d99bc35ba8c6966fd29033c7"
+      },
+      "ci_scripts/ci_post_clone.sh": {
+        "release_blob": "9df882fcac3e7ab3d16df16fa2786e0ccda426f9",
+        "current_blob": "9df882fcac3e7ab3d16df16fa2786e0ccda426f9"
+      },
+      "project.yml": {
+        "release_blob": "ff5c783c86334f2e688c0d3eae11187215c4d284",
+        "current_blob": "ff5c783c86334f2e688c0d3eae11187215c4d284"
+      },
+      "sync-lessons.sh": {
+        "release_blob": "a505aad0f0cea15a2db007794bee24af211530e8",
+        "current_blob": "a505aad0f0cea15a2db007794bee24af211530e8"
+      }
+    },
+    "changed_doc_lines": 11,
+    "source_diff": "diff --git a/Sources/Api.swift b/Sources/Api.swift\nindex e9b4f3a..8615c47 100644\n--- a/Sources/Api.swift\n+++ b/Sources/Api.swift\n@@ -202,7 +202,7 @@ enum Api {\n     /// 会话探活 + 顺带取几个**回显**用的数。\n     ///\n     /// ⚠ 这里的 `practiceLeft` / `balance` 一律**原样回显服务端算好的值**，\n-    /// 原生不做任何加减。~/Edu 的口径：分值一律服务端算，请求里报什么都不算数。\n+    /// 原生不做任何加减。~/Apps/edu/web 的口径：分值一律服务端算，请求里报什么都不算数。\n     static func status(timeout: TimeInterval = 20) async throws -> Status {\n         Status(json: try await request(\"api/state\", timeout: timeout))\n     }\ndiff --git a/Sources/EduArchive.swift b/Sources/EduArchive.swift\nindex 0292ade..a6f9c8b 100644\n--- a/Sources/EduArchive.swift\n+++ b/Sources/EduArchive.swift\n@@ -5,7 +5,7 @@ import WebKit\n ///\n /// ## 数据在哪\n ///\n-/// 练习引擎 `~/Edu/engine/practice.js` 把「这一课练得怎么样」写进 localStorage 的\n+/// 练习引擎 `~/Apps/edu/web/engine/practice.js` 把「这一课练得怎么样」写进 localStorage 的\n /// `edu:<slug>`（掌握度 / 错题本 / 今日计数），把「这孩子整体走到哪」写进\n /// `edu:@profile`（经验 / 等级 / 连续天数 / 勋章 / 今日任务）。那是它的 SSOT。\n ///\ndiff --git a/Sources/LessonWebView.swift b/Sources/LessonWebView.swift\nindex 8f873ff..b7add4d 100644\n--- a/Sources/LessonWebView.swift\n+++ b/Sources/LessonWebView.swift\n@@ -3,15 +3,15 @@ import WebKit\n \n /// 练习引擎的承载层 —— **不重写 practice.js，原样跑它**。\n ///\n-/// `~/Edu/engine/practice.js` 1271 行里装着判题 verify()、组卷权重 nextGen()、\n+/// `~/Apps/edu/web/engine/practice.js` 1271 行里装着判题 verify()、组卷权重 nextGen()、\n /// 错题本两层结构、勋章判定 PRED、上瘾机制五件套；题库是**内联进每个 HTML** 的。\n /// 用 SwiftUI 重写 = 第二份判题逻辑，和 bank.db / badges.json 必然漂移，\n-/// 而 ~/Edu 那些硬约束（「改了 badges.json 必须全量重渲」「页面内联题数必须等于库里的数」）\n+/// 而 ~/Apps/edu/web 那些硬约束（「改了 badges.json 必须全量重渲」「页面内联题数必须等于库里的数」）\n /// 在 Swift 侧根本继承不了。\n ///\n /// ## 为什么用 loadSimulatedRequest 而不是 loadFileURL\n ///\n-/// 页面是**完全自包含**的（JS/CSS/题库全内联，零 CDN —— ~/Edu 的既定设计），\n+/// 页面是**完全自包含**的（JS/CSS/题库全内联，零 CDN —— ~/Apps/edu/web 的既定设计），\n /// 唯一的外部依赖是三个相对请求：`/api/state` `/api/practice` `/api/archive`，\n /// 由内联的 `points_client.js` 自己发。\n ///\n@@ -231,7 +231,7 @@ enum WebSession {\n ///\n /// **不是**由原生去点页面上的按钮实现的 —— 那等于拿 `#gens` 里的第几个当参数传，\n /// 改一次版面排序就悄悄点到别的题型上，而且不报错。走引擎自己的显式入口\n-/// `window.__PRACTICE__.review(gid)`（`~/Edu/engine/practice.js`），\n+/// `window.__PRACTICE__.review(gid)`（`~/Apps/edu/web/engine/practice.js`），\n /// 由引擎组卷、由引擎决定出什么题。\n enum LessonEntry: Equatable {\n     /// 正常做题，引擎按自己的权重组一套混合卷\ndiff --git a/Sources/PaperScan.swift b/Sources/PaperScan.swift\nindex 72f0bf9..d8c8f10 100644\n--- a/Sources/PaperScan.swift\n+++ b/Sources/PaperScan.swift\n@@ -16,7 +16,7 @@ enum PaperScan {\n \n     // MARK: - 卷子的身份 = 档案目录名\n \n-    /// slug 就是 `~/Edu/archive/` 下的目录名，服务端按同一条白名单正则收\n+    /// slug 就是 `~/Apps/edu/web/archive/` 下的目录名，服务端按同一条白名单正则收\n     /// （`points/server.py` 的 `PAPER_SLUG_RE`）。**两边必须能对上**：\n     /// 这边拼错了，表现是传的时候报「卷子编号不对」，而不是传上去落错地方。\n     struct Slug: Equatable {\n@@ -41,7 +41,7 @@ enum PaperScan {\n         }\n     }\n \n-    /// 卷种。**这是这一屏独有的词表** —— ~/Edu 侧没有它的 SSOT（archive 目录名里才第一次出现），\n+    /// 卷种。**这是这一屏独有的词表** —— ~/Apps/edu/web 侧没有它的 SSOT（archive 目录名里才第一次出现），\n     /// 所以在这儿定义，不是从别处抄来的第二份。加一种就在这儿加一行。\n     static let kinds: [(key: String, name: String)] = [\n         (\"final\", \"期末卷\"), (\"mid\", \"期中卷\"),\n@@ -52,7 +52,7 @@ enum PaperScan {\n \n     /// 上传前压到服务端收得下（`WRONG_MAX` 3MB）。\n     ///\n-    /// **阶梯有地板，宁可传不了也不压糊**（照搬 ~/Edu 2026-08-16 拿真扫描件量出来的结论）：\n+    /// **阶梯有地板，宁可传不了也不压糊**（照搬 ~/Apps/edu/web 2026-08-16 拿真扫描件量出来的结论）：\n     /// 1200px/q55 那一档实测已经把字典框小字压到崩边缘，而压糊的题不会报错，\n     /// 只会让读图那步读出一道**错的**题。所以到底装不下就明说，让人把这一页单独拍一张。\n     static func jpeg(_ img: UIImage, limit: Int = 2_900_000) -> Data? {\ndiff --git a/Sources/Theme.swift b/Sources/Theme.swift\nindex ee774e6..2be0625 100644\n--- a/Sources/Theme.swift\n+++ b/Sources/Theme.swift\n@@ -2,7 +2,7 @@ import SwiftUI\n \n /// 配色 —— **亮色**，跟着它包着的那些练习页走。\n ///\n-/// 练习页是「亮色 + 零 CDN + 自包含单文件」（~/Edu 的既定设计目标：双击就能用、\n+/// 练习页是「亮色 + 零 CDN + 自包含单文件」（~/Apps/edu/web 的既定设计目标：双击就能用、\n /// 能发家长、能塞平板离线）。原生壳做成深色，就会出现「深壳套亮页」的夹心，\n /// 每次从列表点进一课都闪一下白。这个 app 的壳只是页面的相框，别抢戏。\n ///\ndiff --git a/Sources/WrongBook.swift b/Sources/WrongBook.swift\nindex e4c05f1..0d0f651 100644\n--- a/Sources/WrongBook.swift\n+++ b/Sources/WrongBook.swift\n@@ -2,7 +2,7 @@ import Foundation\n \n /// 错题本里的**一条 = 一类题**（`gid`），不是一道题。\n ///\n-/// 这是 `~/Edu` 定死的语义，原生这边照抄，不自创第三种：\n+/// 这是 `~/Apps/edu/web` 定死的语义，原生这边照抄，不自创第三种：\n /// 复习时出的是**同类新题**（换数字、换选项、换文本），不是把原题再放一遍 ——\n /// 原题重放只会让孩子把答案背下来，看着会了其实没会。\n /// 原题面只留一句摘要（`q` / `hits[].q`），供回看「我当时错的是这道」。\n",
+    "limitations": "Current source bytes differ in 11 documentation comment lines across 6 Swift files; this is not a rebuild or a reproducible-binary assertion. Local ignored mac-only icon inputs are outside this iOS provenance claim."
+  }
+}

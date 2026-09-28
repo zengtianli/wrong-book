@@ -9,6 +9,12 @@
   "build_id": "567bec28-e5a2-413a-bd02-7b2e04bf2586",
   "processing_state": "VALID",
   "device_install_verified": false,
-  "source_commit": null,
-  "source_note": "Apple 构建及体积已回读；尚未建立当前本机源码与该发行二进制的来源映射。"
+  "source_commit": "7cf2e8492ddb99781d71dcb42d4580c8f77bf35c",
+  "source_note": "官方 ciBuildRuns 回读确认 build18 由成功 Cloud run18 的真实源提交构建；当前已跟踪 iOS 构建输入仅有6个Swift文件11行路径注释更新。未声称当前HEAD是发行源提交，未声称二进制逐字可重现，未扩展为macOS证明。",
+  "source_run_id": "9f7f4285-bffa-45e8-890a-87865d0bd981",
+  "source_queried_at": "2026-09-28T17:04:35.794697+00:00",
+  "source_provenance": {
+    "evidence": "perf/raw/asc-build18-source.json",
+    "evidence_sha256": "55e961f31cd852bb1340399f231b60a919e36a3e71b39b912fdc750f24052ba0"
+  }
 }
