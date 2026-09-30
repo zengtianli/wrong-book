@@ -18,6 +18,23 @@ targets:
       - script: bash "$PROJECT_DIR/sync-lessons.sh"
         name: 验证公开包不含个人资料
         basedOnDependencyAnalysis: false
+    # 给 Agent 的命令行 mistakes 随本机 Mac 版一起装：Contents/Resources/bin/mistakes，
+    # cli/install.sh 按 bundle id 找到已装的 .app 再链到 ~/.local/bin。只在 macOS 的 build 动作里拷
+    # （签名在所有构建阶段之后，脚本会被封进签名）；iOS 包和任何归档（ACTION=install：App Store /
+    # TestFlight）都不带，上架包内容不受影响。
+    postBuildScripts:
+      - name: 本机 Mac 版带上 mistakes 命令行
+        basedOnDependencyAnalysis: false
+        # 不声明 inputFiles/outputFiles：Xcode 会先建好输出所在目录（iOS 包里会多一个空的 bin/），
+        # 缺输入文件时连 iOS 归档也会失败；本阶段每次都跑，不需要依赖分析。
+        script: |
+          if [ "$PLATFORM_NAME" != "macosx" ] || [ "$ACTION" = "install" ]; then
+            echo "skip: mistakes CLI only ships in local macOS builds ($PLATFORM_NAME/$ACTION)"
+            exit 0
+          fi
+          dest="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/bin"
+          mkdir -p "$dest"
+          install -m 755 "$PROJECT_DIR/cli/mistakes" "$dest/mistakes"
     sources:
       # 总部共享：macOS 侧给 iOS-only SwiftUI 修饰符提供同名 no-op，调用点不改（multiplatform.py 注入）
       - path: Shared/PlatformCompat.swift

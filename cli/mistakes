@@ -1,0 +1,595 @@
+#!/usr/bin/env python3
+"""mistakes —— Mistake Notebook · 错题本 的命令行（给 Agent 用，GUI 给人用）。
+
+和 App、edu.tianli.cyou/wrong.html 走**同一个服务端**（~/Apps/edu/web/points/server.py 的 /api/*）：
+上传大小、识别额度、订阅、账号归属、注销冻结全在服务端判；读图与生成练习由服务器上的
+edu-wrong-worker 跑同一份 engine/wrong_ingest.py。这里只组装请求、整理输出。
+
+凭据（都不落盘，cookie 只在本进程内存里）：
+  EDU_USER        账号（邮箱或用户名），或 --user
+  EDU_PASSWORD    账号密码，或 --password-stdin（stdin 第 1 行）
+  EDU_API_BASE    服务端地址，默认 https://edu.tianli.cyou（本地隔离测试服用 http://127.0.0.1:<端口>）
+
+说明：错题本、今日进度读的是**服务器上的学习存档快照**（/api/archive，设备联网时由练习页同步，
+后写覆盖）；设备离线期间做的题要等它下次同步后才看得到。
+退出码：0 成功；1 服务端拒绝/网络失败/作业失败（--json 时输出 {"ok": false, "err": ...}）；2 用法或缺凭据。
+"""
+from __future__ import annotations
+
+import argparse
+import base64
+import json
+import os
+import re
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import date
+from http.cookiejar import CookieJar
+from pathlib import Path
+
+DEFAULT_API = "https://edu.tianli.cyou"
+AGENT = "mistakes-cli/1.0"
+PAPER_SLUG_RE = re.compile(r"^20\d{2}s[12]-g[1-9]-[a-z]{2,12}-[a-z]{2,12}$")   # 同服务端白名单
+PAPER_KINDS = ("final", "mid", "unit", "quiz")                                  # 同 PaperScan.kinds
+
+
+class Fail(Exception):
+    def __init__(self, msg: str, code: int = 1, status: int | None = None):
+        super().__init__(msg)
+        self.msg, self.code, self.status = msg, code, status
+
+
+# ───────────────────────────── 传输（同 Api.swift 的 request）─────────────────────────────
+
+class Client:
+    def __init__(self, base: str, timeout: float = 20):
+        self.base = base.rstrip("/")
+        self.timeout = timeout
+        self.op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(CookieJar()))
+
+    def _open(self, path, body, query, timeout):
+        url = f"{self.base}/{path.lstrip('/')}"
+        if query:
+            url += "?" + urllib.parse.urlencode(query)
+        data = json.dumps(body).encode() if body is not None else None
+        req = urllib.request.Request(url, data=data, method="POST" if body is not None else "GET",
+                                     headers={"Content-Type": "application/json", "User-Agent": AGENT})
+        try:
+            with self.op.open(req, timeout=timeout or self.timeout) as r:
+                return r.status, r.read(), r.headers.get("Content-Type") or ""
+        except urllib.error.HTTPError as e:
+            return e.code, e.read(), e.headers.get("Content-Type") or ""
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            raise Fail(f"连不上 {self.base}：{getattr(e, 'reason', e)}")
+
+    def call(self, path: str, body: dict | None = None, query: dict | None = None,
+             timeout: float | None = None) -> dict:
+        status, payload, _ = self._open(path, body, query, timeout)
+        try:
+            obj = json.loads(payload or b"{}")
+        except ValueError:
+            raise Fail(f"服务端返回的不是 JSON（HTTP {status}）", status=status)
+        if status >= 400 or obj.get("ok") is False:
+            err = Fail(str(obj.get("err") or f"HTTP {status}"), status=status)
+            err.code_name = obj.get("code")
+            raise err
+        return obj
+
+    def raw(self, path: str, query: dict | None = None) -> bytes:
+        status, payload, ctype = self._open(path, None, query, None)
+        if status >= 400 or ctype.startswith("application/json"):
+            try:
+                err = json.loads(payload).get("err")
+            except ValueError:
+                err = None
+            raise Fail(str(err or f"HTTP {status}"), status=status)
+        return payload
+
+
+class Secrets:
+    def __init__(self, args):
+        self.args = args
+        self._account: str | None = None
+
+    def account(self) -> str:
+        if self._account is None:
+            if getattr(self.args, "password_stdin", False):
+                lines = sys.stdin.read().splitlines() if not sys.stdin.isatty() else []
+                if not lines:
+                    raise Fail("stdin 里缺少账号密码（一行）", code=2)
+                self._account = lines[0]
+            else:
+                self._account = os.environ.get("EDU_PASSWORD") or ""
+                if not self._account:
+                    raise Fail("缺账号密码：设 EDU_PASSWORD 或用 --password-stdin", code=2)
+        return self._account
+
+
+def session(args, sec: Secrets) -> Client:
+    user = args.user or os.environ.get("EDU_USER") or ""
+    if not user:
+        raise Fail("缺账号：设 EDU_USER 或用 --user", code=2)
+    c = Client(args.api or os.environ.get("EDU_API_BASE") or DEFAULT_API, timeout=args.timeout)
+    c.call("api/login", {"u": user, "p": sec.account()})
+    return c
+
+
+# ───────────────────────────── 读 ─────────────────────────────
+
+def _access(a: dict) -> dict:
+    return {"enabled": a.get("enabled"), "remaining": a.get("remaining"), "trial_pages": a.get("trial_pages"),
+            "subscribed": a.get("subscribed"), "subscription_expires": a.get("subscription_expires"),
+            "product_id": a.get("product_id")}
+
+
+def cmd_status(c, a, sec):
+    me, st = c.call("api/me"), c.call("api/state")
+    acc, dele = c.call("api/ai_access"), c.call("api/account_delete_request")
+    wr, pp = c.call("api/wrongs"), c.call("api/papers")
+    v = {"ok": True, "user": me.get("u"), "nick": me.get("nick"), "has_email": bool(me.get("email")),
+         "practice_left": st.get("practice_left"), "ai": _access(acc),
+         "uploads": {"total": len(wr.get("items") or []), "pending": wr.get("pending", 0),
+                     "running_jobs": sum(1 for x in wr.get("items") or [] if x.get("job_state") == "running")},
+         "papers": {"total": len(pp.get("items") or []), "pending": pp.get("pending", 0)},
+         "deletion": {k: dele.get(k) for k in ("status", "receipt_id", "requested_at", "expected_by", "completed_at")
+                      if dele.get(k) is not None}}
+    def text():
+        ai = v["ai"]
+        ai_t = (f"订阅有效至 {time.strftime('%Y-%m-%d', time.localtime(ai['subscription_expires'] / 1000))}"
+                if ai["subscribed"] and ai.get("subscription_expires") else
+                f"免费识别剩余 {ai['remaining']} / {ai['trial_pages']} 张")
+        return (f"{v['nick']}（{v['user']}）· {ai_t}\n"
+                f"错题照片 {v['uploads']['total']} 张（待录入 {v['uploads']['pending']}，识别中 {v['uploads']['running_jobs']}）"
+                f" · 整卷 {v['papers']['total']} 份（待拉取 {v['papers']['pending']}）"
+                f" · 今天刷题还能得 {v['practice_left']} 分"
+                + ("" if v["deletion"].get("status") in (None, "none") else f"\n注销：{v['deletion']['status']}"
+                   f"（预计 {str(v['deletion'].get('expected_by') or '')[:10]}）"))
+    return v, text
+
+
+def _archive(c) -> tuple[dict, int]:
+    r = c.call("api/archive")
+    return r.get("data") or {}, int(r.get("ts") or 0)
+
+
+def _json_obj(raw):
+    try:
+        o = json.loads(raw) if isinstance(raw, str) else None
+    except ValueError:
+        return None
+    return o if isinstance(o, dict) else None
+
+
+def _int(x, default=0):
+    return x if isinstance(x, int) and not isinstance(x, bool) else default
+
+
+def cmd_wrongs(c, a, sec):
+    """同 WrongBook.parse：edu:<slug>.wrong[] 只认 gid/gname/q/at/wrong/ok/manual/hits，
+    不读 ans/options（结构上就不留原题重放的后路）；顺序跟课程清单走。"""
+    (arch, ts), man = _archive(c), c.call("api/lessons")
+    lessons = man.get("lessons") or []
+    by_slug = {x.get("slug"): x for x in lessons}
+    order = {x.get("slug"): i for i, x in enumerate(lessons)}
+    groups, orphans = [], []
+    for key, raw in arch.items():
+        if not key.startswith("edu:") or key.startswith("edu:@"):
+            continue
+        slug, o = key[4:], _json_obj(raw)
+        if not o:
+            continue
+        entries = []
+        for j in o.get("wrong") or []:
+            if not isinstance(j, dict) or not isinstance(j.get("gid"), str) or not j["gid"]:
+                continue
+            hits = [{"q": h.get("q") or "", "at": h.get("at") or "",
+                     "no": str(h["no"]) if isinstance(h.get("no"), (str, int)) and not isinstance(h.get("no"), bool) else "",
+                     "src": h.get("src") or ""}
+                    for h in (j.get("hits") or []) if isinstance(h, dict) and h.get("q")]
+            entries.append({"gid": j["gid"], "gname": j.get("gname") or "错题", "q": j.get("q") or "",
+                            "at": j.get("at") or "", "wrong": _int(j.get("wrong")), "ok": _int(j.get("ok")),
+                            "manual": _int(j.get("manual")) != 0, "hits": hits})
+        if not entries:
+            continue
+        lesson = by_slug.get(slug)
+        if lesson is None:
+            orphans.append(slug)
+        groups.append({"slug": slug, "title": (lesson or {}).get("title") or slug,
+                       "subject": (lesson or {}).get("subject") or "", "in_manifest": lesson is not None,
+                       "entries": entries})
+    if a.subject:
+        groups = [g for g in groups if g["subject"] == a.subject]
+    if a.search:
+        t = a.search.lower()
+        for g in groups:
+            g["entries"] = [e for e in g["entries"] if t in (e["gname"] + e["q"] + g["title"]).lower()
+                            or any(t in h["q"].lower() for h in e["hits"])]
+        groups = [g for g in groups if g["entries"]]
+    groups.sort(key=lambda g: (order.get(g["slug"], 1 << 30), g["slug"]))
+    v = {"ok": True, "source": "server_archive_snapshot", "archive_ts": ts or None,
+         "lessons": len(groups), "types": sum(len(g["entries"]) for g in groups),
+         "orphan_slugs": sorted(orphans), "groups": groups}
+    def text():
+        out = []
+        for g in groups:
+            out.append(f"■ {g['title']}（{len(g['entries'])} 类）" + ("" if g["in_manifest"] else "  [课程包里已没有这一课]"))
+            for e in g["entries"]:
+                prog = f" · 已订正 {e['ok']}/2" if e["ok"] else ""
+                out.append(f"   {e['gname']}：{'手动收进' if e['manual'] and not e['wrong'] else '错 %d 次' % e['wrong']}{prog}"
+                           + (f" —— {e['q']}" if e["q"] else ""))
+        return "\n".join(out) or "（服务器存档里没有错题）"
+    return v, text
+
+
+def today_stamp(d: date | None = None) -> str:
+    """同 practice.js 的 today() / GrowthProfile.todayStamp：月/日不补零（2026-8-9）。"""
+    d = d or date.today()
+    return f"{d.year}-{d.month}-{d.day}"
+
+
+def cmd_progress(c, a, sec):
+    """同 GrowthProfile.parse：跨天后今日已做按 0 算；只给原始 xp，不在这里另算等级。"""
+    arch, ts = _archive(c)
+    o = _json_obj(arch.get("edu:@profile")) or {}
+    day, days = o.get("day") if isinstance(o.get("day"), dict) else {}, o.get("days") if isinstance(o.get("days"), dict) else {}
+    today = today_stamp()
+    done = _int(day.get("n")) if day.get("d") == today else 0
+    goal = _int(o.get("goal"), 12)
+    v = {"ok": True, "source": "server_archive_snapshot", "archive_ts": ts or None,
+         "has_profile": bool(o), "today": today, "done_today": done, "goal": goal,
+         "remaining": max(0, goal - done), "xp": _int(o.get("xp")), "streak_days": _int(days.get("streak"))}
+    return v, lambda: (f"今天 {done}/{goal} 题（还差 {v['remaining']}）· 经验 {v['xp']} · 连续 {v['streak_days']} 天"
+                       if o else "服务器存档里还没有学习进度")
+
+
+def cmd_lessons(c, a, sec):
+    m = c.call("api/lessons")
+    ls = [{k: x.get(k) for k in ("slug", "title", "subject", "subject_name", "unit", "kind", "file", "sha256", "desc")
+           if k in x} for x in m.get("lessons") or []]
+    v = {"ok": True, "daily_goal": m.get("daily_goal"), "count": len(ls), "lessons": ls}
+    return v, lambda: "\n".join(f"{x.get('subject_name') or x.get('subject') or ''} · {x.get('title')}  [{x.get('file')}]"
+                                for x in ls) or "（个人课程包是空的：先导入错题照片）"
+
+
+def cmd_lesson(c, a, sec):
+    m = c.call("api/lessons")
+    hit = next((x for x in m.get("lessons") or [] if a.lesson in (x.get("slug"), x.get("file"))), None)
+    if not hit:
+        raise Fail("个人课程包里没有这一课（见 mistakes lessons）")
+    blob = c.raw("api/lesson", {"file": hit["file"]})
+    out = Path(a.out or (hit.get("slug") or "lesson") + ".html")
+    out.write_bytes(blob)
+    v = {"ok": True, "slug": hit.get("slug"), "file": hit.get("file"), "path": str(out.resolve()), "bytes": len(blob)}
+    return v, lambda: f"已下载 {v['path']}（{len(blob)} 字节；含个人题目，请妥善保管）"
+
+
+IMAGE_EXT = {b"\x89PNG": ".png", b"\xff\xd8\xff": ".jpg", b"RIFF": ".webp", b"GIF8": ".gif"}
+
+
+def cmd_image(c, a, sec):
+    """同 wrong.html 的原图 / PaperScan 的页面预览：把自己上传的一张原图存到本地文件（只拿自己的）。"""
+    if a.what == "upload":
+        blob = c.raw("api/wrong_img", {"id": a.target})
+        stem = a.target
+    else:
+        if a.page is None:
+            raise Fail("paper 要 --page 第几页", code=2)
+        blob = c.raw("api/paper_img", {"slug": a.target, "page": a.page})
+        stem = f"{a.target}-p{a.page}"
+    ext = next((e for sig, e in IMAGE_EXT.items() if blob.startswith(sig)), ".bin")
+    out = Path(a.out or stem + ext)
+    out.write_bytes(blob)
+    v = {"ok": True, "what": a.what, "target": a.target, "page": a.page, "path": str(out.resolve()), "bytes": len(blob)}
+    return v, lambda: f"已保存 {v['path']}（{len(blob)} 字节；是本人上传的原图，请妥善保管）"
+
+
+def _upload(x: dict) -> dict:
+    return {k: x.get(k) for k in ("id", "at", "subject", "note", "status", "mime", "bytes", "w", "h",
+                                  "topic", "paper", "page", "job", "job_state") if x.get(k) not in (None, "")} | (
+        {"job_result": {"ok": bool((x.get("job_result") or {}).get("ok"))}} if x.get("job_result") else {})
+
+
+def cmd_uploads(c, a, sec):
+    r = c.call("api/wrongs")
+    items = [_upload(x) for x in r.get("items") or []]
+    v = {"ok": True, "total": len(items), "pending": r.get("pending", 0), "items": items}
+    return v, lambda: "\n".join(f"{x['id']}  {x.get('status')}  {x.get('subject', '')}  {x.get('job_state', '')}"
+                                f"{'（' + x['note'] + '）' if x.get('note') else ''}" for x in items) or "（没有上传过错题照片）"
+
+
+def cmd_papers(c, a, sec):
+    r = c.call("api/papers")
+    items = [{"slug": x.get("slug"), "status": x.get("status"), "pages": sorted((x.get("pages") or {}), key=int),
+              "created": x.get("created"), "updated": x.get("updated"), "note": x.get("note") or ""}
+             for x in r.get("items") or []]
+    v = {"ok": True, "total": len(items), "pending": r.get("pending", 0), "items": items}
+    return v, lambda: "\n".join(f"{x['slug']}  {x['status']}  第 {','.join(x['pages'])} 页" for x in items) or "（没有整卷批次）"
+
+
+def _job_state(c, jid: str) -> dict:
+    r = c.call("api/job", query={"id": jid})
+    if r.get("state") != "done":
+        return {"job": jid, "state": "running"}
+    res = r.get("res") or {}
+    return {"job": jid, "state": "done", "result_ok": bool(res.get("ok")), "log": str(res.get("log") or "")}
+
+
+def _wait(c, jid: str, seconds: float) -> dict:
+    end = time.monotonic() + max(0.0, seconds)
+    while True:
+        s = _job_state(c, jid)
+        if s["state"] == "done" or time.monotonic() >= end:
+            return s
+        time.sleep(3)
+
+
+def cmd_job(c, a, sec):
+    s = _wait(c, a.job_id, a.wait or 0)
+    if s["state"] == "done" and not s["result_ok"]:
+        raise Fail("作业失败：" + (s["log"].strip().splitlines() or ["（无日志）"])[-1])
+    return {"ok": True, **s}, lambda: (f"{a.job_id}：{'完成' if s['state'] == 'done' else '进行中'}"
+                                       + (f"\n{s['log'].strip()}" if s.get("log") else ""))
+
+
+# ───────────────────────────── 写 / 外部动作 ─────────────────────────────
+
+def _dataurl(path: str) -> str:
+    blob = Path(path).read_bytes()
+    if not blob:
+        raise Fail(f"{path} 是空文件", code=2)
+    # mime 前缀只是标签，服务端从真实字节认格式（同 wrong.html：不在客户端预筛格式）
+    return "data:application/octet-stream;base64," + base64.b64encode(blob).decode()
+
+
+def _need_consent(a):
+    if not a.consent_ai:
+        raise Fail("这一步会把图片发给 DeepSeek 做 AI 识别并占用识别额度：同意请加 --consent-ai"
+                   "（同 App/网页的识别同意勾选）", code=2)
+
+
+def cmd_upload(c, a, sec):
+    """同 wrong.html：一张一张传 /api/wrong，默认紧接着派 auto 读图作业。"""
+    if not a.no_auto:
+        _need_consent(a)
+    out = []
+    for f in a.images:
+        r = c.call("api/wrong", {"data": _dataurl(f), "subject": a.subject or "", "note": a.note or ""}, timeout=90)
+        item = {"file": Path(f).name, "id": r["item"]["id"]}
+        if not a.no_auto:
+            item["job"] = c.call("api/wrong_job", {"kind": "auto", "id": item["id"]}).get("job")
+            if a.wait:
+                item.update(_wait(c, item["job"], a.wait))
+        out.append(item)
+    v = {"ok": True, "count": len(out), "items": out}
+    return v, lambda: "\n".join(f"{x['file']} → {x['id']}" + (f" · 作业 {x['job']}" if x.get("job") else "")
+                                + (f" · {x['state']}" if x.get("state") else "") for x in out)
+
+
+def paper_slug(a) -> str:
+    if a.slug:
+        slug = a.slug
+    else:
+        if not (a.year and a.term and a.grade and a.subject and a.kind):
+            raise Fail("给 --slug，或同时给 --year --term --grade --subject --kind 拼卷子编号", code=2)
+        slug = f"{a.year}s{a.term}-g{a.grade}-{a.subject}-{a.kind}"   # 同 PaperScan.Slug.text
+    if not PAPER_SLUG_RE.match(slug):
+        raise Fail(f"卷子编号不对：{slug}（形如 2026s1-g3-math-final）", code=2)
+    return slug
+
+
+def cmd_import(c, a, sec):
+    """同 错题本「导入」整卷：一页一个 /api/paper_page 请求；服务端收到一页即派 auto 读图作业。"""
+    slug = paper_slug(a)
+    if not a.no_auto:
+        _need_consent(a)
+    pages = []
+    for i, f in enumerate(a.images):
+        body = {"slug": slug, "page": a.first_page + i, "note": a.note or "", "data": _dataurl(f)}
+        if a.no_auto:
+            body["auto"] = False               # 服务端的自检通道：只存页，不读图、不占额度
+        r = c.call("api/paper_page", body, timeout=90)
+        p = {"file": Path(f).name, "page": a.first_page + i, "wrong_id": r.get("wrong_id"), "job": r.get("job")}
+        if r.get("auto_err"):
+            p["auto_err"] = r["auto_err"]
+        if p["job"] and a.wait:
+            p.update(_wait(c, p["job"], a.wait))
+        pages.append(p)
+    v = {"ok": True, "slug": slug, "count": len(pages), "pages": pages}
+    return v, lambda: f"卷子 {slug}：传了 {len(pages)} 页\n" + "\n".join(
+        f"  第 {p['page']} 页 {p['file']}" + (f" · 作业 {p['job']}" if p.get("job") else "")
+        + (f" · {p['auto_err']}" if p.get("auto_err") else "") for p in pages)
+
+
+def cmd_recognize(c, a, sec):
+    """同 wrong.html「开始 / 重试识别」：派 /api/wrong_job。commit 写进本账号的个人课程包（不是共享题库）。"""
+    if a.kind in ("auto", "draft"):
+        _need_consent(a)
+    body = {"kind": a.kind, "id": a.upload_id}
+    if a.kind == "commit":
+        if not a.topic:
+            raise Fail("commit 要 --topic <知识点 slug>", code=2)
+        body["topic"] = a.topic
+        if a.gen:
+            body["gen"] = a.gen
+        if a.dup_ok:
+            body["dup_ok"] = True
+    jid = c.call("api/wrong_job", body).get("job")
+    s = _wait(c, jid, a.wait) if a.wait else {"job": jid, "state": "queued"}
+    if s.get("state") == "done" and not s.get("result_ok"):
+        raise Fail("作业失败：" + (s["log"].strip().splitlines() or ["（无日志）"])[-1])
+    return {"ok": True, **s}, lambda: f"已派作业 {jid}（{s['state']}）；用 mistakes job {jid} --wait 60 看结果"
+
+
+def cmd_delete(c, a, sec):
+    if not a.yes:
+        raise Fail("删除上传的原图是真删（服务端不留底）：确认请加 --yes", code=2)
+    if a.what == "upload":
+        c.call("api/wrong_del", {"id": a.target})
+        v = {"ok": True, "deleted": "upload", "id": a.target}
+    else:
+        body = {"slug": a.target}
+        if a.page is not None:
+            body["page"] = a.page
+        c.call("api/paper_del", body)
+        v = {"ok": True, "deleted": "paper", "slug": a.target, "page": a.page}
+    return v, lambda: f"已删除 {a.what} {a.target}" + (f" 第 {a.page} 页" if a.page is not None else "")
+
+
+def cmd_deletion_status(c, a, sec):
+    if a.receipt:
+        r = c.call("api/account_delete_status", {"receipt_id": a.receipt})
+    else:
+        r = c.call("api/account_delete_request")
+    v = {"ok": True, **{k: r.get(k) for k in ("status", "receipt_id", "requested_at", "expected_by", "completed_at")
+                        if r.get(k) is not None}}
+    return v, lambda: f"注销状态：{v.get('status')}" + (f"（预计 {str(v.get('expected_by'))[:10]}）"
+                                                     if v.get("expected_by") else "")
+
+
+def cmd_account_delete(c, a, sec):
+    """同 Session.deleteAccount：先试即时注销 /api/account_del；409（有扫描历史等）再递注销申请。"""
+    if not a.yes:
+        raise Fail("注销不可恢复：确认请加 --yes（注销不会自动取消 Apple 订阅）", code=2)
+    try:
+        c.call("api/account_del", {"p": sec.account()})
+        return {"ok": True, "status": "deleted"}, lambda: "账号已注销，数据已删除"
+    except Fail as f:
+        if f.status != 409:
+            raise
+    r = c.call("api/account_delete_request", {"password": sec.account()})
+    v = {"ok": True, **{k: r.get(k) for k in ("status", "receipt_id", "requested_at", "expected_by") if r.get(k)}}
+    return v, lambda: f"已受理注销申请（{v.get('status')}），预计 {str(v.get('expected_by'))[:10]} 前完成；回执 {v.get('receipt_id')}"
+
+
+# ───────────────────────────── 命令行 ─────────────────────────────
+
+EXAMPLES = """示例：
+  EDU_USER=me@example.com EDU_PASSWORD=… mistakes status --json
+  mistakes wrongs --subject math --json            # 服务器存档里的错题本（按课）
+  mistakes progress --json                         # 今天几题 / 目标 / 经验 / 连续天数
+  mistakes import p1.jpg p2.jpg --year 2026 --term 1 --grade 3 --subject math --kind final --consent-ai --wait 120
+  mistakes job auto-20260930-101010-abc123-1790000000-a1b2c3 --wait 60 --json
+  mistakes delete upload 20260930-101010-abc123 --yes
+纯界面/设备本地的留在 App：拍照与相册选择、页面预览、每日提醒、离线课程副本、Apple 订阅购买、练习答题本身。"""
+
+
+def build() -> argparse.ArgumentParser:
+    ap = argparse.ArgumentParser(prog="mistakes", formatter_class=argparse.RawDescriptionHelpFormatter,
+                                 description="Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。",
+                                 epilog=EXAMPLES)
+    ap.add_argument("--api", help="服务端地址（默认 $EDU_API_BASE 或 https://edu.tianli.cyou）")
+    ap.add_argument("--user", help="账号：邮箱或用户名（默认 $EDU_USER）")
+    ap.add_argument("--password-stdin", action="store_true", help="账号密码从 stdin 第 1 行读（默认 $EDU_PASSWORD）")
+    ap.add_argument("--timeout", type=float, default=20, help="单次请求超时秒数（默认 20；上传固定 90）")
+    sub = ap.add_subparsers(dest="cmd", metavar="命令")
+
+    def cmd(parent, name, fn, help_):
+        p = parent.add_parser(name, help=help_, description=help_)
+        p.add_argument("--json", action="store_true", help="输出 JSON")
+        p.set_defaults(fn=fn)
+        return p
+
+    cmd(sub, "status", cmd_status, "账号概况：AI 识别额度/订阅、待录入照片与卷子、识别中作业、注销状态")
+    p = cmd(sub, "wrongs", cmd_wrongs, "错题本（服务器存档快照，按课分组；一条 = 一类题）")
+    p.add_argument("--subject", help="只看一个科目（math / chinese …）")
+    p.add_argument("--search", help="按题型名、题面摘要、课名搜索")
+    cmd(sub, "progress", cmd_progress, "今日任务与成长：今天做了几题、目标、经验、连续天数")
+    cmd(sub, "lessons", cmd_lessons, "个人课程包清单（App 同步的那份）")
+    p = cmd(sub, "lesson", cmd_lesson, "下载一份个人练习页 HTML（同网页「下载」）")
+    p.add_argument("lesson", help="课的 slug 或 file（见 mistakes lessons）")
+    p.add_argument("--out", help="保存路径（默认 ./<slug>.html）")
+    cmd(sub, "uploads", cmd_uploads, "我上传的错题照片及其识别作业状态")
+    cmd(sub, "papers", cmd_papers, "我上传的整卷批次")
+    p = cmd(sub, "image", cmd_image, "把自己上传的一张原图（照片或卷子某页）存到本地文件")
+    p.add_argument("what", choices=("upload", "paper"))
+    p.add_argument("target", help="照片 id 或卷子编号")
+    p.add_argument("--page", type=int, help="paper 用：第几页")
+    p.add_argument("--out", help="保存路径（默认 ./<id>.<格式>）")
+    p = cmd(sub, "job", cmd_job, "查一件读图/入库作业；--wait 最多等几秒")
+    p.add_argument("job_id")
+    p.add_argument("--wait", type=float, default=0, help="等到完成或超时（秒）")
+
+    p = cmd(sub, "upload", cmd_upload, "上传错题照片（一张一请求），默认接着派 AI 读图（须 --consent-ai）")
+    p.add_argument("images", nargs="+", help="图片文件（格式由服务端按字节识别）")
+    p.add_argument("--subject", help="科目 key（math / chinese …）")
+    p.add_argument("--note", help="备注")
+    p.add_argument("--consent-ai", action="store_true", help="同意把图片发给 DeepSeek 识别（占识别额度）")
+    p.add_argument("--no-auto", action="store_true", help="只上传不派读图")
+    p.add_argument("--wait", type=float, default=0, help="等读图作业完成（秒）")
+
+    p = cmd(sub, "import", cmd_import, "导入整卷（一页一请求，同 App「导入」）；服务端每页自动读图（须 --consent-ai）")
+    p.add_argument("images", nargs="+", help="按页序给图片文件")
+    p.add_argument("--slug", help="卷子编号，如 2026s1-g3-math-final；或用下面五项拼")
+    p.add_argument("--year", type=int)
+    p.add_argument("--term", type=int, choices=(1, 2), help="1 上学期 / 2 下学期")
+    p.add_argument("--grade", type=int, choices=range(1, 7))
+    p.add_argument("--subject", help="科目 key（math / chinese …）")
+    p.add_argument("--kind", choices=PAPER_KINDS, help="卷种")
+    p.add_argument("--first-page", type=int, default=1, help="第一张算第几页（默认 1）")
+    p.add_argument("--note", help="备注")
+    p.add_argument("--consent-ai", action="store_true", help="同意把图片发给 DeepSeek 识别（占识别额度）")
+    p.add_argument("--no-auto", action="store_true", help="只存页不读图（服务端自检通道）")
+    p.add_argument("--wait", type=float, default=0, help="每页等读图作业完成（秒）")
+
+    p = cmd(sub, "recognize", cmd_recognize, "对一张已上传的照片派作业：auto 读图并生成练习 / draft 只读草稿 / commit 入个人课程包")
+    p.add_argument("upload_id")
+    p.add_argument("--kind", choices=("auto", "draft", "commit"), default="auto")
+    p.add_argument("--topic", help="commit 用：知识点 slug")
+    p.add_argument("--gen", help="commit 用：题型 gid")
+    p.add_argument("--dup-ok", action="store_true", help="commit 用：确认不是重复题")
+    p.add_argument("--consent-ai", action="store_true", help="auto/draft 须同意 AI 识别")
+    p.add_argument("--wait", type=float, default=0, help="等作业完成（秒）")
+
+    p = cmd(sub, "delete", cmd_delete, "删除自己上传的一张照片或一份卷子（真删，须 --yes）")
+    p.add_argument("what", choices=("upload", "paper"))
+    p.add_argument("target", help="照片 id 或卷子编号")
+    p.add_argument("--page", type=int, help="paper 用：只删这一页")
+    p.add_argument("--yes", action="store_true")
+
+    pa = sub.add_parser("account", help="账号注销：状态 / 申请", description="账号注销：状态 / 申请")
+    asub = pa.add_subparsers(dest="sub", metavar="动作", required=True)
+    p = cmd(asub, "deletion-status", cmd_deletion_status, "本账号的注销状态（或按回执查）")
+    p.add_argument("--receipt", help="注销回执 id（不给则查当前账号）")
+    p = cmd(asub, "delete", cmd_account_delete, "注销本账号：先即时删除，不行再递申请（不可恢复，须 --yes）")
+    p.add_argument("--yes", action="store_true")
+    return ap
+
+
+def main(argv: list[str]) -> int:
+    ap = build()
+    a = ap.parse_args(argv)
+    if not getattr(a, "fn", None):
+        ap.print_help()
+        return 2
+    as_json = getattr(a, "json", False)
+    sec = Secrets(a)
+    try:
+        c = session(a, sec)
+        v, text = a.fn(c, a, sec)
+    except Fail as f:
+        if as_json:
+            print(json.dumps({"ok": False, "err": f.msg, **({"status": f.status} if f.status else {})},
+                             ensure_ascii=False))
+        else:
+            print(f"✘ {f.msg}", file=sys.stderr)
+        return f.code
+    except OSError as e:
+        msg = f"读写本地文件失败：{e}"
+        print(json.dumps({"ok": False, "err": msg}, ensure_ascii=False) if as_json else f"✘ {msg}",
+              file=sys.stdout if as_json else sys.stderr)
+        return 1
+    if as_json:
+        print(json.dumps(v, ensure_ascii=False, indent=1))
+    else:
+        print(text())
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main(sys.argv[1:]))
+    except KeyboardInterrupt:
+        raise SystemExit(130)
