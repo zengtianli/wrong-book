@@ -2,13 +2,13 @@
 
 <p align="center"><img src="Resources/icon-1024.png" width="96" alt="Mistake Notebook"></p>
 
-# Mistake Notebook · wrong-book
+# Mistake Notebook · 错题本
 
 
 
 **Organize your mistakes so you can answer with more confidence next time.**
 
-![Swift](https://img.shields.io/badge/Swift-5-F05138?logo=swift&logoColor=white) ![SwiftUI](https://img.shields.io/badge/SwiftUI-0D84FF?logo=swift&logoColor=white) ![Platform](https://img.shields.io/badge/iOS%2018.0%2B%20·%20macOS%2015.0%2B-000?logo=apple) ![TestFlight](https://img.shields.io/badge/TestFlight-内测中-0D84FF) ![License](https://img.shields.io/badge/License-MIT-green)
+![Swift](https://img.shields.io/badge/Swift-5-F05138?logo=swift&logoColor=white) ![SwiftUI](https://img.shields.io/badge/SwiftUI-0D84FF?logo=swift&logoColor=white) ![Platform](https://img.shields.io/badge/iOS%2018.0%2B%20·%20macOS%2015.0%2B-000?logo=apple) [![App Store](https://img.shields.io/badge/App%20Store-available-0D84FF?logo=apple)](https://apps.apple.com/app/id6806626967) ![License](https://img.shields.io/badge/License-MIT-green)
 
 Start with your own exam papers and photos of missed questions, organizing scattered study materials for ongoing review. New accounts and public installers start with an empty personal notebook; study materials and records are isolated by account.
 
@@ -25,9 +25,54 @@ The three entry points are Notebook, Import, and Review, with account, reminders
 
 ## Availability
 
-In private TestFlight testing; no public link is available yet.
+Available on the [App Store](https://apps.apple.com/app/id6806626967): 1.0 (build 18) has been on sale since 2026-09-15; see the [release record](perf/asc-release.json).
 
 The public package includes no personal courses or question bank. Users import their own practice materials; sync-lessons.sh maintains only the zero-course public package.
+
+## Command line for agents · `mistakes`
+
+The app is for people; the command line is for agents. `cli/mistakes` is a thin client of the same server the app and the website use (the `/api/*` endpoints of `edu.tianli.cyou`), written with the Python standard library only. Upload size, recognition quota, subscriptions, account ownership and the deletion freeze are all decided on the server, and recognition and practice generation run in the same server-side worker.
+
+A locally built Mac edition carries the command at `错题本.app/Contents/Resources/bin/mistakes` (a `project.yml` build phase copies it only in macOS builds, before signing); iPhone/iPad packages and every archive (App Store / TestFlight) leave it out.
+
+```bash
+sh cli/install.sh          # Mac edition installed: finds the .app by bundle id and links to the command inside it; otherwise links to cli/mistakes in this repo (source edits apply at once)
+sh cli/install.sh --check  # verify only; --uninstall removes only this product's link
+```
+
+If the installed Mac edition is an older build without the command, `install.sh` refuses and asks for a reinstall of the Mac edition instead of falling back to the repo.
+
+Credentials come only from environment variables or stdin and are never stored or echoed: `EDU_USER` (email or username), `EDU_PASSWORD` (or `--password-stdin`); `EDU_API_BASE` defaults to `https://edu.tianli.cyou`.
+
+```bash
+mistakes status --json                         # recognition quota/subscription, pending photos and papers, running jobs, deletion state
+mistakes wrongs --subject math --json          # the mistake notebook (server snapshot of the practice archive, grouped by lesson)
+mistakes progress --json                       # questions done today, daily goal, XP, streak
+mistakes import p1.jpg p2.jpg --year 2026 --term 1 --grade 3 --subject math --kind final --consent-ai --wait 120
+mistakes job <job-id> --wait 60 --json
+mistakes delete upload <photo-id> --yes
+```
+
+Every read command supports `--json` and prints `{"ok": true, …}`; failures print `{"ok": false, "err": …}` and exit non-zero (1 = refused by the server, network failure or failed job; 2 = usage error or missing credentials). Read commands never change state. Commands that send images to AI recognition and use quota (`upload`, `import`, `recognize --kind auto|draft`) require `--consent-ai`, matching the app's consent step; deletions require `--yes`.
+
+| In the app | Command |
+|---|---|
+| Account, AI quota and subscription state, deletion progress in Settings | `mistakes status` / `mistakes account deletion-status [--receipt ID]` |
+| Mistake notebook / review (by lesson, by subject, search) | `mistakes wrongs [--subject] [--search]` |
+| Today's goal, XP, streak | `mistakes progress` |
+| Personal lesson pack / download one lesson | `mistakes lessons` / `mistakes lesson <slug> --out FILE` |
+| Import a paper (page-by-page upload, automatic recognition) | `mistakes import <images…> --slug or --year --term --grade --subject --kind` |
+| Single mistake photo, queue recognition or commit to the personal lesson pack | `mistakes upload` / `mistakes recognize <photo-id> --kind auto\|draft\|commit` |
+| Upload history and job progress | `mistakes uploads` / `mistakes papers` / `mistakes job <job-id> [--wait SECONDS]` |
+| View an uploaded original photo / paper page | `mistakes image upload <photo-id>` / `mistakes image paper <slug> --page N` |
+| Delete an upload | `mistakes delete upload\|paper <id> --yes` |
+| Delete the account (immediate deletion first, a deletion request when scan history exists) | `mistakes account delete --yes` |
+
+Note: `wrongs` and `progress` read the server snapshot of the practice archive (synced by the practice pages while a device is online, last write wins), so work done offline appears after the next sync; the app's notebook also shows the original question rows from the lesson pack, while the command line lists the mistake types stored in the archive.
+
+GUI-only (pure interface or device-only): taking or picking photos, page previews, answering practice questions, daily reminders, offline lesson copies, and buying or restoring the Apple subscription (the server only trusts Apple-signed transactions).
+
+Regression: `python3 Tests/cli_mistakes_test.py` first checks the packaging rule and `install.sh` (a fake .app in a temporary Applications folder), then starts an isolated local server (temporary directory, free port), never touches live accounts and never calls the AI; it needs `edu/web/points/server.py` from the same workspace, or `EDU_SERVER_PY` pointing to it.
 
 ## Build
 
