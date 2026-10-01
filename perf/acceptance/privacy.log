@@ -1,0 +1,11 @@
+PASS real paperPage/job: original cookie bound; changed scope, renewed login and endpoint blocked before HTTP
+PASS switch at transport boundary: in-flight request stays with original account; following requests blocked
+PASS production Session.refresh: delayed A response cannot replace B after logout/login
+PASS production Session.restore: delayed response cannot replace guest choice
+PASS production guest refresh: no status request and no silent re-login
+PASS production offline refresh: cached-account reconnect still probes and restores identity
+PASS production login: busy blocks guest, overlapping auth, deletion and background refresh
+PASS production register: busy preserves registration until its status response completes
+PASS production deletion refresh: stale discovery/completion cannot rebind receipt or clear new user
+Scope: Privacy: bound import cookies; old scope/login/endpoint rejected before transport; stale account/deletion responses rejected; guest refresh sends no request; auth operations serialize. Preferences are in-memory; library storage is a test stand-in. Physical-device permissions, live deletion, server retention and AI consent UI are outside this check.
+Production Swift code in an isolated local harness; no device UI, live AI, account or purchase validation.

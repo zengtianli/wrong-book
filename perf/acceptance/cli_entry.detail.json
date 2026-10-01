@@ -1,0 +1,24 @@
+{
+  "summary": "命令行在 App 里：mistakes — Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。",
+  "passed": true,
+  "commands": [
+    "mistakes"
+  ],
+  "app": "cyou.tianli.wrongbook",
+  "host_app": "/Applications/错题本.app",
+  "target": "/Applications/错题本.app/Contents/Resources/bin/mistakes",
+  "inside_app": true,
+  "help_summary": "Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。",
+  "entries": [
+    {
+      "command": "mistakes",
+      "link": "~/.local/bin/mistakes",
+      "target": "/Applications/错题本.app/Contents/Resources/bin/mistakes",
+      "inside_app": true,
+      "executable": true,
+      "exit_code": 0,
+      "summary": "Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。",
+      "error": null
+    }
+  ]
+}

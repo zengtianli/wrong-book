@@ -1,3 +1,56 @@
+name: wrong-book
 name_en: Mistake Notebook
 name_zh: 错题本
 display_name: Mistake Notebook · 错题本
+family: edu
+form: ios
+lifecycle: active
+bundle_id: cyou.tianli.wrongbook
+origin: own
+sop:
+  accept:
+    functionality: bash scripts/accept/functionality.sh
+    recovery: bash scripts/accept/recovery.sh
+    privacy: bash scripts/accept/privacy.sh
+  test: bash Tests/check-local-regressions.sh && python3 Tests/cli_mistakes_test.py
+  ui:
+  - Sources/**
+  - Shared/**
+  source:
+  - Sources/**
+  - Shared/**
+  - Resources/**
+  - Widget/**
+  - ShareExtension/**
+  - project.yml
+  - '*.entitlements'
+  - cli/mistakes
+  test_inputs:
+  - Tests/**
+  - ref/**
+  - test-contract.py
+  - test_check_markdown_drift.py
+  - scripts/tests/**
+  - scripts/accept/**
+  - Package.swift
+  - cli/**
+  media:
+  - shots
+  - ../02-审核/当前版本/02-视频/成片/public-preview
+  media_meta: ../02-审核/当前版本/02-视频/成片/public-preview/provenance.json
+  release: perf/asc-release.json
+  runtime_note: iPhone 17 / iOS 27.2 当前离线（tunnel unavailable、ddiServicesAvailable=false）；主机 DDI 已核验可用。未启动 App，未用模拟器替代真机数据，等待连接解锁及空闲测量窗口。
+  # 给 Agent 的命令行：同一服务端 /api/* 的薄客户端（stdlib）。本机 Mac 版 .app 自带
+  # Contents/Resources/bin/mistakes（project.yml 的构建阶段只在 macOS build 拷，iOS 包与归档不带），
+  # cli/install.sh 按 bundle id 找到已装的 .app 链到 ~/.local/bin/mistakes。宿主 = 本组件 bundle_id。
+  cli:
+    commands:
+    - mistakes
+  runtime:
+    kind: ios
+    readback: builtin:asc-device
+  product:
+    distribution: public
+    source_visibility: public
+    source_url: https://github.com/zengtianli/wrong-book
+    rationale: 整理自己的错题，留给下一次更有把握的作答。 面向外部使用者提供现有公开产品与源码入口，持续维护获取、教程和版本证据。

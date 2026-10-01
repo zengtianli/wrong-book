@@ -1,0 +1,4 @@
+Scope: Recovery: production catalog retry/cancellation, subscription error recovery and stale-response isolation, HTTP error decoding. Injected local faults; no StoreKit transactions or device end-to-end claim.
+Production Swift code in an isolated local harness; no device UI, live AI, account or purchase validation.
+PASS: catalog fault-to-success/partial preservation/retry bounds/cancellation; subscription concurrent loads, error-state retry, backend independence, stale-account rejection and restore failure release
+Api HTTP/JSON regression passed

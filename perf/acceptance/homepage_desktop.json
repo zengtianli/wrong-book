@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "name": "homepage_desktop",
+  "app_id": "wrong-book-ios",
+  "command": "/Users/tianli/Dev/.venv/bin/python /Users/tianli/Apps/chapter/engine/acceptors/homepage.py --viewport desktop",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-09-28T00:19:40.155691+08:00",
+  "finished_at": "2026-09-28T00:19:57.573600+08:00",
+  "input_sha256": "a682e45f568f3546e6570c9f399c968f3db6739c674582149d58707cb8e387a2",
+  "log": "perf/acceptance/homepage_desktop.log",
+  "log_sha256": "c6ea166e326fca3a753d94a5acb8a8158729c4168a04410f418be856e7c47d04",
+  "summary": "desktop 1440px：HTTP 200，标题「Mistake Notebook · 错题本 · 整理自己的错题，留给下一次更有把握的作答。」，无横向溢出，5 张图片全部加载",
+  "detail": {
+    "summary": "desktop 1440px：HTTP 200，标题「Mistake Notebook · 错题本 · 整理自己的错题，留给下一次更有把握的作答。」，无横向溢出，5 张图片全部加载",
+    "passed": true,
+    "url": "https://app-ios-wrong-book.tianli.cyou/",
+    "viewport": [
+      1440,
+      900
+    ],
+    "http_status": 200,
+    "title": "Mistake Notebook · 错题本 · 整理自己的错题，留给下一次更有把握的作答。",
+    "inner_width": 1440,
+    "scroll_width": 1440,
+    "horizontal_overflow": false,
+    "images": [
+      {
+        "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/icon.png?v=1ddf33c713",
+        "complete": true,
+        "natural_width": 180,
+        "natural_height": 180,
+        "rendered_width": 36,
+        "rendered_height": 36,
+        "alt": ""
+      },
+      {
+        "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/01.jpg",
+        "complete": true,
+        "natural_width": 341,
+        "natural_height": 720,
+        "rendered_width": 279,
+        "rendered_height": 590,
+        "alt": "1.0 (18) 实机演示：测试账号中的示例算术题。"
+      },
+      {
+        "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/02.jpg",
+        "complete": true,
+        "natural_width": 341,
+        "natural_height": 720,
+        "rendered_width": 368,
+        "rendered_height": 620,
+        "alt": "1.0 (18) 实机演示：重新练习测试题。"
+      },
+      {
+        "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/03.jpg",
+        "complete": true,
+        "natural_width": 341,
+        "natural_height": 720,
+        "rendered_width": 368,
+        "rendered_height": 620,
+        "alt": "1.0 (18) 实机演示：导入前确认 AI 识别说明。"
+      },
+      {
+        "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/icon.png?v=1ddf33c713",
+        "complete": true,
+        "natural_width": 180,
+        "natural_height": 180,
+        "rendered_width": 72,
+        "rendered_height": 72,
+        "alt": "Mistake Notebook · 错题本 图标"
+      }
+    ],
+    "videos": [
+      {
+        "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/demo.mp4",
+        "ready_state": 0,
+        "duration": null,
+        "current_time": 0,
+        "paused": true,
+        "error": null,
+        "video_width": 0,
+        "video_height": 0,
+        "tracks": 1,
+        "play_error": null
+      }
+    ],
+    "failed_requests": [],
+    "requests": 7,
+    "screenshot": "perf/acceptance/homepage_desktop.png",
+    "screenshot_sha256": "af430ab6c8a32f41f52ffb54ab5dacc0b84a89f97d792c55fd79920576076841",
+    "screenshot_check": "极差 255，标准差 52.2",
+    "browser": {
+      "binary": "/Users/tianli/Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+      "kind": "headless_shell",
+      "version": "Google Chrome for Testing 151.0.7922.34"
+    },
+    "probe_timed_out": true,
+    "method": "隔离无界面浏览器（临时配置、无调试端口、不操作桌面）经本地透传代理加载线上页面，探针读取布局与资源状态",
+    "limits": [
+      "单一桌面视口",
+      "机器判定布局与资源；视觉美观未做人工审阅"
+    ]
+  }
+}

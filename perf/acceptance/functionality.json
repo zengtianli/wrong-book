@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "name": "functionality",
+  "app_id": "wrong-book-ios",
+  "command": "bash scripts/accept/functionality.sh",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-09-30T23:03:12.506370+08:00",
+  "finished_at": "2026-09-30T23:03:13.371072+08:00",
+  "input_sha256": "c422a39bd65de6975f4e2ea978f748a3df146605461c24522c5394c5ea5d350d",
+  "log": "perf/acceptance/functionality.log",
+  "log_sha256": "9f6fb508ef36cee31913f9473d05e8f5640b7c11c708c240aab0519be86918ad",
+  "summary": "PASS import subjects: empty and single-subject libraries retain both choices; valid titles and unique keys",
+  "detail": null
+}

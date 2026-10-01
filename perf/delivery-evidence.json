@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "checks": {
+    "homepage_desktop": {
+      "result": "passed",
+      "scope": "promo_ui",
+      "method": "ui_automation",
+      "checked_at": "2026-09-28T00:19:57.573600+08:00",
+      "input_sha256": "a682e45f568f3546e6570c9f399c968f3db6739c674582149d58707cb8e387a2",
+      "evidence": "perf/acceptance/homepage_desktop.json",
+      "evidence_sha256": "5a8fcdf7ea6fd1ce943bf874dbf6e15ec217e8f0b8ad63d4488318c4fcab829c",
+      "detail": "builtin:homepage_desktop：/Users/tianli/Dev/.venv/bin/python /Users/tianli/Apps/chapter/engine/acceptors/homepage.py --viewport desktop → desktop 1440px：HTTP 200，标题「Mistake Notebook · 错题本 · 整理自己的错题，留给下一次更有把握的作答。」，无横向溢出，5 张图片全部加载"
+    },
+    "homepage_mobile": {
+      "result": "passed",
+      "scope": "promo_ui",
+      "method": "ui_automation",
+      "checked_at": "2026-09-28T00:19:57.561307+08:00",
+      "input_sha256": "a682e45f568f3546e6570c9f399c968f3db6739c674582149d58707cb8e387a2",
+      "evidence": "perf/acceptance/homepage_mobile.json",
+      "evidence_sha256": "e8afd1ab22fc53c814f562425e76287bda3c7426542eedeea28b0ba25ae7eed6",
+      "detail": "builtin:homepage_mobile：/Users/tianli/Dev/.venv/bin/python /Users/tianli/Apps/chapter/engine/acceptors/homepage.py --viewport mobile → mobile 390px：HTTP 200，标题「Mistake Notebook · 错题本 · 整理自己的错题，留给下一次更有把握的作答。」，无横向溢出，5 张图片全部加载"
+    },
+    "media_playback": {
+      "result": "passed",
+      "scope": "media",
+      "method": "ui_automation",
+      "checked_at": "2026-09-28T00:19:47.289606+08:00",
+      "input_sha256": "0edc66f2e73a9c7bcfac8e9b0d21040ef5cfdd89202f7e985c00b68bdde132f8",
+      "evidence": "perf/acceptance/media_playback.json",
+      "evidence_sha256": "8fc40dcc9a665fe5ecedcf5a5e818c81ef1f906948d4d8f99ecca0c28ec644fa",
+      "detail": "builtin:media_playback：/Users/tianli/Dev/.venv/bin/python /Users/tianli/Apps/chapter/engine/acceptors/media_playback.py → 1 个本地视频 ffprobe/ffmpeg 全量解码通过（/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/../02-审核/当前版本/02-视频/成片/public-preview/tour.mp4 12.0s h264）；推广页 1 个视频在无界面浏览器中实际播放（1.2/12s）"
+    },
+    "functionality": {
+      "result": "passed",
+      "scope": "code",
+      "method": "real_product",
+      "checked_at": "2026-09-30T23:03:13.371072+08:00",
+      "input_sha256": "c422a39bd65de6975f4e2ea978f748a3df146605461c24522c5394c5ea5d350d",
+      "evidence": "perf/acceptance/functionality.json",
+      "evidence_sha256": "0357605b7596da5f61ea995c52f54d2b3ec133172c65f0059d40f7f4ceaf7273",
+      "detail": "sop.accept：bash scripts/accept/functionality.sh → PASS import subjects: empty and single-subject libraries retain both choices; valid titles and unique keys"
+    },
+    "recovery": {
+      "result": "passed",
+      "scope": "code",
+      "method": "real_product",
+      "checked_at": "2026-09-30T23:03:14.930504+08:00",
+      "input_sha256": "c422a39bd65de6975f4e2ea978f748a3df146605461c24522c5394c5ea5d350d",
+      "evidence": "perf/acceptance/recovery.json",
+      "evidence_sha256": "eb6e693e920110540c390d6e75103fcbd2b009731034b85a7d09cb737707c860",
+      "detail": "sop.accept：bash scripts/accept/recovery.sh → Api HTTP/JSON regression passed"
+    },
+    "privacy": {
+      "result": "passed",
+      "scope": "code",
+      "method": "real_product",
+      "checked_at": "2026-09-30T23:03:14.930408+08:00",
+      "input_sha256": "c422a39bd65de6975f4e2ea978f748a3df146605461c24522c5394c5ea5d350d",
+      "evidence": "perf/acceptance/privacy.json",
+      "evidence_sha256": "e0d8da2b32f1e773a7bcdf36efb5cdbc621b03488c96d4928cea366c5f73930e",
+      "detail": "sop.accept：bash scripts/accept/privacy.sh → Production Swift code in an isolated local harness; no device UI, live AI, account or purchase validation."
+    },
+    "cli_entry": {
+      "result": "passed",
+      "scope": "cli_entry",
+      "method": "real_product",
+      "checked_at": "2026-10-01T11:01:37.750617+08:00",
+      "input_sha256": "c0a9548fada02f0004afc32da126d5e208d56a7e65db5068e5453bde5fd7d6ec",
+      "evidence": "perf/acceptance/cli_entry.json",
+      "evidence_sha256": "8f475bda808e87eb976f16fc098f329ad9047e845d3d55b22c1b2aeaac576281",
+      "detail": "builtin:cli_entry：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/cli_entry.py → 命令行在 App 里：mistakes — Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。"
+    }
+  },
+  "updated_at": "2026-10-01T11:01:37.802666+08:00"
+}

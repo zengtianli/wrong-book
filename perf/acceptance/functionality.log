@@ -1,0 +1,6 @@
+Scope: Local lesson file → production question index → stable review identifiers; production import subject options.
+Production Swift code in an isolated local harness; no device UI, live AI, account or purchase validation.
+PASS local production file read: 2 valid personal questions, stable review IDs, escaped text, prompt inclusion
+PASS legacy lesson replacement: sample filtering and original generator mapping
+NOT COVERED: authenticated library authorization, iOS UI, import upload/AI, live practice engine, sync and StoreKit
+PASS import subjects: empty and single-subject libraries retain both choices; valid titles and unique keys

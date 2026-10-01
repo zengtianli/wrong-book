@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "name": "cli_entry",
+  "app_id": "wrong-book-ios",
+  "command": "~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/cli_entry.py",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-01T11:01:36.647991+08:00",
+  "finished_at": "2026-10-01T11:01:37.750617+08:00",
+  "input_sha256": "c0a9548fada02f0004afc32da126d5e208d56a7e65db5068e5453bde5fd7d6ec",
+  "log": "perf/acceptance/cli_entry.log",
+  "log_sha256": "4bde3aa525321ed79b450281132faa288db3f51553443efccff6c710d80c9d45",
+  "summary": "命令行在 App 里：mistakes — Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。",
+  "detail": {
+    "summary": "命令行在 App 里：mistakes — Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。",
+    "passed": true,
+    "commands": [
+      "mistakes"
+    ],
+    "app": "cyou.tianli.wrongbook",
+    "host_app": "/Applications/错题本.app",
+    "target": "/Applications/错题本.app/Contents/Resources/bin/mistakes",
+    "inside_app": true,
+    "help_summary": "Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。",
+    "entries": [
+      {
+        "command": "mistakes",
+        "link": "~/.local/bin/mistakes",
+        "target": "/Applications/错题本.app/Contents/Resources/bin/mistakes",
+        "inside_app": true,
+        "executable": true,
+        "exit_code": 0,
+        "summary": "Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。",
+        "error": null
+      }
+    ]
+  }
+}

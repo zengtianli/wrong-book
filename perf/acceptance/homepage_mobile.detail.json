@@ -1,0 +1,91 @@
+{
+  "summary": "mobile 390px：HTTP 200，标题「Mistake Notebook · 错题本 · 整理自己的错题，留给下一次更有把握的作答。」，无横向溢出，5 张图片全部加载",
+  "passed": true,
+  "url": "https://app-ios-wrong-book.tianli.cyou/",
+  "viewport": [
+    390,
+    844
+  ],
+  "http_status": 200,
+  "title": "Mistake Notebook · 错题本 · 整理自己的错题，留给下一次更有把握的作答。",
+  "inner_width": 390,
+  "scroll_width": 390,
+  "horizontal_overflow": false,
+  "images": [
+    {
+      "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/icon.png?v=1ddf33c713",
+      "complete": true,
+      "natural_width": 180,
+      "natural_height": 180,
+      "rendered_width": 36,
+      "rendered_height": 36,
+      "alt": ""
+    },
+    {
+      "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/01.jpg",
+      "complete": true,
+      "natural_width": 341,
+      "natural_height": 720,
+      "rendered_width": 242,
+      "rendered_height": 510,
+      "alt": "1.0 (18) 实机演示：测试账号中的示例算术题。"
+    },
+    {
+      "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/02.jpg",
+      "complete": true,
+      "natural_width": 341,
+      "natural_height": 720,
+      "rendered_width": 169,
+      "rendered_height": 355,
+      "alt": "1.0 (18) 实机演示：重新练习测试题。"
+    },
+    {
+      "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/03.jpg",
+      "complete": true,
+      "natural_width": 341,
+      "natural_height": 720,
+      "rendered_width": 169,
+      "rendered_height": 355,
+      "alt": "1.0 (18) 实机演示：导入前确认 AI 识别说明。"
+    },
+    {
+      "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/icon.png?v=1ddf33c713",
+      "complete": true,
+      "natural_width": 180,
+      "natural_height": 180,
+      "rendered_width": 72,
+      "rendered_height": 72,
+      "alt": "Mistake Notebook · 错题本 图标"
+    }
+  ],
+  "videos": [
+    {
+      "src": "https://app-ios-wrong-book.tianli.cyou/assets/ios/wrong-book-ios/demo.mp4",
+      "ready_state": 0,
+      "duration": null,
+      "current_time": 0,
+      "paused": true,
+      "error": null,
+      "video_width": 0,
+      "video_height": 0,
+      "tracks": 1,
+      "play_error": null
+    }
+  ],
+  "failed_requests": [],
+  "requests": 7,
+  "screenshot": "perf/acceptance/homepage_mobile.png",
+  "screenshot_sha256": "4ad9c1a379f74c4706ad7801ba4cc8f0d97c854e2ff7312b5a601497af42054c",
+  "screenshot_check": "极差 255，标准差 52.1",
+  "browser": {
+    "binary": "/Users/tianli/Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "kind": "headless_shell",
+    "version": "Google Chrome for Testing 151.0.7922.34"
+  },
+  "probe_timed_out": true,
+  "method": "隔离无界面浏览器（临时配置、无调试端口、不操作桌面）经本地透传代理加载线上页面，探针读取布局与资源状态",
+  "limits": [
+    "响应式视口，不等于真机",
+    "机器判定布局与资源；视觉美观未做人工审阅"
+  ]
+}
