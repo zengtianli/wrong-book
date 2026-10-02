@@ -81,8 +81,8 @@ sop:
       budget: {memory_mb: 60, cpu: 0.5}
       distribution: none
   measure:  # 模拟器无界面、不抢焦点，本人用电脑时也能测（Mac 线静默启动：不上屏、不进 Dock）
-    # 起虚构演示学习库 → 旧 iPhone 测量（perf/simulator.json，lightweight.json 引用它）→ 五条平台线
-    # （perf/platforms/<线>.json）；输入没变的线跳过，任何一条推迟整体退出 75，下个空档只补没测完的。
+    # 起虚构学习库 → 逐线共享测量；iPhone 同一原件投影到 simulator/lightweight，不再另测 legacy。
+    # 核当前输入与原件 SHA 后复用；锁/负载等待 0，忙或预算耗尽即返回 75，下个时段只补缺口。
     command: ~/Dev/.venv/bin/python scripts/perf/measure_platforms.py
     outputs: [perf/simulator.json, perf/lightweight.json, perf/raw, perf/platforms]
     in_use: true
