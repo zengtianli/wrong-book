@@ -1,4 +1,4 @@
-// PlatformCompat.swift —— 总部共享（~/Apps/ios 全舰队按绝对路径引用，multiplatform.py 注入 project.yml）
+// PlatformCompat.swift —— 总部共享（Apps 下 form=ios 的舰队按绝对路径引用，multiplatform.py 注入 project.yml）
 //
 // 作用：让为 iPhone 写的 SwiftUI 代码**尽量一行不改**就能编进 macOS destination。
 // 做法：只在 macOS 侧提供 iOS-only 类型 / 修饰符的同名替身（no-op 或最接近的 AppKit 语义）。
@@ -249,4 +249,51 @@ public final class AVAudioSession {
     public func setActive(_ on: Bool, options: SetActiveOptions = []) throws {}
 }
 
+#endif
+
+#if os(visionOS)
+// visionOS 没有触感反馈：UIKit 把两个 generator 标为 unavailable。模块内同名类型遮蔽 UIKit 的声明，调用点不改。
+public final class UINotificationFeedbackGenerator {
+    public enum FeedbackType { case success, warning, error }
+    public init() {}
+    public func notificationOccurred(_ t: FeedbackType) {}
+    public func prepare() {}
+}
+public final class UIImpactFeedbackGenerator {
+    public enum FeedbackStyle { case light, medium, heavy, soft, rigid }
+    public init(style: FeedbackStyle = .medium) {}
+    public func impactOccurred() {}
+    public func impactOccurred(intensity: CGFloat) {}
+    public func prepare() {}
+}
+#endif
+
+#if os(watchOS)
+// watchOS 没有 UIKit 的键盘类型与 feedback generator：键盘类型为空实现，触感映射到 WKInterfaceDevice。
+import WatchKit
+public enum UIKeyboardType { case `default`, decimalPad, numberPad, numbersAndPunctuation, emailAddress, URL, phonePad, asciiCapable, webSearch }
+public extension View {
+    func keyboardType(_ t: UIKeyboardType) -> Self { self }
+}
+public final class UINotificationFeedbackGenerator {
+    public enum FeedbackType { case success, warning, error }
+    public init() {}
+    public func notificationOccurred(_ t: FeedbackType) {
+        let kind: WKHapticType
+        switch t {
+        case .success: kind = .success
+        case .warning: kind = .retry
+        case .error: kind = .failure
+        }
+        WKInterfaceDevice.current().play(kind)
+    }
+    public func prepare() {}
+}
+public final class UIImpactFeedbackGenerator {
+    public enum FeedbackStyle { case light, medium, heavy, soft, rigid }
+    public init(style: FeedbackStyle = .medium) {}
+    public func impactOccurred() { WKInterfaceDevice.current().play(.click) }
+    public func impactOccurred(intensity: CGFloat) { WKInterfaceDevice.current().play(.click) }
+    public func prepare() {}
+}
 #endif

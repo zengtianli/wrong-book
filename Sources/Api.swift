@@ -31,6 +31,12 @@ enum Api {
         return data
     }
 
+    /// 个人课程清单（`/api/lessons` 原样 JSON）。Apple Watch 只拿标题与学科把错题归到课名下，
+    /// 不下载课页；iPhone / iPad / Mac 的下载与校验仍走 LessonSync。
+    static func lessonManifest() async throws -> [String: Any] {
+        try await request("api/lessons")
+    }
+
     struct Failure: LocalizedError {
         let message: String
         var statusCode: Int = 0

@@ -59,7 +59,7 @@ struct LessonWebView: UIViewRepresentable {
                                            forMainFrameOnly: true))
         }
         cfg.userContentController = ucc
-        #if os(iOS)
+        #if os(iOS) || os(visionOS)
         // 做题要发声（practice.js 用 WebAudio 合成音效），别要求全屏手势
         cfg.allowsInlineMediaPlayback = true
         #endif
@@ -67,7 +67,8 @@ struct LessonWebView: UIViewRepresentable {
         let wv = WKWebView(frame: .zero, configuration: cfg)
         wv.navigationDelegate = context.coordinator
         context.coordinator.watchForBackground(wv)
-        #if os(iOS)
+        // Vision Pro 走 UIKit 这一支：Mac 那一支的 drawsBackground 是 AppKit 版 WKWebView 的键，UIKit 版没有（KVC 会崩）
+        #if os(iOS) || os(visionOS)
         wv.isOpaque = false                       // Mac 上 isOpaque 只读、无 backgroundColor、无 scrollView
         wv.backgroundColor = .clear
         wv.scrollView.contentInsetAdjustmentBehavior = .always

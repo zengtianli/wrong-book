@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 import WebKit
 
@@ -129,24 +128,8 @@ final class LessonSync: ObservableObject {
     }
 }
 
-enum LessonPaths {
-    static var activeScope: String?
-    static var offlineReadOnly = false
-    static func remoteURL(file: String) -> URL {
-        var url = URLComponents(url: Api.base.appendingPathComponent("api/lesson"), resolvingAgainstBaseURL: false)!
-        url.queryItems = [URLQueryItem(name: "file", value: file)]
-        return url.url!
-    }
-    static func valid(_ file: String) -> Bool {
-        !file.isEmpty && !file.hasPrefix("/") && !file.contains("\\") &&
-        !file.split(separator: "/", omittingEmptySubsequences: false).contains(where: { $0.isEmpty || $0 == "." || $0 == ".." }) &&
-        file.hasSuffix(".html")
-    }
-    static func directory(scope: String) -> URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("wrong-book/private-v2/" + Data(scope.utf8).sha256Hex, isDirectory: true)
-    }
-    static var downloads: URL? { activeScope.map(directory(scope:)) }
+/// LessonPaths 的 WebKit 一半：练习页与存档读取用的网页存储分区（其余在 LessonPaths.swift，Apple Watch 也编那份）。
+extension LessonPaths {
     // Never read the historical default localStorage/cookies.
     @MainActor static var webDataStore: WKWebsiteDataStore {
         guard let scope = activeScope else { return guestStore }
@@ -157,13 +140,5 @@ enum LessonPaths {
         let uuid = [String(chars[0..<8]), String(chars[8..<12]), String(chars[12..<16]), String(chars[16..<20]), String(chars[20..<32])].joined(separator: "-")
         return WKWebsiteDataStore(forIdentifier: UUID(uuidString: uuid)!)
     }
-    static func removeFiles(scope: String) throws {
-        let directory = directory(scope: scope)
-        if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
-    }
     @MainActor private static let guestStore = WKWebsiteDataStore.nonPersistent()
-}
-
-extension Data {
-    var sha256Hex: String { SHA256.hash(data: self).map { String(format: "%02x", $0) }.joined() }
 }

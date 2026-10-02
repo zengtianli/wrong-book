@@ -74,8 +74,26 @@ struct LessonPack {
               let d = try? Data(contentsOf: root.appendingPathComponent("manifest.json")),
               let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any],
               o["scope"] as? String == scope else { return .empty }
+        let list = lessons(fromManifest: o, scope: scope)
+        // A new personal library is intentionally empty.
+        if list.isEmpty {
+            return LessonPack(lessons: [], dailyGoal: o["daily_goal"] as? Int ?? 12,
+                              problem: nil)
+        }
+        // bundle 里真有那个文件吗 —— manifest 说有而文件没进包，表现是「点进去白屏」
+        let missing = list.filter { $0.resolvedURL == nil }
+        return LessonPack(
+            lessons: list,
+            dailyGoal: o["daily_goal"] as? Int ?? 12,
+            problem: missing.isEmpty ? nil
+                : "有 \(missing.count) 课的页面没进包：" + missing.prefix(3).map(\.slug).joined(separator: "、"))
+    }
+
+    /// manifest（`/api/lessons` 的原样 JSON）里的课程条目。Apple Watch 只拿它把错题归到课名下，
+    /// 不下载课页 —— 所以这里只解析，不校验文件（校验在上面的 load() 里）。
+    static func lessons(fromManifest o: [String: Any], scope: String) -> [Lesson] {
         let raw = (o["lessons"] as? [[String: Any]]) ?? []
-        let list = raw.map { j in
+        return raw.map { j in
             Lesson(kind: j["kind"] as? String ?? "practice",
                    slug: j["slug"] as? String ?? "",
                    title: j["title"] as? String ?? "",
@@ -90,18 +108,6 @@ struct LessonPack {
                    tag: j["tag"] as? String ?? "",
                    sha256: j["sha256"] as? String ?? "", scope: scope)
         }
-        // A new personal library is intentionally empty.
-        if list.isEmpty {
-            return LessonPack(lessons: [], dailyGoal: o["daily_goal"] as? Int ?? 12,
-                              problem: nil)
-        }
-        // bundle 里真有那个文件吗 —— manifest 说有而文件没进包，表现是「点进去白屏」
-        let missing = list.filter { $0.resolvedURL == nil }
-        return LessonPack(
-            lessons: list,
-            dailyGoal: o["daily_goal"] as? Int ?? 12,
-            problem: missing.isEmpty ? nil
-                : "有 \(missing.count) 课的页面没进包：" + missing.prefix(3).map(\.slug).joined(separator: "、"))
     }
 }
 

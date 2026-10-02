@@ -9,58 +9,82 @@ struct LoginView: View {
 
     var body: some View {
         ZStack {
+            #if !os(visionOS)
             Ink.paper.ignoresSafeArea()
+            #endif
 
             VStack(spacing: 22) {
                 Spacer()
-                VStack(spacing: 8) {
-                    Text("wrongbook")
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundStyle(Ink.text)
-                    Text("导入自己的错题照片，整理复习")
-                        .font(.footnote).foregroundStyle(Ink.dim)
-                }
-
-                VStack(spacing: 10) {
-                    field("用户名或邮箱", text: $user, secure: false)
-                    field("密码", text: $password, secure: true)
-                }
-
-                if let e = session.error {
-                    Text(e).font(.footnote).foregroundStyle(Ink.red)
-                        .multilineTextAlignment(.center).transition(.opacity)
-                }
-
-                Button {
-                    Task { await session.login(user: user, password: password) }
-                } label: {
-                    HStack {
-                        if session.busy { ProgressView().tint(.white) }
-                        Text(session.busy ? "登录中" : "登录").fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 40)
-                    .background(Ink.accent, in: RoundedRectangle(cornerRadius: 7))
-                    .foregroundStyle(.white)
-                }
-                .disabled(session.busy || user.isEmpty || password.isEmpty)
-                .opacity(user.isEmpty || password.isEmpty ? 0.45 : 1)
-
-                HStack(spacing: 18) {
-                    Button("先看看") { session.skipLogin() }
-                    Button("邮箱注册") { showRegister = true }
-                }
-                .font(.footnote).foregroundStyle(Ink.blue)
-                .disabled(session.busy)
-
+                #if os(visionOS)
+                // Vision Pro：窗口是玻璃，表单是浮在上面的一张纸（亮色输入框摊在玻璃上读不清）
+                VStack(spacing: 22) { form }
+                    .padding(.vertical, 40).padding(.horizontal, 36)
+                    .background(Ink.paper, in: RoundedRectangle(cornerRadius: 32, style: .continuous))
+                #else
+                form
+                #endif
                 Spacer()
+                #if os(visionOS)
+                // 这一行在纸外、直接落在玻璃上：用系统次级色，墨色在玻璃上读不清
+                Text("从自己的错题照片开始，登录后导入和同步")
+                    .font(.caption2).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 24)
+                #else
                 Text("从自己的错题照片开始，登录后导入和同步")
                     .font(.caption2).foregroundStyle(Ink.dim.opacity(0.8))
                     .multilineTextAlignment(.center)
+                #endif
             }
             .padding(.horizontal, 30).frame(maxWidth: 450)
         }
         .animation(.easeInOut(duration: 0.2), value: session.error)
         .sheet(isPresented: $showRegister) { RegisterView() }
+    }
+
+    /// 标题、输入框、登录按钮和两个链接 —— 窄屏原样摊在纸色整页上，Vision Pro 收进一张纸里。
+    @ViewBuilder
+    private var form: some View {
+        VStack(spacing: 8) {
+            Text("wrongbook")
+                .font(.system(size: 30, weight: .bold))
+                .foregroundStyle(Ink.text)
+            Text("导入自己的错题照片，整理复习")
+                .font(.footnote).foregroundStyle(Ink.dim)
+        }
+
+        VStack(spacing: 10) {
+            field("用户名或邮箱", text: $user, secure: false)
+            field("密码", text: $password, secure: true)
+        }
+
+        if let e = session.error {
+            Text(e).font(.footnote).foregroundStyle(Ink.red)
+                .multilineTextAlignment(.center).transition(.opacity)
+        }
+
+        Button {
+            Task { await session.login(user: user, password: password) }
+        } label: {
+            HStack {
+                if session.busy { ProgressView().tint(.white) }
+                Text(session.busy ? "登录中" : "登录").fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity, minHeight: 40)
+            .background(Ink.accent, in: RoundedRectangle(cornerRadius: 7))
+            .foregroundStyle(.white)
+        }
+        .flatButton()
+        .disabled(session.busy || user.isEmpty || password.isEmpty)
+        .opacity(user.isEmpty || password.isEmpty ? 0.45 : 1)
+
+        HStack(spacing: 18) {
+            Button("先看看") { session.skipLogin() }
+            Button("邮箱注册") { showRegister = true }
+        }
+        .flatButton()
+        .font(.footnote).foregroundStyle(Ink.blue)
+        .disabled(session.busy)
     }
 
     private var ruled: some View {

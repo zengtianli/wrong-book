@@ -1,18 +1,26 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 @main
 struct WrongBookApp: App {
+    #if os(macOS)
+    // 平台验收车道的 Mac 静默启动（-lane_quiet）；不传那个参数时什么都不做
+    @NSApplicationDelegateAdaptor(LaneAppDelegate.self) private var laneDelegate
+    #endif
     @StateObject private var session = Session()
 
     var body: some Scene {
         WindowGroup {
-            RootView().environmentObject(session).preferredColorScheme(.light).tint(Ink.accent)
+            RootView().environmentObject(session).lightAppearance().tint(Ink.accent)
                 #if os(macOS)
-                .frame(minWidth: 760, minHeight: 620)
+                // 侧栏 + 错题列表 + 题目三栏并排，再窄就挤了
+                .frame(minWidth: 900, minHeight: 620)
                 #endif
         }
-        #if os(macOS)
-        .defaultSize(width: 1050, height: 780)
+        #if os(macOS) || os(visionOS)
+        .defaultSize(width: 1240, height: 820)
         #endif
     }
 }
@@ -21,6 +29,14 @@ struct RootView: View {
     @EnvironmentObject var session: Session
     @ObservedObject private var subscriptions = AISubscription.shared
     @Environment(\.scenePhase) private var scenePhase
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var hSize
+    /// 只认 iPad 的 regular：iPhone Pro Max 横屏时尺寸类也是 regular，但那块屏摆不下侧栏 + 列表 + 题目，
+    /// 仍走原来的标签页。
+    private var wide: Bool { hSize == .regular && UIDevice.current.userInterfaceIdiom == .pad }
+    #else
+    private let wide = true      // Mac 与 Vision Pro 的窗口一律按宽屏排
+    #endif
 
     var body: some View {
         Group {
@@ -47,11 +63,19 @@ struct RootView: View {
                 switch session.phase {
                 case .checking:  SplashView()
                 case .loggedOut: LoginView()
-                case .loggedIn:  HomeView()
+                case .loggedIn:
+                    if wide { RegularHomeView() } else { HomeView() }
                 }
             }
         }
+        .environment(\.wideLayout, wide)
         .animation(.easeInOut(duration: 0.3), value: session.phase)
+        .task {
+            // 平台验收车道：iPad 横屏、Mac 截图窗口尺寸（不传 -lane_* 时什么都不做）
+            LaneSignal.applyOrientation()
+            LaneSignal.applyWindowFrame()
+            WatchLink.shared.activate()
+        }
         .task { await session.restore(); await session.refreshDeletion() }
         .task { await AISubscription.shared.listen() }
         .task { await subscriptions.listenForPurchaseIntents() }
@@ -65,6 +89,14 @@ struct RootView: View {
             }
         }
         .onChange(of: session.status?.user) { _, _ in AISubscription.shared.clearAccess() }
+        // Apple Watch 跟着 iPhone 的登录态走（WatchLink）：服务端确认了是谁（登录 / 恢复 / 注册）就递 cookie，
+        // 回到登录页（退出 / 注销）就递「已退出」。没网时离线打开（status 为空、仍算登录着）不算退出。
+        .onChange(of: session.status?.user) { _, user in
+            if user != nil { WatchLink.shared.publishSession() }
+        }
+        .onChange(of: session.phase) { _, phase in
+            if phase == .loggedOut { WatchLink.shared.publishSignedOut() }
+        }
         .alert("继续订阅", isPresented: Binding(
             get: { subscriptions.purchaseIntent != nil && session.phase == .loggedIn },
             set: { if !$0 { subscriptions.purchaseIntent = nil } }), presenting: subscriptions.purchaseIntent) { product in

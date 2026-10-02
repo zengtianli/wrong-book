@@ -20,6 +20,7 @@ struct LessonScreen: View {
             HStack(spacing: 10) {
                 Button { if let onClose { onClose() } else { dismiss() } } label: { Image(systemName: "xmark").font(.headline) }
                     .foregroundStyle(Ink.text)
+                    .flatButton()
                     .accessibilityLabel("关闭练习")
                 VStack(alignment: .leading, spacing: 1) {
                     Text(lesson.title).font(.headline).foregroundStyle(Ink.text).lineLimit(1)

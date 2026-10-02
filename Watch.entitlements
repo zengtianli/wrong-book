@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 手表 App 与表盘复杂功能共享复习摘要的仓（手表本机钥匙串，不跨设备、不同步）。第一项 = 不传
+	     kSecAttrAccessGroup 时的默认落点，所以**两个手表 target 这一项必须逐字相同**。
+	     $(AppIdentifierPrefix) 由 Xcode 展开成 "<TeamID>." —— TeamID 不写死在任何文件里。 -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)cyou.tianli.wrongbook.shared</string>
+	</array>
+</dict>
+</plist>

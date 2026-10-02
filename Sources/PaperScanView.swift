@@ -203,6 +203,7 @@ struct PaperScanView: View {
                 picked = []
             }
         }
+        .onAppear { LaneSignal.ready("import") }      // 平台验收车道 `-tab 1` 落在这一屏时的「起来了」
     }
 
     private var thisYear: Int { Calendar(identifier: .gregorian).component(.year, from: Date()) }

@@ -9,6 +9,8 @@ xcuserdata/
 # xcodegen 从 project.yml 生成,不进仓 —— 进仓会和 project.yml 打架:
 # 改了 yml 忘了重生成,工程和规格就悄悄不一致了。
 WrongBook.xcodeproj/
+# 同理：手表的两份 Info.plist 是 project.yml 的 info.properties 生成的，不是手写的
+Watch/*.plist
 
 # Generated public manifest is empty; private historical build exports stay in .build-inputs.
 Resources/Lessons/*.html
@@ -22,7 +24,9 @@ __pycache__/
 # git-template 的 info/exclude 默认拦所有 *.png。图标是**构建输入**:actool 读它,
 # 不进仓则 clone 下来编出来的 app 没图标。
 !Resources/icon-1024.png
-!Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
+# 资产目录里的图全是构建输入：Mac 的 mac-*.png、Watch 复用的 1024、Vision 的 AppIcon.solidimagestack 三层。
+# 只放行 icon-1024.png 时，全新 checkout 编出来的 Mac 包没有图标（mac-*.png 从没进仓，2026-10-02 发现）。
+!Resources/Assets.xcassets/**/*.png
 # shots/ 是验收证据,几 MB,留本地不进仓;要复现: bash sim-run.sh
 shots/
 

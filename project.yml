@@ -1,10 +1,17 @@
 name: WrongBook
 options:
   bundleIdPrefix: cyou.tianli
-  deploymentTarget: { iOS: "18.0", macOS: "15.0" }
+  # visionOS 26：与成长小金库同一口径（WidgetKit 在 visionOS 26 之前不可用；本 App 主 target 没有小组件，
+  # 取同一个版本省得两个 edu App 各有一套）。watchOS 11：手表 App 与表盘复杂功能是独立 target（见文件末尾；
+  # xcodegen 不许把 watchOS 写进 supportedDestinations）。
+  deploymentTarget: { iOS: "18.0", macOS: "15.0", visionOS: "26.0", watchOS: "11.0" }
   createIntermediateGroups: true
 settings:
   base:
+    # 名字与版本放全局：手表 App 与复杂功能必须与 iPhone App 同名、同版本（App Store 拒收不一致的包）。
+    APP_DISPLAY_NAME: 错题本
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "11"
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: B9LJH93LA4
     ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -12,7 +19,13 @@ settings:
 targets:
   WrongBook:
     type: application
-    supportedDestinations: [iOS, macOS]
+    # iPhone / iPad / Mac / Vision Pro 是同一个 target（同名、同图标、同 bundle id、同一套数据）；
+    # Apple Watch 是下面单独的 WrongBookWatch，iOS 构建时嵌进 WrongBook.app/Watch/。
+    supportedDestinations: [iOS, macOS, visionOS]
+    dependencies:
+      # 手表 App 只随 iOS 包走（WrongBook.app/Watch/）；Mac 与 visionOS 包里不带
+      - target: WrongBookWatch
+        destinationFilters: [iOS]
     # Public distributions contain an empty personal library, never a user's courses.
     preBuildScripts:
       - script: bash "$PROJECT_DIR/sync-lessons.sh"
@@ -38,6 +51,10 @@ targets:
     sources:
       # 总部共享：macOS 侧给 iOS-only SwiftUI 修饰符提供同名 no-op，调用点不改（multiplatform.py 注入）
       - path: Shared/PlatformCompat.swift
+      # 平台验收车道契约（lane-ready 日志、iPad 横屏、Mac 静默启动与离屏截图），不传 -lane_* 时零行为
+      - path: Shared/LaneSignal.swift
+      # iPhone → 手表登录态转交（Mac / Vision 上编译为空操作）
+      - path: Shared/WatchCookieLink.swift
       - path: Sources
       # ⚠ 图标资产必须在这儿列出来。漏了的表现是**编译通过、装机通过、桌面白板**——
       #   ASSETCATALOG_COMPILER_APPICON_NAME 指向一个不在工程里的 catalog,
@@ -57,7 +74,7 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.education
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_CFBundleDisplayName: 错题本
+        INFOPLIST_KEY_CFBundleDisplayName: "$(APP_DISPLAY_NAME)"
         # 缺这一行的表现是**点「扫描卷子」当场闪退**，而崩溃日志只说 access violation，
         # 一个字都不提「你没声明用途」。VisionKit 的文档扫描器走的就是相机权限。
         INFOPLIST_KEY_NSCameraUsageDescription: 拍摄错题照片，确认后上传到你自己的学习库用于识别和复习。
@@ -67,8 +84,72 @@ targets:
         # 直接进 Ready to Test(缺这行则每个 build 都要人去网页点一次)。
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         GENERATE_INFOPLIST_FILE: YES
-        MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "11"
     scheme:
       testTargets: []
       configVariants: []
+
+  # ── Apple Watch ───────────────────────────────────────────────────────────
+  # 抬腕看的只读一面：待巩固几类、今天做了几题、连续几天、先复习哪几类；不做题（练习引擎是网页，
+  # 手表没有 WebKit）。登录态由 iPhone 经 WatchConnectivity 递过来（Shared/WatchCookieLink.swift，
+  # Sources/WatchLink.swift）。错题的解析与 iPhone 共用同一份文件（WrongBook / Lessons / Api），不另写一套。
+  WrongBookWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: Shared/PlatformCompat.swift
+      - path: Shared/LaneSignal.swift
+      - path: Shared/WatchCookieLink.swift
+      - path: Sources/Api.swift
+      - path: Sources/AccountDeletion.swift
+      - path: Sources/PaperRequestSession.swift
+      - path: Sources/LessonPaths.swift
+      - path: Sources/Lessons.swift
+      - path: Sources/WrongBook.swift
+      - path: Sources/ReviewDigest.swift
+      - path: Sources/Theme.swift
+      - path: Sources/WatchLink.swift
+      - path: Watch/App
+      - path: Watch/Common
+      # ⚠ 同主 App：资产目录不列进来，手表包零报错地没有图标。AppIcon 里那张 platform: watchos 的 1024 只有手表 actool 认。
+      - path: Resources/Assets.xcassets
+    dependencies:
+      - target: WrongBookWatchWidget
+    info:
+      path: Watch/Info.plist
+      properties:
+        CFBundleDisplayName: "$(APP_DISPLAY_NAME)"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: cyou.tianli.wrongbook
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: cyou.tianli.wrongbook.watchkitapp
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # 手表的导航标题取全局强调色：AccentColor 是产品卡主题红（iPhone 靠 .tint 盖成墨绿），
+        # 在黑底手表上红标题像报错，手表单独用同色相提亮的绿（= WatchInk.accent）
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: WatchAccent
+        CODE_SIGN_ENTITLEMENTS: Watch.entitlements
+    scheme: {}
+  # 表盘复杂功能：圆形 / 矩形 / 单行 / 表角四种，读手表 App 刷新时写进钥匙串的那份摘要（不联网）。
+  WrongBookWatchWidget:
+    type: app-extension
+    platform: watchOS
+    info:
+      path: Watch/Widget-Info.plist
+      properties:
+        CFBundleDisplayName: "$(APP_DISPLAY_NAME)"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    sources:
+      # 摘要只是一份 Codable 投影（ReviewDigest），复杂功能不碰存档解析、不联网
+      - path: Sources/ReviewDigest.swift
+      - path: Sources/Theme.swift
+      - path: Watch/Common
+      - path: Watch/Complications
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: cyou.tianli.wrongbook.watchkitapp.widget
+        CODE_SIGN_ENTITLEMENTS: WatchWidget.entitlements

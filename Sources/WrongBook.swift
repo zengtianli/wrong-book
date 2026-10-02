@@ -161,3 +161,29 @@ struct GrowthProfile {
         return "\(c.year ?? 0)-\(c.month ?? 0)-\(c.day ?? 0)"
     }
 }
+
+extension ReviewDigest {
+    /// 从整本错题本与今日进度算一份摘要（数据形状见 ReviewDigest.swift）。
+    static func make(book: WrongBook, profile: GrowthProfile?, now: Date = Date(),
+                     limit: Int = ReviewDigest.limit) -> ReviewDigest {
+        var all: [(item: Item, at: String)] = []
+        for lw in book.byLesson {
+            for e in lw.entries {
+                all.append((Item(id: lw.lesson.slug + "#" + e.gid, name: e.gname, lesson: lw.lesson.title,
+                                 subject: lw.lesson.subjectName, question: e.q, wrong: e.wrong, ok: e.ok,
+                                 manual: e.manual), e.at))
+            }
+        }
+        all.sort { a, b in
+            if a.item.ok != b.item.ok { return a.item.ok < b.item.ok }
+            if a.item.wrong != b.item.wrong { return a.item.wrong > b.item.wrong }
+            return a.at < b.at
+        }
+        let cal = Calendar.current
+        let dayEnd = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: now)) ?? now
+        // GrowthProfile.parse 已按引擎的日期戳把「不是今天的计数」清零，这里原样用
+        return ReviewDigest(due: book.totalTypes, doneToday: profile?.doneToday ?? 0, goal: profile?.goal ?? 12,
+                            streak: profile?.streakDays ?? 0, level: profile?.level ?? 1, dayEnd: dayEnd,
+                            next: all.prefix(limit).map(\.item), updated: now)
+    }
+}

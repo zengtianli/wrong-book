@@ -1,4 +1,4 @@
-// Compile with Sources/{LessonSync,Lessons,LessonWebView,PaperRequestSession}.swift and Shared/PlatformCompat.swift.
+// Compile with Sources/{LessonPaths,LessonSync,Lessons,LessonWebView,PaperRequestSession}.swift and Shared/PlatformCompat.swift.
 // No production HTTP or accounts.
 import Foundation
 import WebKit

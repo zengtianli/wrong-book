@@ -2,6 +2,9 @@ import StoreKit
 import Combine
 import Foundation
 import OSLog
+#if os(visionOS)
+import UIKit
+#endif
 
 @MainActor
 final class AISubscription: ObservableObject {
@@ -107,9 +110,12 @@ final class AISubscription: ObservableObject {
     }
 
     func listenForPurchaseIntents() async {
+        // visionOS 的 StoreKit 没有 PurchaseIntent（App Store 推广购买不经过 App）：那边只走 App 内的订阅入口。
+        #if !os(visionOS)
         for await intent in PurchaseIntent.intents where Self.productIDs.contains(intent.product.id) {
             purchaseIntent = intent.product
         }
+        #endif
     }
 
     func listen() async {
@@ -196,7 +202,17 @@ final class AISubscription: ObservableObject {
             let current = try await fetchAccess(account)
             try account.requireCurrent()
             guard let token = current.token else { throw Api.Failure(message: "请先登录并同步账号。") }
-            switch try await product.purchase(options: [.appAccountToken(token)]) {
+            #if os(visionOS)
+            // Vision Pro 的 StoreKit 要指明在哪个窗口里弹 Apple 的购买确认（没有不带 scene 的 purchase）。
+            guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive })
+                    ?? UIApplication.shared.connectedScenes.first else {
+                throw Api.Failure(message: "找不到可以显示购买确认的窗口，请稍后重试。")
+            }
+            let outcome = try await product.purchase(confirmIn: scene, options: [.appAccountToken(token)])
+            #else
+            let outcome = try await product.purchase(options: [.appAccountToken(token)])
+            #endif
+            switch outcome {
             case .success(let result):
                 try await accept(result, account: account, generation: generation)
             case .pending:
