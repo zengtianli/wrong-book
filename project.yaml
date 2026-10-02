@@ -4,6 +4,7 @@ name_zh: 错题本
 display_name: Mistake Notebook · 错题本
 family: edu
 form: ios
+platforms: [iphone, ipad, mac, watch, vision]   # 跑在哪（正交于 form=源码住哪）；multiplatform.py audit 与 project.yml 对账；须与 sop.platforms 一致
 lifecycle: active
 bundle_id: cyou.tianli.wrongbook
 origin: own
@@ -12,15 +13,26 @@ sop:
     functionality: bash scripts/accept/functionality.sh
     recovery: bash scripts/accept/recovery.sh
     privacy: bash scripts/accept/privacy.sh
-  test: bash Tests/check-local-regressions.sh && python3 Tests/cli_mistakes_test.py
+    # 平台线启动冒烟：先起虚构演示学习库（scripts/demo/fixture.py：随机端口、随机密码、合成账号「小林」），
+    # 再交给 Chapter 内置的 platform_launch（共享 sim_lane：仓外构建、无窗口模拟器 / Mac 静默启动不上屏、截图）
+    launch_iphone: bash scripts/accept/launch.sh iphone
+    launch_ipad: bash scripts/accept/launch.sh ipad
+    launch_mac: bash scripts/accept/launch.sh mac
+    launch_watch: bash scripts/accept/launch.sh watch
+    launch_vision: bash scripts/accept/launch.sh vision
+  # 第三段是手表 / Vision 的便宜编译车道（按 project.yml 各 target 源码清单 swiftc -typecheck，不起模拟器）
+  test: bash Tests/check-local-regressions.sh && python3 Tests/cli_mistakes_test.py && bash Tests/check-platform-typecheck.sh
   ui:
   - Sources/**
   - Shared/**
+  - Watch/**
   source:
   - Sources/**
   - Shared/**
   - Resources/**
   - Widget/**
+  # 手表 app 随 iOS 包嵌入（WrongBook.app/Watch/），所以它是每条线的源码，不只是手表线的
+  - Watch/**
   - ShareExtension/**
   - project.yml
   - '*.entitlements'
@@ -39,7 +51,42 @@ sop:
   - ../02-审核/当前版本/02-视频/成片/public-preview
   media_meta: ../02-审核/当前版本/02-视频/成片/public-preview/provenance.json
   release: perf/asc-release.json
-  runtime_note: iPhone 17 / iOS 27.2 当前离线（tunnel unavailable、ddiServicesAvailable=false）；主机 DDI 已核验可用。未启动 App，未用模拟器替代真机数据，等待连接解锁及空闲测量窗口。
+  # 一个 App 五条平台线（用户 2026-10-02：同名、同图标、同数据；「我都有，但你用模拟器好了」）。
+  # 模拟器验收、证据标 environment=simulator；Mac 线是本机原生（同一 target，就在本仓，不委托别的组件）。
+  # 手表 / Vision / Mac 还没上架（distribution: none）。预算：iPhone / iPad / Mac 沿用 Chapter 默认（150 MB · 0.5%）；
+  # 手表与 Vision 是我们定的目标，引擎只判 memory_mb / cpu，size_mb / cold_launch_ms 由 README 与交接对照。
+  platforms:
+    iphone:
+      simulator: {device_type: iPhone-17-Pro}
+      store_shots: shots/appstore/iphone/*.png
+      distribution: app_store
+    ipad:
+      simulator: {device_type: iPad-Pro-13-inch-M5-12GB}
+      store_shots: shots/appstore/ipad/*.png
+      distribution: app_store
+    mac:
+      store_shots: shots/appstore/mac/*.png
+      distribution: none
+    watch:
+      scheme: WrongBookWatch
+      bundle_id: cyou.tianli.wrongbook.watchkitapp
+      source: [Watch/**]
+      simulator: {device_type: Apple-Watch-Series-12-46mm}
+      store_shots: shots/appstore/watch/*.png
+      budget: {memory_mb: 25, cpu: 0.5, size_mb: 10, cold_launch_ms: 1500}
+      distribution: none
+    vision:
+      simulator: {device_type: Apple-Vision-Pro-4K}
+      store_shots: shots/appstore/vision/*.png
+      budget: {memory_mb: 60, cpu: 0.5}
+      distribution: none
+  measure:  # 模拟器无界面、不抢焦点，本人用电脑时也能测（Mac 线静默启动：不上屏、不进 Dock）
+    # 起虚构演示学习库 → 旧 iPhone 测量（perf/simulator.json，lightweight.json 引用它）→ 五条平台线
+    # （perf/platforms/<线>.json）；输入没变的线跳过，任何一条推迟整体退出 75，下个空档只补没测完的。
+    command: ~/Dev/.venv/bin/python scripts/perf/measure_platforms.py
+    outputs: [perf/simulator.json, perf/lightweight.json, perf/raw, perf/platforms]
+    in_use: true
+  runtime_note: 平台线模式（2026-10-02）：五条线都按模拟器验收（Mac 线本机原生），实体 iPhone 不回读、真机未验证；ASC 回读只核对已上传的 iOS 构建。
   # 给 Agent 的命令行：同一服务端 /api/* 的薄客户端（stdlib）。本机 Mac 版 .app 自带
   # Contents/Resources/bin/mistakes（project.yml 的构建阶段只在 macOS build 拷，iOS 包与归档不带），
   # cli/install.sh 按 bundle id 找到已装的 .app 链到 ~/.local/bin/mistakes。宿主 = 本组件 bundle_id。
