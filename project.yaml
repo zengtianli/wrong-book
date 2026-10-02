@@ -57,6 +57,7 @@ sop:
   # 手表与 Vision 是我们定的目标，引擎只判 memory_mb / cpu，size_mb / cold_launch_ms 由 README 与交接对照。
   platforms:
     iphone:
+      input_normalization: {proof: perf/input-normalizations/finder-iphone.json, sha256: fc2d5b78b12bca125b009dc5657fd0fa8230432ef1e889929649dff2cd01016b}
       simulator: {device_type: iPhone-17-Pro}
       store_shots: shots/appstore/iphone/*.png
       distribution: app_store
