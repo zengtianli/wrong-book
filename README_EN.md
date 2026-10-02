@@ -23,6 +23,42 @@ The three entry points are Notebook, Import, and Review, with account, reminders
 | **Download your own practice for offline review** | Sign in to sync your materials; downloaded practice works offline. Study records are stored separately for each account. |
 | **Import by taking or selecting photos** | Phones and tablets can take photos or choose from the library; Mac selects image files. Confirm subject, page numbers, and the AI-recognition notice before upload, then upload page by page and inspect results. The first 10 images per account are free; afterward, choose an Apple monthly or annual subscription to continue recognition. No invitation code or API key is needed. |
 
+## One app, five platforms
+
+Same name, same icon, same study library: iPhone, iPad, Mac and Apple Vision Pro are one target, and Apple Watch is a watch app installed along with the iPhone package. Mistakes and progress live on the server, so practice done on one device shows on the others after a sync.
+
+| Platform | What it looks like | Can you install it now |
+|---|---|---|
+| iPhone | Three tabs (mistakes / review / import); import by taking or choosing photos | On the [App Store](https://apps.apple.com/app/id6806626967) |
+| iPad | Wide layout: sidebar (mistakes / review / import + today's progress) + mistake list + question side by side; a narrow Split View falls back to the iPhone layout | The package on sale is the same one, but **this wide layout is not released yet** |
+| Mac | Native macOS window with the same three columns; import through a file dialog; the package bundles the `mistakes` CLI | **Not released**, local builds only |
+| Apple Watch | Raise your wrist for how many categories need review, today's count and the streak; swipe for what to review first; four complications. Read-only: no practice, no import; the sign-in is handed over from the iPhone | **Not released** (the watch app embedded in the iPhone package is not in any release build yet) |
+| Apple Vision Pro | The same three columns in a system glass window; no camera, so import picks image files | **Not released**, verified on the simulator only |
+
+<table><tr>
+<td align="center" width="50%"><img src="docs/screenshots/07-ipad.png" alt="iPad landscape: sidebar, mistake list and question side by side"><br><sub>iPad landscape: sidebar, mistake list and question side by side (simulator screenshot)</sub></td>
+<td align="center" width="50%"><img src="docs/screenshots/08-mac.png" alt="Mac: mistake list and question side by side"><br><sub>Mac: mistake list and question side by side (quiet offscreen capture on this Mac; sidebar cropped because offscreen rendering cannot draw the selected row's system material)</sub></td>
+</tr><tr>
+<td align="center" width="50%"><img src="docs/screenshots/10-vision.png" alt="Apple Vision Pro: the mistake notebook in a glass window"><br><sub>Apple Vision Pro: the mistake notebook in a glass window (simulator screenshot, cropped)</sub></td>
+<td align="center" width="50%"><img src="docs/screenshots/09-watch.png" width="208" alt="Apple Watch: categories to review, today's count and streak"><br><sub>Apple Watch: categories to review, today's count and streak (simulator screenshot)</sub></td>
+</tr></table>
+
+The account "小林", the five practice sets and the mistake records in the screenshots are demo data (a fictional study library that `scripts/demo/fixture.py` starts locally), not any real student's records.
+
+### Per-platform resource use (simulator and native measurements)
+
+<!-- platforms:start -->
+| Platform | Measured on | Package (zip) | Idle memory | Idle CPU | Cold launch to first data screen | Host load (1 / 5 / 15 min) | Target |
+|---|---|---|---|---|---|---|---|
+| iPhone | not measured | — | — | — | — | — | ≤ 150 MB · ≤ 0.5% |
+| iPad | not measured | — | — | — | — | — | ≤ 150 MB · ≤ 0.5% |
+| Mac | not measured | — | — | — | — | — | ≤ 150 MB · ≤ 0.5% |
+| Apple Watch | not measured | — | — | — | — | — | ≤ 25 MB · ≤ 10 MB package · ≤ 1.5 s |
+| Apple Vision Pro | not measured | — | — | — | — | — | ≤ 60 MB |
+
+<sub>Measured ; data in `perf/platforms/<platform>.json`. iPhone, iPad, Watch and Vision are Release builds on Xcode simulators, the Mac is a native local Release build; **none of these are real-device numbers, and the package sizes are not App Store slices** (the App Store iPhone size is under "Resource usage" below). Memory is the app process's phys_footprint; CPU is CPU time ÷ wall time over 60 s after a 45 s settle; cold launch is the median time from the launch request to the app's "first data-bearing screen" log (fictional local demo library, 5 runs, the first run after install discarded). Simulator launch times swing widely with host load: with memory tight on 2026-10-02, the same code on the Growth Treasury iPhone lane measured 1.8–4.1 s at different times. Most of a Vision Pro cold launch is the simulator's own overhead (process spawn, visionOS scene setup), which stretches noticeably on a busy host.</sub>
+<!-- platforms:end -->
+
 ## Availability
 
 Available on the [App Store](https://apps.apple.com/app/id6806626967): 1.0 (build 18) has been on sale since 2026-09-15; see the [release record](perf/asc-release.json).
@@ -103,11 +139,11 @@ MIT © 2026 Tianli Zeng
 
 Download size is App Store data; memory, CPU and launch time are iOS Simulator measurements, not physical-device figures.
 
-| Download | Idle memory | Idle CPU | Simulator cold launch to first screen ready |
+| Download | Idle memory | Idle CPU | Simulator cold launch to first data-bearing screen |
 |---|---|---|---|
-| **2.2 MB** (installed 3.0 MB) | **24.1 MB** | **0.02%** | **1.4 s** |
+| **2.2 MB** (installed 3.0 MB) | **37.7 MB** | **0.02%** | **2.3 s** |
 
 Sizes are read back for this exact distribution build. The physical device is not yet measured, so memory, CPU and launch time come from the iOS Simulator and are labelled as such.
 
-<sub>v1.0 (18) · iPhone 17（iPhone18,3）；体积为 Apple 设备切片记录，运行性能尚未真机实测 · App Store; package sizes exclude user data and caches; installed phone version not verified · measured 2026-09-26. Sizes come from Apple App Store Connect device slices for this build. Memory, CPU and launch time were measured on iPhone 17 Pro / iOS 27.0 Simulator / Mac16,12 / Apple M4 / macOS 27.2 with a local Release build v1.0 (11) (2026-09-27), App process only; these are not physical-device figures, which are still unmeasured. Memory uses phys_footprint; CPU is CPU time ÷ wall time over a 60-second sampling window; sizes in decimal MB. Raw data: [perf/lightweight.json](perf/lightweight.json).</sub>
+<sub>v1.0 (18) · iPhone 17（iPhone18,3）；体积为 Apple 设备切片记录，运行性能尚未真机实测 · App Store; package sizes exclude user data and caches; installed phone version not verified · measured 2026-09-26. Sizes come from Apple App Store Connect device slices for this build. Memory, CPU and launch time were measured on iPhone 17 Pro (iPhone-17-Pro) / iOS 27.0 Simulator with a local Release build v1.0 (11) (2026-10-02), App process only; these are not physical-device figures, which are still unmeasured. Memory uses phys_footprint; CPU is CPU time ÷ wall time over a 60-second sampling window; sizes in decimal MB. Raw data: [perf/lightweight.json](perf/lightweight.json).</sub>
 <!-- lightweight:end -->

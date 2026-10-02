@@ -21,6 +21,42 @@
 | **下载自己的练习，离线复习** | 登录后同步本人资料，下载好的练习可以离线使用；不同账号的学习记录分别保存。 |
 | **拍照或选择图片后导入** | 手机和平板可拍照或从相册选图，Mac 可选择图片文件。上传前确认学科、页码及 AI 识别说明，逐页上传并查看识别结果。每账号前 10 张免费，之后可选择 Apple 月订阅或年订阅继续识别，无需邀请码或 API 密钥。 |
 
+## 一个 App，五个平台
+
+同一个名字、同一个图标、同一个学习库：iPhone、iPad、Mac、Apple Vision Pro 是同一个 target，Apple Watch 是随 iPhone 包一起装的手表 App。错题和进度都在服务端，哪台设备上做的题，别的设备同步后就看到。
+
+| 平台 | 长什么样 | 现在能不能装 |
+|---|---|---|
+| iPhone | 三个标签页（错题本 / 复习 / 导入），拍照或选图导入 | [App Store](https://apps.apple.com/app/id6806626967) 已上架 |
+| iPad | 宽屏：侧栏（错题本 / 复习 / 导入 + 今天的进度）+ 错题列表 + 题目并排；分屏窄栏退回 iPhone 布局 | 在售的是同一个包，但**这套宽屏布局还没发版** |
+| Mac | 原生 macOS 窗口，同样的三栏；用文件对话框选图导入；包里自带 `mistakes` 命令行 | **未上架**，只能本机构建 |
+| Apple Watch | 抬腕看待巩固几类、今天几题、连续几天，翻一页是先复习哪几类；表盘复杂功能四种。只读，不做题、不导入；登录态由 iPhone 递过来 | **未上架**（随 iPhone 包嵌入的手表 App 还没进任何发行构建） |
+| Apple Vision Pro | 同一套三栏放在系统玻璃窗口里；没有相机，用文件选图导入 | **未上架**，只在模拟器上验过 |
+
+<table><tr>
+<td align="center" width="50%"><img src="docs/screenshots/07-ipad.png" alt="iPad 横屏：侧栏 + 错题列表 + 题目并排"><br><sub>iPad 横屏：侧栏 + 错题列表 + 题目并排（模拟器截图）</sub></td>
+<td align="center" width="50%"><img src="docs/screenshots/08-mac.png" alt="Mac：错题列表与题目并排"><br><sub>Mac：错题列表与题目并排（本机静默离屏截图，侧栏已裁去：离屏渲染画不出选中行的系统材质）</sub></td>
+</tr><tr>
+<td align="center" width="50%"><img src="docs/screenshots/10-vision.png" alt="Apple Vision Pro：玻璃窗口里的错题本"><br><sub>Apple Vision Pro：玻璃窗口里的错题本（模拟器截图，已裁边）</sub></td>
+<td align="center" width="50%"><img src="docs/screenshots/09-watch.png" width="208" alt="Apple Watch：待巩固几类、今天几题、连续几天"><br><sub>Apple Watch：待巩固几类、今天几题、连续几天（模拟器截图）</sub></td>
+</tr></table>
+
+截图里的账号「小林」、五份练习和错题记录都是演示数据（`scripts/demo/fixture.py` 在本机临时起的虚构学习库），不是任何真实学生的记录。
+
+### 各平台资源占用（模拟器与本机实测）
+
+<!-- platforms:start -->
+| 平台 | 测量环境 | 包体（zip） | 空闲内存 | 空闲 CPU | 冷启动到首屏有数据 | 测量时负载（1 / 5 / 15 分钟） | 目标 |
+|---|---|---|---|---|---|---|---|
+| iPhone | 未测 | — | — | — | — | — | ≤ 150 MB · ≤ 0.5% |
+| iPad | 未测 | — | — | — | — | — | ≤ 150 MB · ≤ 0.5% |
+| Mac | 未测 | — | — | — | — | — | ≤ 150 MB · ≤ 0.5% |
+| Apple Watch | 未测 | — | — | — | — | — | ≤ 25 MB · ≤ 10 MB 包 · ≤ 1.5 s |
+| Apple Vision Pro | 未测 | — | — | — | — | — | ≤ 60 MB |
+
+<sub> 实测，数据来自 `perf/platforms/<平台>.json`。iPhone / iPad / Watch / Vision 是 Xcode 模拟器上的 Release 构建，Mac 是本机原生的本地 Release 构建；**都不是真机数值，包体也不是 App Store 切片**（App Store 的 iPhone 体积见下方「资源占用」）。内存为 App 进程 phys_footprint，CPU 为启动静置 45 秒后 60 秒窗口内的 CPU 时间 ÷ 墙钟，冷启动是发出启动到 App 打出「第一屏有数据」日志的中位数（虚构的本地演示学习库，5 次，丢弃装机后第一次）。模拟器的启动时间随宿主负载浮动很大：2026-10-02 本机内存吃紧时，成长小金库同一份代码的 iPhone 线在不同时段测出 1.8–4.1 秒；Vision Pro 的冷启动里模拟器自己的开销（进程拉起、visionOS 场景初始化）占大头，宿主忙时会明显拉长。</sub>
+<!-- platforms:end -->
+
 ## 怎么拿到
 
 已在 [App Store](https://apps.apple.com/app/id6806626967) 上架：1.0（build 18）自 2026-09-15 起在售，见[发行记录](perf/asc-release.json)。
@@ -101,11 +137,11 @@ MIT © 2026 曾田力 (Tianli Zeng)
 
 安装包为 App Store 数据；内存、CPU 与启动时间为 iOS 模拟器实测，不是真机数值。
 
-| 安装包 | 空闲内存 | 空闲 CPU | 模拟器冷启动到首屏就绪 |
+| 安装包 | 空闲内存 | 空闲 CPU | 模拟器冷启动到有数据的首屏 |
 |---|---|---|---|
-| **2.2 MB**（装好后 3.0 MB） | **24.1 MB** | **0.02%** | **1.4 s** |
+| **2.2 MB**（装好后 3.0 MB） | **37.7 MB** | **0.02%** | **2.3 s** |
 
 体积按具体发行构建回读；真机尚未测量，内存、CPU 与启动时间先用 iOS 模拟器实测并标明环境。
 
-<sub>v1.0 (18) · iPhone 17（iPhone18,3）；体积为 Apple 设备切片记录，运行性能尚未真机实测 · App Store；体积不含用户数据与后续缓存；手机实际安装版本尚未核验 · 2026-09-26。体积来自 Apple App Store Connect 对应构建的设备切片记录。内存、CPU 与启动时间是 iPhone 17 Pro / iOS 27.0 Simulator / Mac16,12 / Apple M4 / macOS 27.2 上本地源码 Release 构建 v1.0 (11) 的实测（2026-09-27），只统计 App 进程，不等于真机数值；真机测量尚未完成。内存口径为 phys_footprint；CPU 为 60 秒采样窗内 CPU 时间 ÷ 墙钟；大小按十进制 MB。原始数据见 [perf/lightweight.json](perf/lightweight.json)。</sub>
+<sub>v1.0 (18) · iPhone 17（iPhone18,3）；体积为 Apple 设备切片记录，运行性能尚未真机实测 · App Store；体积不含用户数据与后续缓存；手机实际安装版本尚未核验 · 2026-09-26。体积来自 Apple App Store Connect 对应构建的设备切片记录。内存、CPU 与启动时间是 iPhone 17 Pro (iPhone-17-Pro) / iOS 27.0 Simulator 上本地源码 Release 构建 v1.0 (11) 的实测（2026-10-02），只统计 App 进程，不等于真机数值；真机测量尚未完成。内存口径为 phys_footprint；CPU 为 60 秒采样窗内 CPU 时间 ÷ 墙钟；大小按十进制 MB。原始数据见 [perf/lightweight.json](perf/lightweight.json)。</sub>
 <!-- lightweight:end -->
