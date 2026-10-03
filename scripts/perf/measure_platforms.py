@@ -59,7 +59,8 @@ def current(shared, lane):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--only", help="comma-separated lanes; legacy is an alias for iphone")
+    parser.add_argument("--only", default=os.environ.get("SOP_PERF_PLATFORM"),
+                        help="comma-separated lanes; legacy is an alias for iphone; default SOP_PERF_PLATFORM")
     parser.add_argument("--force", action="store_true", help="measure requested lanes even with valid current evidence")
     parser.add_argument("--budget-min", type=float, default=50.0, help="stop before starting the next step at this deadline")
     parser.add_argument("--reuse-size-build", type=Path, help="shared Release receipt; requires --only one lane")
@@ -67,7 +68,7 @@ def main(argv=None):
     options = parser.parse_args(argv)
     if options.budget_min < 0:
         parser.error("--budget-min cannot be negative")
-    wanted = [part.strip() for part in options.only.split(",") if part.strip()] if options.only else list(LANES)
+    wanted = [part.strip() for part in options.only.split(",") if part.strip()] if options.only is not None else list(LANES)
     unknown = [lane for lane in wanted if lane not in (*LANES, "legacy")]
     if unknown or not wanted:
         parser.error(f"unknown or empty lanes: {wanted}")

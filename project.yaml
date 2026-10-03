@@ -85,6 +85,7 @@ sop:
     # 起虚构学习库 → 逐线共享测量；iPhone 同一原件投影到 simulator/lightweight，不再另测 legacy。
     # 核当前输入与原件 SHA 后复用；锁/负载等待 0，忙或预算耗尽即返回 75，下个时段只补缺口。
     command: ~/Dev/.venv/bin/python scripts/perf/measure_platforms.py
+    platform_env: SOP_PERF_PLATFORM
     outputs: [perf/simulator.json, perf/lightweight.json, perf/raw, perf/platforms, perf/projections]
     in_use: true
   runtime_note: 平台线模式（2026-10-02）：五条线都按模拟器验收（Mac 线本机原生），实体 iPhone 不回读、真机未验证；ASC 回读只核对已上传的 iOS 构建。
