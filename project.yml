@@ -10,8 +10,8 @@ settings:
   base:
     # 名字与版本放全局：手表 App 与复杂功能必须与 iPhone App 同名、同版本（App Store 拒收不一致的包）。
     APP_DISPLAY_NAME: 错题本
-    MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "11"
+    MARKETING_VERSION: "1.0.1"
+    CURRENT_PROJECT_VERSION: "19"
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: B9LJH93LA4
     ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -55,6 +55,9 @@ targets:
       - path: Shared/LaneSignal.swift
       # iPhone → 手表登录态转交（Mac / Vision 上编译为空操作）
       - path: Shared/WatchCookieLink.swift
+      - path: Shared/AppLifecycle.swift
+      - path: Shared/AppConfiguration.swift
+      - path: Shared/AppLifecycleMobile.swift
       - path: Sources
       # ⚠ 图标资产必须在这儿列出来。漏了的表现是**编译通过、装机通过、桌面白板**——
       #   ASSETCATALOG_COMPILER_APPICON_NAME 指向一个不在工程里的 catalog,
@@ -67,9 +70,12 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cyou.tianli.wrongbook
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphone*]": Configuration.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=xr*]": Configuration.entitlements
         # ── Mac 侧（multiplatform.py 注入）：沙盒 + 加固运行时是 TestFlight for Mac 的硬门槛；
         #    entitlements 按 sdk 分开给，iOS 的 profile 不认 app-sandbox 这个键。
         "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Mac.entitlements
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS[sdk=macosx*]": "$(inherited) APP_LIFECYCLE_KVS"
         "ENABLE_HARDENED_RUNTIME[sdk=macosx*]": YES
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.education
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

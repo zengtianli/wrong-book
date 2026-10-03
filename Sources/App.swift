@@ -14,6 +14,7 @@ struct WrongBookApp: App {
     var body: some Scene {
         WindowGroup {
             RootView().environmentObject(session).lightAppearance().tint(Ink.accent)
+                .appLifecycleMobile(productID: "wrong-book", channel: MobileProductLifecycle.channel, configuration: MobileProductLifecycle.configuration)
                 #if os(macOS)
                 // 侧栏 + 错题列表 + 题目三栏并排，再窄就挤了
                 .frame(minWidth: 900, minHeight: 620)
