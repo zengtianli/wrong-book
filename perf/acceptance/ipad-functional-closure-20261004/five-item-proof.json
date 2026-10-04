@@ -119,6 +119,18 @@
     },
     "recovery": {
       "valid": true,
+      "original_record_scope": "HTTP/catalog/subscription recovery and stale-response isolation only; the original recovery.sh did not compile LessonSync/LessonPaths and did not prove course-cache persistence.",
+      "course_cache_supplement": {
+        "proof": "perf/acceptance/lesson-cache-recovery-20261004/attempt-137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B/proof.json",
+        "sha256": "a11c60870b2da3f9954af8d92ea3a91d2f1347383b207eaa768c6faff5fc1fb5",
+        "finished_at": "2026-10-04T17:42:38.115304+08:00",
+        "source79_unchanged": true,
+        "save_pid": 53848,
+        "fresh_restore_pid": 53854,
+        "coverage": "Real production LessonSync.sync page/atomic manifest/offline pointer persistence, fresh-process restoreOffline read-only/owner scope, bad download SHA/corrupt manifest/owner and scope mismatch protection, reset preserving files.",
+        "boundaries": "Already-authenticated UUID user/scope/cookie and URLProtocol fixture only; actual Api/PaperRequestSession and LessonPaths compiled unchanged. EduArchive reset is a counter fixture; no WebKit/archive/device/real-service claim. Future reuse requires all five production-source SHA values in the supplement to match.",
+        "new_sdk_count": 0
+      },
       "ledger": {
         "result": "passed",
         "scope": "code",
@@ -259,5 +271,11 @@
     "系统基线/旋转/稳定比较未测，None保持",
     "性能/Store/推广本批取消，原失败75保留",
     "原17:04前置IO失败不改结果/时刻"
-  ]
+  ],
+  "supplemented_at": "2026-10-04T17:42:38.115304+08:00",
+  "prior_five_item_proof": {
+    "path": "perf/acceptance/lesson-cache-recovery-20261004/five-item-proof-before-course-cache-supplement.json",
+    "sha256": "c63da25cff4cba17507159d9af0f11709f4722e3f8a29a5a4bc292d14046db30",
+    "scope_correction": "The 17:16 snapshot's generic recovery validity was an HTTP recovery check. Core course-cache recovery is substantiated only by the later real LessonSync supplement; old HTTP records/ledger bytes and timestamps remain unchanged."
+  }
 }

@@ -1,0 +1,132 @@
+{
+  "run_id": "137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B",
+  "source79": "d775eaa9e4bf4cb8a13b6b5df2193aee717393108f6f07e3895f872c9941bcea",
+  "source79_file_count": 79,
+  "production_sources": {
+    "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Sources/LessonSync.swift": "5c283027b7db4a57766b27092530adb8fdf5be813416cdf8407c8989410bebd7",
+    "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Sources/LessonPaths.swift": "b4a95fcd9d58570bf3e22d1a2eaa30c0b4b392cd4015a6aa740f8fe54947194f",
+    "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Sources/Api.swift": "4c90190328334f642a51ee094de687a96b614175123ea40b7f8d639967d394d5",
+    "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Sources/PaperRequestSession.swift": "1ba87da2a575da21f28b449b815e96a1c5701d1a21799bf541d0172b7607d683",
+    "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Sources/AccountDeletion.swift": "aa4e3332f4ba6017bce785e9f25add24621c151d4a0899422cffca0df4071b72"
+  },
+  "harness": {
+    "path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/lesson-cache-recovery-20261004/LessonCacheRecoveryAcceptance.swift",
+    "sha256": "eda92451586f73e92a1737b45cbdb4f827aa8ea5bff7f7372c3b77c210274ca2"
+  },
+  "fixture_boundaries": [
+    "already-authenticated isolated user/scope/cookie; no real authentication service",
+    "URLProtocol rejects any nonfixture host/path/cookie; actual URLSession.shared and PaperRequestSession",
+    "EduArchive.reset only counter fixture; no WebKit/archive behavior claim"
+  ],
+  "uncovered": [
+    "device UI",
+    "real account/network service",
+    "WebKit/EduArchive behavior"
+  ],
+  "steps": [
+    {
+      "stage": "compile",
+      "command": [
+        "/bin/bash",
+        "-c",
+        "set -euo pipefail\nsource \"$1\"\nshift\nxcode_env_use macosx\nexec \"$@\"",
+        "lesson-cache-acceptance",
+        "/Users/tianli/Dev/tools/dev/lib/tools/macapp/xcode_env.sh",
+        "xcrun",
+        "--sdk",
+        "macosx",
+        "swiftc",
+        "-target",
+        "arm64-apple-macos15.0",
+        "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Sources/LessonSync.swift",
+        "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Sources/LessonPaths.swift",
+        "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Sources/Api.swift",
+        "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Sources/PaperRequestSession.swift",
+        "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Sources/AccountDeletion.swift",
+        "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/lesson-cache-recovery-20261004/LessonCacheRecoveryAcceptance.swift",
+        "-o",
+        "/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/wrongbook-real-lesson-cache.mni0fa_7/cache-recovery"
+      ],
+      "started_at": "2026-10-04T17:42:33.208142+08:00",
+      "finished_at": "2026-10-04T17:42:38.042636+08:00",
+      "seconds": 4.834472041926347,
+      "exit_code": 0,
+      "log": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/lesson-cache-recovery-20261004/attempt-137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B/compile.log",
+      "log_sha256": "3c64e12e1332906668a3cd31ca48dbc1272e45b58fc4faad46b5262b32597543"
+    },
+    {
+      "stage": "save",
+      "command": [
+        "/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/wrongbook-real-lesson-cache.mni0fa_7/cache-recovery",
+        "-api_base",
+        "https://wrongbook-lesson-cache-fixture.invalid",
+        "-cache_qa_run",
+        "137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B",
+        "-cache_qa_output",
+        "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/lesson-cache-recovery-20261004/attempt-137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B",
+        "-cache_qa_stage",
+        "save"
+      ],
+      "started_at": "2026-10-04T17:42:38.043841+08:00",
+      "finished_at": "2026-10-04T17:42:38.084373+08:00",
+      "seconds": 0.04055758297909051,
+      "exit_code": 0,
+      "log": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/lesson-cache-recovery-20261004/attempt-137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B/save.log",
+      "log_sha256": "df061a900ebc2d0cb09081e3f1f6200e5d1c82f09549e8ceb0b0d886c161e523"
+    },
+    {
+      "stage": "restore",
+      "command": [
+        "/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/wrongbook-real-lesson-cache.mni0fa_7/cache-recovery",
+        "-api_base",
+        "https://wrongbook-lesson-cache-fixture.invalid",
+        "-cache_qa_run",
+        "137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B",
+        "-cache_qa_output",
+        "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/lesson-cache-recovery-20261004/attempt-137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B",
+        "-cache_qa_stage",
+        "restore"
+      ],
+      "started_at": "2026-10-04T17:42:38.085084+08:00",
+      "finished_at": "2026-10-04T17:42:38.106143+08:00",
+      "seconds": 0.021084707928821445,
+      "exit_code": 0,
+      "log": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/lesson-cache-recovery-20261004/attempt-137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B/restore.log",
+      "log_sha256": "1aea834ff275608c749c4242a74c77fe3ed1c46ac37ebbe40d0e37decb21ba66"
+    }
+  ],
+  "executable_sha256": "e04d8e7074771267caac61d0058120281b9a115c6101e1d1f3107cd1da30653a",
+  "source79_changed_after": [],
+  "ok": true,
+  "actual_processes": {
+    "save": 53848,
+    "fresh_restore": 53854
+  },
+  "checks": [
+    "production_sync_page_manifest_and_offline_pointer",
+    "bad_download_sha_preserves_prior_cache_and_pointer",
+    "fresh_process_restore_offline_read_only_owner_scoped",
+    "corrupt_manifest_rejected_without_replacing_active_cache",
+    "mismatched_owner_rejected_without_replacing_active_cache",
+    "mismatched_scope_rejected_without_replacing_active_cache",
+    "production_reset_disables_pointer_and_keeps_saved_files"
+  ],
+  "owned_cache_removed": true,
+  "finished_at": "2026-10-04T17:42:38.115304+08:00",
+  "artifacts": {
+    "restore.json": "35fd33e07422f3e9434c96de5d7ee8e758a1c7272b00a31e3e66ffe5b5899286",
+    "save.log": "df061a900ebc2d0cb09081e3f1f6200e5d1c82f09549e8ceb0b0d886c161e523",
+    "saved-manifest.json": "0d98e69495778fa16bbd275f5aaf8bdddc0b08747412fc0a04495b56ac92a91a",
+    "save.json": "23f20fb1f93c5baa8372ca22cdea45e59d468acca84523d31dfe2af10b824952",
+    "restore.log": "1aea834ff275608c749c4242a74c77fe3ed1c46ac37ebbe40d0e37decb21ba66",
+    "saved-page.html": "cc87d6314d77ffe62c1cc2eb760efade3d8b0f3fddbc9153d4c9898664e78173",
+    "compile.log": "3c64e12e1332906668a3cd31ca48dbc1272e45b58fc4faad46b5262b32597543",
+    "requests.json": "27c519314a23bc3c5681035b47c0c3c4a9431660fa320fa86933e09e8f7dccae",
+    "LessonCacheRecoveryAcceptance.swift": "eda92451586f73e92a1737b45cbdb4f827aa8ea5bff7f7372c3b77c210274ca2",
+    "production-source/AccountDeletion.swift": "aa4e3332f4ba6017bce785e9f25add24621c151d4a0899422cffca0df4071b72",
+    "production-source/LessonSync.swift": "5c283027b7db4a57766b27092530adb8fdf5be813416cdf8407c8989410bebd7",
+    "production-source/Api.swift": "4c90190328334f642a51ee094de687a96b614175123ea40b7f8d639967d394d5",
+    "production-source/LessonPaths.swift": "b4a95fcd9d58570bf3e22d1a2eaa30c0b4b392cd4015a6aa740f8fe54947194f",
+    "production-source/PaperRequestSession.swift": "1ba87da2a575da21f28b449b815e96a1c5701d1a21799bf541d0172b7607d683"
+  }
+}

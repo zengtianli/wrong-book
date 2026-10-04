@@ -1,0 +1,13 @@
+{
+  "status": "failed fixture attempt, never App PASS",
+  "observed_failure": "initial unbound sync did not produce the expected course file; original save exit1/log remain",
+  "followup": "later attempt uses real PaperRequestSession bound cookie with explicitly authenticated fixture user/scope",
+  "cleanup": {
+    "at": "2026-10-04T17:44:59.933197+08:00",
+    "scope": "only initial failed fixture UUID namespace",
+    "cache_exists": false,
+    "prefs_path": "/Users/tianli/Library/Preferences/WrongBook.LessonCacheQA.7598D472-A0B3-4155-8B6E-E183B602D6CE.plist",
+    "prefs_removed": true,
+    "prefs_before_sha256": "9261ecceda608ef174256e5fdc774c1e6e3dcf533409c1bc393d490d01c713f1"
+  }
+}

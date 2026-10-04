@@ -1,0 +1,21 @@
+{
+  "cache_directory" : "\/Users\/tianli\/Library\/Application Support\/wrong-book\/private-v2\/05033c7c5545b5e8a0736d7c045cef02796b84c94cc71e10caba8a73a70a0716",
+  "checks" : [
+    "production_sync_page_manifest_and_offline_pointer",
+    "bad_download_sha_preserves_prior_cache_and_pointer"
+  ],
+  "identity_boundary" : "already-authenticated isolated user\/scope\/cookie fixture; real PaperRequestSession binding",
+  "manifest_sha256" : "0d98e69495778fa16bbd275f5aaf8bdddc0b08747412fc0a04495b56ac92a91a",
+  "ok" : true,
+  "page_sha256" : "cc87d6314d77ffe62c1cc2eb760efade3d8b0f3fddbc9153d4c9898664e78173",
+  "pid" : 53848,
+  "run_id" : "137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B",
+  "scope" : "wrongbook-cache-qa-137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B",
+  "stage" : "save",
+  "suite" : "WrongBook.LessonCacheQA.137A85E4-BDAB-4EF3-A65A-C0263B2DCA9B",
+  "uncovered" : [
+    "real account\/network service",
+    "WebKit\/EduArchive behavior",
+    "device UI"
+  ]
+}

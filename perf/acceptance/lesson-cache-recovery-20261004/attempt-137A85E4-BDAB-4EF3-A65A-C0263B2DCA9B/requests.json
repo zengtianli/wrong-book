@@ -1,0 +1,22 @@
+[
+  {
+    "cookie" : "edu_sess=isolated-cache-fixture",
+    "handles_cookies" : "false",
+    "url" : "https:\/\/wrongbook-lesson-cache-fixture.invalid\/api\/lessons"
+  },
+  {
+    "cookie" : "edu_sess=isolated-cache-fixture",
+    "handles_cookies" : "false",
+    "url" : "https:\/\/wrongbook-lesson-cache-fixture.invalid\/api\/lesson?file=unit-a.html"
+  },
+  {
+    "cookie" : "edu_sess=isolated-cache-fixture",
+    "handles_cookies" : "false",
+    "url" : "https:\/\/wrongbook-lesson-cache-fixture.invalid\/api\/lessons"
+  },
+  {
+    "cookie" : "edu_sess=isolated-cache-fixture",
+    "handles_cookies" : "false",
+    "url" : "https:\/\/wrongbook-lesson-cache-fixture.invalid\/api\/lesson?file=unit-a.html"
+  }
+]
