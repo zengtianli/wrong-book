@@ -1,0 +1,39 @@
+{
+ "schema_version": 1,
+ "platform": "iphone",
+ "app_id": "wrong-book-ios",
+ "version": "1.0.1",
+ "build": "19",
+ "input_sha256": "37463c45737f3710f11520970d6a8a4e0b3163c86152f50902831afa4545d340",
+ "runtime_measurement": {
+  "environment": "simulator",
+  "device": "iPhone 17 Pro (iPhone-17-Pro)",
+  "os": "iOS 27.0",
+  "xcode": "Xcode 27.0 (27A266a)",
+  "evidence": "perf/platforms/iphone/measure-20261004-075948.json",
+  "evidence_sha256": "8211e56f2ff34f591647fab0ae755a40a6b4e231d5597c1ea0c8a36b9b4caf70"
+ },
+ "size": {
+  "download_bytes": 7141575,
+  "installed_bytes": 13953623,
+  "download_mb": 7.14,
+  "installed_mb": 13.95,
+  "kind": "simulator .app (Release), not a store slice"
+ },
+ "speed": {
+  "cold_launch_ms": 2957.0,
+  "runs": 5,
+  "discarded_runs": 1,
+  "ready_signal": "os_log",
+  "method": "launch command issued -> App os_log \"lane-ready\" (first data-bearing screen), App terminated 3 s before each run, first run after install discarded, median; only the discarded first launch carried the warm-up arguments (sign-in), timed launches reopen with the stored session"
+ },
+ "idle": {
+  "memory_mb": 37.0,
+  "cpu_pct": 0.02,
+  "window_s": 60,
+  "settle_s": 45,
+  "method": "shared measure.py idle: CPU-time delta / wall window; phys_footprint peak of 3 samples after the window",
+  "scope": "Simulator App host process only; excludes CoreSimulator, system services and inactive extensions"
+ },
+ "measured_at": "2026-10-04T07:59:48+08:00"
+}

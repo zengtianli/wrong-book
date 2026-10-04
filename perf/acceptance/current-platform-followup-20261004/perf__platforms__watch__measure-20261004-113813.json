@@ -1,0 +1,197 @@
+{
+ "schema_version": 1,
+ "platform": "watch",
+ "app_id": "wrong-book-ios",
+ "input_sha256": "d775eaa9e4bf4cb8a13b6b5df2193aee717393108f6f07e3895f872c9941bcea",
+ "measured_at": "2026-10-04T11:38:13+08:00",
+ "completed_at": "2026-10-04T11:43:17+08:00",
+ "build": {
+  "configuration": "Release",
+  "scheme": "WrongBookWatch",
+  "bundle_id": "cyou.tianli.wrongbook.watchkitapp",
+  "version": "1.0.1",
+  "build": "19",
+  "sdk": "watchsimulator27.0",
+  "executable_sha256": "075a143a3ea891d2231aef7f6ac8c438e88cbd916c17a11e0472f575d36ef86a",
+  "signing": "unsigned simulator build (CODE_SIGNING_ALLOWED=NO)",
+  "seconds": 71.6,
+  "xcode": {
+   "name": "Xcode.app",
+   "version": "27.0",
+   "build": "27A266a",
+   "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+  },
+  "reuse": null
+ },
+ "measurement": {
+  "environment": "simulator",
+  "device": "Apple Watch Series 12 (46mm) (Apple-Watch-Series-12-46mm)",
+  "os": "watchOS 27.0",
+  "udid": "71612A23-0E31-4E0A-9C3A-F5EE4E69FCE1",
+  "install_seconds": 9.6,
+  "samples": [
+   {
+    "run": 0,
+    "pid": 17252,
+    "ready_seconds": 1.047,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 1,
+    "pid": 17352,
+    "ready_seconds": 0.764,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 2,
+    "pid": 17441,
+    "ready_seconds": 0.751,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 3,
+    "pid": 17673,
+    "ready_seconds": 0.816,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 4,
+    "pid": 17855,
+    "ready_seconds": 0.723,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 5,
+    "pid": 17939,
+    "ready_seconds": 0.783,
+    "ready_signal": "os_log",
+    "errors": []
+   }
+  ],
+  "idle": {
+   "process": "18048",
+   "footprint_mb": 20.0,
+   "cpu_pct": 0.02,
+   "window_s": 60
+  },
+  "loads": {
+   "before_launches": [
+    12.189453125,
+    15.6875,
+    23.3935546875
+   ],
+   "counted_launches": [
+    {
+     "run": 1,
+     "before": [
+      10.689453125,
+      15.25244140625,
+      23.14892578125
+     ],
+     "after": [
+      9.9130859375,
+      15.015625,
+      23.01904296875
+     ]
+    },
+    {
+     "run": 2,
+     "before": [
+      9.279296875,
+      14.79931640625,
+      22.8955078125
+     ],
+     "after": [
+      9.279296875,
+      14.79931640625,
+      22.8955078125
+     ]
+    },
+    {
+     "run": 3,
+     "before": [
+      8.8564453125,
+      14.61962890625,
+      22.78466796875
+     ],
+     "after": [
+      8.76611328125,
+      14.416015625,
+      22.6171875
+     ]
+    },
+    {
+     "run": 4,
+     "before": [
+      8.76611328125,
+      14.416015625,
+      22.6171875
+     ],
+     "after": [
+      8.46435546875,
+      14.25927734375,
+      22.513671875
+     ]
+    },
+    {
+     "run": 5,
+     "before": [
+      7.9462890625,
+      14.0556640625,
+      22.39306640625
+     ],
+     "after": [
+      7.6298828125,
+      13.888671875,
+      22.28515625
+     ]
+    }
+   ],
+   "after_launches": [
+    7.6298828125,
+    13.888671875,
+    22.28515625
+   ],
+   "before_idle": [
+    4.61474609375,
+    12.1240234375,
+    21.15283203125
+   ]
+  },
+  "orientation": null,
+  "rotation": null,
+  "device_selection": {
+   "mode": "configured/default",
+   "udid": "71612A23-0E31-4E0A-9C3A-F5EE4E69FCE1",
+   "name": "Apple Watch Series 12 (46mm)",
+   "state_before": "Shutdown",
+   "shutdown_verified": false
+  },
+  "with_helpers": false,
+  "scope": "Simulator App host process only; excludes CoreSimulator, system services and inactive extensions",
+  "settle_s": 45
+ },
+ "size": {
+  "download_bytes": 2069438,
+  "installed_bytes": 3429138,
+  "download_mb": 2.07,
+  "installed_mb": 3.43
+ },
+ "speed": {
+  "cold_launch_ms": 764.0,
+  "runs": 5,
+  "discarded_runs": 1,
+  "ready_signal": "os_log",
+  "method": "launch command issued -> App os_log \"lane-ready\" (first data-bearing screen), App terminated 3 s before each run, first run after install discarded, median; only the discarded first launch carried the warm-up arguments (sign-in), timed launches reopen with the stored session"
+ },
+ "tool_sha256": {
+  "platform_measure.py": "da85b47da11905bd81ef01df3ef26a0b9821894aea2f92deb78976a45d70e3d2",
+  "measure.py": "9b4f3cb22190a295fade42759bdb19f27da7c5dbd13449e78cb14743472ed94c",
+  "sim_lane.py": "ba7cbd20ded10311bdc948675314205e5be797537da2eb9ae33ac2844e1d3d34"
+ }
+}

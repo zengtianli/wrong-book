@@ -1,0 +1,5 @@
+→ vision
+SDK 构建缓存不适用：缓存构建源码与当前平台输入不同（/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.e2766eabc81e0578df93d993048369508ad4f6077790b0da959f0a6c39998a98/sim-lane-build.suhcmo_l/build.json）；仅补当前 SDK
+＝ vision: 已保存 SDK 构建回执（/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.e2766eabc81e0578df93d993048369508ad4f6077790b0da959f0a6c39998a98/sim-lane-build.oa74q934/build.json）
+开机后 1 分钟负载 20.1 180s 内没降到 15.0，未测量（下个空档重测）
+← vision: 75

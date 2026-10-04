@@ -1,0 +1,32 @@
+→ watch
+SDK 构建缓存不适用：缓存构建源码与当前平台输入不同（/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.f2d4962b1a41dac358dcabebc3774ef43b25849c943c9164d84f7765a16091e9/sim-lane-build.x0bc5_or/build.json）；仅补当前 SDK
+＝ watch: 已保存 SDK 构建回执（/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.f2d4962b1a41dac358dcabebc3774ef43b25849c943c9164d84f7765a16091e9/sim-lane-build.f7x7qaon/build.json）
+{
+ "ok": true,
+ "out": "perf/platforms/watch.json",
+ "version": "1.0.1",
+ "input_sha256": "d775eaa9e4bf4cb8a13b6b5df2193aee717393108f6f07e3895f872c9941bcea",
+ "speed": {
+  "cold_launch_ms": 764.0,
+  "runs": 5,
+  "discarded_runs": 1,
+  "ready_signal": "os_log",
+  "method": "launch command issued -> App os_log \"lane-ready\" (first data-bearing screen), App terminated 3 s before each run, first run after install discarded, median; only the discarded first launch carried the warm-up arguments (sign-in), timed launches reopen with the stored session"
+ },
+ "idle": {
+  "memory_mb": 20.0,
+  "cpu_pct": 0.02,
+  "window_s": 60,
+  "settle_s": 45,
+  "method": "shared measure.py idle: CPU-time delta / wall window; phys_footprint peak of 3 samples after the window",
+  "scope": "Simulator App host process only; excludes CoreSimulator, system services and inactive extensions"
+ },
+ "size": {
+  "download_bytes": 2069438,
+  "installed_bytes": 3429138,
+  "download_mb": 2.07,
+  "installed_mb": 3.43,
+  "kind": "simulator .app (Release), not a store slice"
+ }
+}
+← watch: 0

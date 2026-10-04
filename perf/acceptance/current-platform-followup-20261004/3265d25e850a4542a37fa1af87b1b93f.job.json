@@ -1,0 +1,16 @@
+{
+  "id": "3265d25e850a4542a37fa1af87b1b93f",
+  "app_id": "wrong-book-ios",
+  "action": "perf",
+  "stage": "perf",
+  "status": "succeeded",
+  "created_at": "2026-10-04T10:36:15+08:00",
+  "started_at": "2026-10-04T11:33:22+08:00",
+  "finished_at": "2026-10-04T11:38:01+08:00",
+  "log_path": "/Users/tianli/Library/Application Support/app-sop/workbench/logs/3265d25e850a4542a37fa1af87b1b93f.log",
+  "message": "当前性能证据通过",
+  "check": null,
+  "retry": false,
+  "platform": "mac",
+  "tmpdir": "/private/tmp"
+}

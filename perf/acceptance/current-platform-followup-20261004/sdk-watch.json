@@ -1,0 +1,44 @@
+{
+ "ok": true,
+ "platform": "watch",
+ "configuration": "Release",
+ "scheme": "WrongBookWatch",
+ "compilation_conditions": [],
+ "app_path": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.f2d4962b1a41dac358dcabebc3774ef43b25849c943c9164d84f7765a16091e9/sim-lane-build.f7x7qaon/dd/Build/Products/Release-watchsimulator/WrongBookWatch.app",
+ "bundle_id": "cyou.tianli.wrongbook.watchkitapp",
+ "version": "1.0.1",
+ "build": "19",
+ "executable_sha256": "075a143a3ea891d2231aef7f6ac8c438e88cbd916c17a11e0472f575d36ef86a",
+ "sdk": "watchsimulator27.0",
+ "xcode": {
+  "name": "Xcode.app",
+  "version": "27.0",
+  "build": "27A266a",
+  "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+ },
+ "destination": "generic/platform=watchOS Simulator",
+ "signing": "unsigned simulator build (CODE_SIGNING_ALLOWED=NO)",
+ "log": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.f2d4962b1a41dac358dcabebc3774ef43b25849c943c9164d84f7765a16091e9/sim-lane-build.f7x7qaon/build-watch-Release.log",
+ "work_dir": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.f2d4962b1a41dac358dcabebc3774ef43b25849c943c9164d84f7765a16091e9/sim-lane-build.f7x7qaon",
+ "seconds": 71.6,
+ "generated_info_plists": [
+  {
+   "source_path": "src/Watch/Info.plist",
+   "backup_path": "cache-provenance/xcodegen-info.r9hhsv6_/Watch/Info.plist",
+   "sha256": "696a260824464a87ef5b8584118c620fc164851e7a5f69cf7d99cea8d0d836f6",
+   "targets": [
+    "WrongBookWatch"
+   ],
+   "reason": "XcodeGen target info.path; absent from original sources"
+  },
+  {
+   "source_path": "src/Watch/Widget-Info.plist",
+   "backup_path": "cache-provenance/xcodegen-info.r9hhsv6_/Watch/Widget-Info.plist",
+   "sha256": "53e1b982e486c15873df5b577394766be09e775d715becdef03e930dbec350ea",
+   "targets": [
+    "WrongBookWatchWidget"
+   ],
+   "reason": "XcodeGen target info.path; absent from original sources"
+  }
+ ]
+}

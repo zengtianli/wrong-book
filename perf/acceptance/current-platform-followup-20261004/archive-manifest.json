@@ -1,0 +1,107 @@
+{
+  "scope": "Original bytes privately archived, no public/push/receipt relabel",
+  "files": [
+    {
+      "file": "sdk-mac.json",
+      "original_path": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.c436b762dd1384982c89d360cb6f17b895622213becc927b69a57195ff4eddf4/sim-lane-build.lpfibe59/build.json",
+      "size": 1895,
+      "sha256": "52d61b0799de1061edb753ac64f2a81b7411f3f6625af143c423c7239bb4903d"
+    },
+    {
+      "file": "sdk-watch.json",
+      "original_path": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.f2d4962b1a41dac358dcabebc3774ef43b25849c943c9164d84f7765a16091e9/sim-lane-build.f7x7qaon/build.json",
+      "size": 1921,
+      "sha256": "1f8a19062bede883250b2f2f914910042e1493be9fcab19bcdcb6c36541343b6"
+    },
+    {
+      "file": "sdk-vision.json",
+      "original_path": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.e2766eabc81e0578df93d993048369508ad4f6077790b0da959f0a6c39998a98/sim-lane-build.oa74q934/build.json",
+      "size": 1896,
+      "sha256": "b504e89406098594864ef5c81d170309e02143019665c422b68412294a72c6db"
+    },
+    {
+      "file": "3265d25e850a4542a37fa1af87b1b93f.job.log",
+      "original_path": "/Users/tianli/Library/Application Support/app-sop/workbench/logs/3265d25e850a4542a37fa1af87b1b93f.log",
+      "size": 15075,
+      "sha256": "182b06c74dab50dbaa57179f6d41c05c318741bc34ab133b418d0dcdd3f7879f"
+    },
+    {
+      "file": "5ee9ad46853b44b8b81245421fb04ff5.job.log",
+      "original_path": "/Users/tianli/Library/Application Support/app-sop/workbench/logs/5ee9ad46853b44b8b81245421fb04ff5.log",
+      "size": 15113,
+      "sha256": "5950cfeb0981cc94f77b31a0dddfc55de6e8125aad5fb1946f9120238e0b7b10"
+    },
+    {
+      "file": "0ca5aa0603cf468d8918a4e32b4154ce.job.log",
+      "original_path": "/Users/tianli/Library/Application Support/app-sop/workbench/logs/0ca5aa0603cf468d8918a4e32b4154ce.log",
+      "size": 15098,
+      "sha256": "7b03c342d0c2268a2e5e82c027002e8fdf4b5324740aba650f2ebe528a0f030f"
+    },
+    {
+      "file": "perf__platforms__mac.json",
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/platforms/mac.json",
+      "size": 1452,
+      "sha256": "b8c6de5587e7b1ebe2a06bfe3ce7a1c050ee6da5a02fca4fdb72b24fc8d10f5c"
+    },
+    {
+      "file": "perf__platforms__watch.json",
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/platforms/watch.json",
+      "size": 1486,
+      "sha256": "d552db6a13592961eb8cf96f3b32d97a58dd3ceb443045cc7b5ddd843ab42a52"
+    },
+    {
+      "file": "perf__platforms__mac__measure-20261004-113330.json",
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/platforms/mac/measure-20261004-113330.json",
+      "size": 2980,
+      "sha256": "65201c2536d3135334ef8082670874297a3792e0456a3e9a7609b942b8863672"
+    },
+    {
+      "file": "perf__platforms__watch__measure-20261004-113813.json",
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/platforms/watch/measure-20261004-113813.json",
+      "size": 4339,
+      "sha256": "cb5a3ff0c70cfc8e723a710a0617c977e58b6a67264a7b102657729036dc5007"
+    },
+    {
+      "file": "perf__input-normalizations__finder-iphone.json",
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/input-normalizations/finder-iphone.json",
+      "size": 18655,
+      "sha256": "fc2d5b78b12bca125b009dc5657fd0fa8230432ef1e889929649dff2cd01016b"
+    },
+    {
+      "file": "perf__platforms__iphone.json",
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/platforms/iphone.json",
+      "size": 1459,
+      "sha256": "244ead28746f60d9b8f8405dbad3d2ba8981da52c6da0aef6c67818caf3bf618"
+    },
+    {
+      "file": "perf__platforms__iphone__measure-20261002-230130.json",
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/platforms/iphone/measure-20261002-230130.json",
+      "size": 2988,
+      "sha256": "cc3463785dda624721b97024cd96968457b0c561ec56f3c9ab06a8056e9db1cb"
+    },
+    {
+      "file": "perf__platforms__iphone__measure-20261004-075948.json",
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/platforms/iphone/measure-20261004-075948.json",
+      "size": 4299,
+      "sha256": "8211e56f2ff34f591647fab0ae755a40a6b4e231d5597c1ea0c8a36b9b4caf70"
+    },
+    {
+      "file": "producer-113327.log",
+      "original_path": "/Users/tianli/Library/Logs/app-sop/wrong-book-ios-measure-20261004-113327.log",
+      "size": 1564,
+      "sha256": "4eab8e3aebc1c6c3c6f1150ad2efb7b06ee4ea975e74f50e9b2e3bf7e6741d35"
+    },
+    {
+      "file": "producer-113808.log",
+      "original_path": "/Users/tianli/Library/Logs/app-sop/wrong-book-ios-measure-20261004-113808.log",
+      "size": 1559,
+      "sha256": "cf5394c3d39a377b62ee64f7b6081c59f8b31acb4c2e7e927dbda53d7aab3b39"
+    },
+    {
+      "file": "producer-114323.log",
+      "original_path": "/Users/tianli/Library/Logs/app-sop/wrong-book-ios-measure-20261004-114323.log",
+      "size": 597,
+      "sha256": "db81ebc99707d01edf8c9b5ea550ccc97945f4ea581abff8dcb71e3a35d90d0f"
+    }
+  ]
+}

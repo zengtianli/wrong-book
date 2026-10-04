@@ -1,0 +1,422 @@
+{
+ "at": "2026-10-04T11:43:19+08:00",
+ "offline": false,
+ "mode": "run",
+ "scope": "当前登记组件的增量观察；保留异时点证据，不等同本轮全量验收",
+ "families": 1,
+ "apps": [
+  {
+   "id": "wrong-book-ios",
+   "name": "Mistake Notebook · 错题本",
+   "repo": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序",
+   "form": "ios",
+   "family": "edu",
+   "current": "1.0 (18)",
+   "items": [
+    {
+     "stage": "perf",
+     "key": "test",
+     "status": "ok",
+     "detail": "2026-10-04 11:32 在当前代码通过",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "media",
+     "key": "media",
+     "status": "stale",
+     "detail": "1.0 (18) 沿用已标注录像，但最近一次界面复核绑定的界面源码 18451dc4… 已不是当前 8f652831…",
+     "fix": "按当前界面源码重跑界面复核（录制记录 ui_reviews 里的工具），或重录",
+     "auto": null
+    },
+    {
+     "stage": "media",
+     "key": "platform-iphone-shots",
+     "status": "ok",
+     "detail": "iPhone：4 张商店截图尺寸与格式合规",
+     "fix": null,
+     "auto": null,
+     "platform": "iphone"
+    },
+    {
+     "stage": "media",
+     "key": "platform-ipad-shots",
+     "status": "ok",
+     "detail": "iPad：3 张商店截图尺寸与格式合规",
+     "fix": null,
+     "auto": null,
+     "platform": "ipad"
+    },
+    {
+     "stage": "media",
+     "key": "platform-mac-shots",
+     "status": "ok",
+     "detail": "Mac：3 张商店截图尺寸与格式合规",
+     "fix": null,
+     "auto": null,
+     "platform": "mac"
+    },
+    {
+     "stage": "media",
+     "key": "platform-watch-shots",
+     "status": "ok",
+     "detail": "Apple Watch：3 张商店截图尺寸与格式合规",
+     "fix": null,
+     "auto": null,
+     "platform": "watch"
+    },
+    {
+     "stage": "media",
+     "key": "platform-vision-shots",
+     "status": "ok",
+     "detail": "Apple Vision Pro：3 张商店截图尺寸与格式合规",
+     "fix": null,
+     "auto": null,
+     "platform": "vision"
+    },
+    {
+     "stage": "media",
+     "key": "input-binding",
+     "status": "stale",
+     "detail": "产品输入已变化，现有实测/素材证据未更新",
+     "fix": "补受影响的实测或素材复核证据",
+     "auto": null
+    },
+    {
+     "stage": "promo",
+     "key": "brand-naming",
+     "status": "ok",
+     "detail": "双语字段、英文主显、跨族重名及已拒绝拼音名检查通过；英语语义与其他拼音须人工审阅",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "promo",
+     "key": "page_icon",
+     "status": "ok",
+     "detail": "产品页图标与正式素材一致",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "promo",
+     "key": "page",
+     "status": "ok",
+     "detail": "https://app-ios-wrong-book.tianli.cyou/",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "promo",
+     "key": "readme",
+     "status": "stale",
+     "detail": "README 已更新但没推送（分支领先远端 14 个提交）",
+     "fix": "是否推送由本人决定：iOS 仓一推送就会触发 Xcode Cloud 构建并上传，随发版推送，Agent 不推送；核实无 CI 后可登记 sop.push_safe",
+     "auto": null,
+     "blocker": "user"
+    },
+    {
+     "stage": "ship",
+     "key": "asc",
+     "status": "ok",
+     "detail": "ASC App Store 1.0 (18) 已回读",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "ship",
+     "key": "device",
+     "status": "na",
+     "detail": "本人 2026-10-02 要求模拟器验收；真机未验证（平台线模式：iPhone/iPad/Watch/Vision 按模拟器验收）",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "ship",
+     "key": "release",
+     "status": "info",
+     "detail": "发布 1.0 (18) 之后源码改了 5 次，未发版（fix: keep WrongBook tabs clear of config；feat: add optional iCloud settings and a；five platforms: wide layout for iPad, Ma…）",
+     "fix": "是否发版由本人决定：iOS 仓一推送就会触发 Xcode Cloud 构建并上传，Agent 不推送、不发版",
+     "auto": null,
+     "blocker": "user"
+    },
+    {
+     "stage": "ship",
+     "key": "product-distribution",
+     "status": "ok",
+     "detail": "公开发行产品",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "ship",
+     "key": "product-rationale",
+     "status": "ok",
+     "detail": "整理自己的错题，留给下一次更有把握的作答。 面向外部使用者提供现有公开产品与源码入口，持续维护获取、教程和版本证据。",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "ship",
+     "key": "product-source",
+     "status": "ok",
+     "detail": "公共源码匿名可访问：https://github.com/zengtianli/wrong-book",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "ship",
+     "key": "platform-iphone",
+     "status": "ok",
+     "detail": "iPhone：模拟器 iPhone-17-Pro 验收；cyou.tianli.wrongbook；发行 app_store",
+     "fix": null,
+     "auto": null,
+     "platform": "iphone",
+     "environment": "simulator"
+    },
+    {
+     "stage": "ship",
+     "key": "platform-ipad",
+     "status": "ok",
+     "detail": "iPad：模拟器 iPad-Pro-13-inch-M5-12GB 验收；cyou.tianli.wrongbook；发行 app_store",
+     "fix": null,
+     "auto": null,
+     "platform": "ipad",
+     "environment": "simulator"
+    },
+    {
+     "stage": "ship",
+     "key": "platform-mac",
+     "status": "ok",
+     "detail": "Mac：本机原生 验收；cyou.tianli.wrongbook；仅本机验收，不发行",
+     "fix": null,
+     "auto": null,
+     "platform": "mac",
+     "environment": "native"
+    },
+    {
+     "stage": "ship",
+     "key": "platform-watch",
+     "status": "ok",
+     "detail": "Apple Watch：模拟器 Apple-Watch-Series-12-46mm 验收；scheme WrongBookWatch；cyou.tianli.wrongbook.watchkitapp；仅模拟器验收，不发行",
+     "fix": null,
+     "auto": null,
+     "platform": "watch",
+     "environment": "simulator"
+    },
+    {
+     "stage": "ship",
+     "key": "platform-vision",
+     "status": "ok",
+     "detail": "Apple Vision Pro：模拟器 Apple-Vision-Pro-4K 验收；cyou.tianli.wrongbook；仅模拟器验收，不发行",
+     "fix": null,
+     "auto": null,
+     "platform": "vision",
+     "environment": "simulator"
+    },
+    {
+     "stage": "ship",
+     "key": "platform-iphone-release",
+     "status": "na",
+     "detail": "iPhone：随组件的 iOS 构建发行，ASC 回读见维护里的 asc / release 项",
+     "fix": null,
+     "auto": null,
+     "platform": "iphone"
+    },
+    {
+     "stage": "ship",
+     "key": "platform-ipad-release",
+     "status": "na",
+     "detail": "iPad：随组件的 iOS 构建发行，ASC 回读见维护里的 asc / release 项",
+     "fix": null,
+     "auto": null,
+     "platform": "ipad"
+    },
+    {
+     "stage": "ship",
+     "key": "platform-mac-release",
+     "status": "na",
+     "detail": "Mac：仅本机验收，不发行（distribution: none）",
+     "fix": null,
+     "auto": null,
+     "platform": "mac"
+    },
+    {
+     "stage": "ship",
+     "key": "platform-watch-release",
+     "status": "na",
+     "detail": "Apple Watch：仅模拟器验收，不发行（distribution: none；本人 2026-10-02 要求模拟器验收；真机未验证）",
+     "fix": null,
+     "auto": null,
+     "platform": "watch"
+    },
+    {
+     "stage": "ship",
+     "key": "platform-vision-release",
+     "status": "na",
+     "detail": "Apple Vision Pro：仅模拟器验收，不发行（distribution: none；本人 2026-10-02 要求模拟器验收；真机未验证）",
+     "fix": null,
+     "auto": null,
+     "platform": "vision"
+    },
+    {
+     "stage": "perf",
+     "key": "perf",
+     "status": "ok",
+     "detail": "1.0 (18) · 2026-09-26",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "perf",
+     "key": "size",
+     "status": "ok",
+     "detail": "installed 2.96 MB · download 2.16 MB",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "perf",
+     "key": "budget",
+     "status": "missing",
+     "detail": "original raw/doc bytes or path changed",
+     "fix": "补注明真机/模拟器环境的实际资源记录",
+     "auto": "measure",
+     "environment": null
+    },
+    {
+     "stage": "perf",
+     "key": "speed",
+     "status": "missing",
+     "detail": "original raw/doc bytes or path changed",
+     "fix": "补注明真机/模拟器环境的实际资源记录",
+     "auto": "measure",
+     "environment": null
+    },
+    {
+     "stage": "perf",
+     "key": "platform-iphone-perf",
+     "status": "stale",
+     "detail": "iPhone：实测输入 37463c45… 与当前 d775eaa9… 不同，历史输入契约证明未通过（original raw/doc bytes or path changed）",
+     "fix": "按平台线测量并写 perf/platforms/iphone.json（共享测量脚本：sim_lane 构建运行 + footprint/ps；input_sha256 取 app_sop.py lane-inputs --app wrong-book-ios --platform iphone）",
+     "auto": "measure",
+     "platform": "iphone",
+     "environment": "simulator"
+    },
+    {
+     "stage": "perf",
+     "key": "platform-ipad-perf",
+     "status": "stale",
+     "detail": "iPad：实测输入 37463c45… 与当前 d775eaa9… 不同，历史输入契约证明未通过（平台未登记完整 input_normalization proof/sha256）",
+     "fix": "按平台线测量并写 perf/platforms/ipad.json（共享测量脚本：sim_lane 构建运行 + footprint/ps；input_sha256 取 app_sop.py lane-inputs --app wrong-book-ios --platform ipad）",
+     "auto": "measure",
+     "platform": "ipad",
+     "environment": "simulator"
+    },
+    {
+     "stage": "perf",
+     "key": "platform-mac-perf",
+     "status": "ok",
+     "detail": "Mac 本机 Mac16,12 / Apple M4 · macOS 27.2：空闲内存 52MiB · 空闲 CPU 0.03% · 压缩包体 4.14638MB · 冷启动中位数 736ms；资源范围：Local ad-hoc Release build, main process only, quiet launch (hidden, no Dock icon, window never on screen)；本项为平台技术性能，不代表完整轻量合计",
+     "fix": null,
+     "auto": null,
+     "platform": "mac",
+     "environment": "native"
+    },
+    {
+     "stage": "perf",
+     "key": "platform-watch-perf",
+     "status": "ok",
+     "detail": "Apple Watch 模拟器 Apple Watch Series 12 (46mm) (Apple-Watch-Series-12-46mm) · watchOS 27.0：空闲内存 20MiB · 空闲 CPU 0.02% · 压缩包体 2.06944MB · 冷启动中位数 764ms；资源范围：Simulator App host process only; excludes CoreSimulator, system services and inactive extensions；本项为平台技术性能，不代表完整轻量合计（模拟器数值不代表真机）",
+     "fix": null,
+     "auto": null,
+     "platform": "watch",
+     "environment": "simulator"
+    },
+    {
+     "stage": "perf",
+     "key": "platform-vision-perf",
+     "status": "stale",
+     "detail": "Apple Vision Pro：实测输入 37463c45… 与当前 d775eaa9… 不同，历史输入契约证明未通过（平台未登记完整 input_normalization proof/sha256）",
+     "fix": "按平台线测量并写 perf/platforms/vision.json（共享测量脚本：sim_lane 构建运行 + footprint/ps；input_sha256 取 app_sop.py lane-inputs --app wrong-book-ios --platform vision）",
+     "auto": "measure",
+     "platform": "vision",
+     "environment": "simulator"
+    },
+    {
+     "stage": "perf",
+     "key": "input-binding",
+     "status": "stale",
+     "detail": "产品输入已变化，现有实测/素材证据未更新",
+     "fix": "补受影响的实测或素材复核证据",
+     "auto": null
+    },
+    {
+     "stage": "perf",
+     "key": "auto-measure",
+     "status": "fail",
+     "detail": "测量失败：命令退出成功但证据未通过回读：original raw/doc bytes or path changed（/Users/tianli/Library/Logs/app-sop/wrong-book-ios-measure-20261004-113808.log）",
+     "fix": "输入/条件变化后再查，或单 App --retry",
+     "auto": null
+    }
+   ],
+   "input_fingerprints": {
+    "stages": {
+     "test": "4f7aeae5bf1793af1241cc24262760b6c88401231427277f5ffd9d9a27de2b1a",
+     "perf": "e37370e8cc4b6f067049144f2f85cd99ff498451f99cabfe30143dd28f3cf1bd",
+     "media": "242e30b4b1895cd64f9f8a5fa4695632e45060162a1005ab0bea27311c47f0d4",
+     "promo": "9639ff114a5adcda3c7a233673068ea49301cc4e701a5a7acdadb3f21b7b44a7",
+     "ship": "4524bf6f9bdea61326b14292480c22df600e0dfd2a9f48664f91aa406d4e007b"
+    },
+    "bindings": {
+     "business": "c6f7ad9a07fb3b97352d761515ef3ed6d40e2506ceb4f8027edad7b88ff09c1c",
+     "code": "8bff5793563d58128bfe2b01eb3451cc0002b95fe98cc1110deece8949e8cfee",
+     "ui": "4be2ed2ad6226644275c36b100fd093857b60cbf58015d4518330ebe7b0bc64d",
+     "promo_ui": "c77d45661546d17c1dfa0a8466cac34d8af40f9bdced43f8bf692bfd0dcf46a8",
+     "media": "ad239bebe91ee1cfd90cf2530583bb6e3506ea8ea43237544cb58a07a6640b29",
+     "icon": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+     "installed_icon": "dee36ace772e1ed71145ee73f01e32ff75f471341ab8aa67fb7efebb93796fe5",
+     "cli_entry": "031080ff19a29739fa0443d1a1de0b4b10f2897642628f62c7f2bd81afd090f1",
+     "platform_iphone": "bd7345a47379160b9f07bf698f926c6f290607899fcf43f6b351017018389c22",
+     "platform_ipad": "284f342169a0bb882a06005ae1c46017e4c183b34095855a8160ad7a5170fd8c",
+     "platform_mac": "5e1511ebae09dc026f7e7331caf5bdbb877609472e54d19b7f251025bf660a1e",
+     "platform_watch": "cfcbce65040c4f20c5eb2e5b0b0329d4b17495c0a7c87996c6a617ebf90eaa77",
+     "platform_vision": "5113046222d7071a052dfb0c422de9b0646e33336822d73180d0faf93d3a4eff"
+    },
+    "icon_inputs": {},
+    "installed_icon_inputs": {},
+    "product_policy_sha256": "22fd154d5462db390381aac4b24a51874df941498c52b82e8d63fb729f3c15f4",
+    "product_naming_sha256": "bf1a14c1a2588a264ede61600b3d9ddf66ed5ba83d5bcfd81461c7d2615fe5c4",
+    "icon_complete": false,
+    "installed_icon_matches": false,
+    "components": {
+     "business": "c6f7ad9a07fb3b97352d761515ef3ed6d40e2506ceb4f8027edad7b88ff09c1c",
+     "code": "8bff5793563d58128bfe2b01eb3451cc0002b95fe98cc1110deece8949e8cfee",
+     "perf": "1992e99b20c62521f8f0ba32a2edf8f49fa2a6930d705f23850e952c45046c9a",
+     "ui": "608155150f45807b235fd07b1312df4539b10e1bca93e7e4ae8c21dda3a2b1a3",
+     "media": "165494aca9352b67a8b2730d6e0aebb42d38534620963021df04d3bb49e8d4fa"
+    }
+   },
+   "machine_state": "needs_check",
+   "delivery_state": "pending_user",
+   "coverage": [
+    "media_playback",
+    "launch_ipad",
+    "launch_mac",
+    "launch_watch",
+    "launch_vision"
+   ],
+   "resource_environments": [
+    "native",
+    "simulator"
+   ],
+   "scope_notes": [
+    "本次资源验收含用户接受的模拟器范围；真机资源尚未验证，模拟器数值不代表真机",
+    "Apple Watch、Apple Vision Pro：仅模拟器验收，不发行；本人 2026-10-02 要求模拟器验收；真机未验证"
+   ]
+  }
+ ],
+ "actions": [
+  "Mistake Notebook · 错题本 测量失败：命令退出成功但证据未通过回读：original raw/doc bytes or path changed（/Users/tianli/Library/Logs/app-sop/wrong-book-ios-measure-20261004-113808.log）"
+ ]
+}

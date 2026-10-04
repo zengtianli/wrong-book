@@ -1,0 +1,39 @@
+{
+ "schema_version": 1,
+ "platform": "mac",
+ "app_id": "wrong-book-ios",
+ "version": "1.0.1",
+ "build": "19",
+ "input_sha256": "d775eaa9e4bf4cb8a13b6b5df2193aee717393108f6f07e3895f872c9941bcea",
+ "runtime_measurement": {
+  "environment": "native",
+  "device": "Mac16,12 / Apple M4",
+  "os": "macOS 27.2",
+  "xcode": "Xcode 27.0 (27A266a)",
+  "evidence": "perf/platforms/mac/measure-20261004-113330.json",
+  "evidence_sha256": "65201c2536d3135334ef8082670874297a3792e0456a3e9a7609b942b8863672"
+ },
+ "size": {
+  "download_bytes": 4146382,
+  "installed_bytes": 9845294,
+  "download_mb": 4.15,
+  "installed_mb": 9.85,
+  "kind": "local ad-hoc Release .app, not a store package"
+ },
+ "speed": {
+  "cold_launch_ms": 736.0,
+  "runs": 5,
+  "discarded_runs": 1,
+  "ready_signal": "os_log",
+  "method": "launch command issued -> App os_log \"lane-ready\" (first data-bearing screen), App terminated 3 s before each run, first run after install discarded, median; only the discarded first launch carried the warm-up arguments (sign-in), timed launches reopen with the stored session"
+ },
+ "idle": {
+  "memory_mb": 52.0,
+  "cpu_pct": 0.03,
+  "window_s": 60,
+  "settle_s": 45,
+  "method": "shared measure.py idle: CPU-time delta / wall window; phys_footprint peak of 3 samples after the window",
+  "scope": "Local ad-hoc Release build, main process only, quiet launch (hidden, no Dock icon, window never on screen)"
+ },
+ "measured_at": "2026-10-04T11:33:30+08:00"
+}

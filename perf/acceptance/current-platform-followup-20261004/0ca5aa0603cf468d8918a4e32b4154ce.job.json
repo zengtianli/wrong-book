@@ -1,0 +1,17 @@
+{
+  "id": "0ca5aa0603cf468d8918a4e32b4154ce",
+  "app_id": "wrong-book-ios",
+  "action": "perf",
+  "stage": "perf",
+  "status": "deferred",
+  "created_at": "2026-10-04T10:36:16+08:00",
+  "started_at": "2026-10-04T11:43:20+08:00",
+  "finished_at": null,
+  "log_path": "/Users/tianli/Library/Application Support/app-sop/workbench/logs/0ca5aa0603cf468d8918a4e32b4154ce.log",
+  "message": "测量推迟：测量脚本判定当前不是恒定情况，空闲时再测（/Users/tianli/Library/Logs/app-sop/wrong-book-ios-measure-20261004-114323.log）",
+  "check": null,
+  "retry": false,
+  "platform": "vision",
+  "tmpdir": "/private/tmp",
+  "next_attempt_at": "2026-10-04T11:49:15.766573+08:00"
+}
