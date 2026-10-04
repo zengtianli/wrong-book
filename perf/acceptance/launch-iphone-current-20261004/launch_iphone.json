@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "name": "launch_iphone",
+  "app_id": "wrong-book-ios",
+  "command": "bash scripts/accept/launch.sh iphone",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-04T10:04:24.534896+08:00",
+  "finished_at": "2026-10-04T10:09:34.172754+08:00",
+  "input_sha256": "bd7345a47379160b9f07bf698f926c6f290607899fcf43f6b351017018389c22",
+  "log": "perf/acceptance/launch_iphone.log",
+  "log_sha256": "5c6b781a9822ad34a01afdcdd14a2587d3ac0daae6163a894dae64febe697fd0",
+  "summary": "iPhone 模拟器 iPhone 17 Pro 启动冒烟通过：os_log 12.677 s，截图 1206×2622",
+  "detail": {
+    "summary": "iPhone 模拟器 iPhone 17 Pro 启动冒烟通过：os_log 12.677 s，截图 1206×2622",
+    "passed": true,
+    "platform": "iphone",
+    "environment": "simulator",
+    "scheme": "WrongBook",
+    "sim_lane": "/Users/tianli/Dev/tools/dev/lib/tools/macapp/ios/sim_lane.py",
+    "method": "sim_lane 在仓外临时副本构建，在无窗口模拟器启动并截图；Mac 线静默启动（open -g -j + App -lane_quiet，不上屏不进 Dock，App 进程内离屏渲染截图）；不合成输入、不抢焦点",
+    "build": {
+      "app_path": "/private/tmp/sim-lane-build.86czfv17/dd/Build/Products/Debug-iphonesimulator/WrongBook.app",
+      "bundle_id": "cyou.tianli.wrongbook",
+      "version": "1.0.1",
+      "build": "19",
+      "configuration": "Debug",
+      "executable_sha256": "b752538d1c2920f4abe6a924cbc4b3d93260b14b0e01a8ff240945297a1a3bbc",
+      "sdk": "iphonesimulator27.0",
+      "xcode": {
+        "name": "Xcode.app",
+        "version": "27.0",
+        "build": "27A266a",
+        "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+      },
+      "log": "/private/tmp/sim-lane-build.86czfv17/build-iphone-Debug.log",
+      "reuse": null
+    },
+    "device": {
+      "udid": "280663C5-C40F-4F3E-8E88-2EB031CA689D",
+      "name": "iPhone 17 Pro",
+      "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "device_type": "iPhone-17-Pro"
+    },
+    "launch_args": [
+      "-api_base",
+      "http://127.0.0.1:56849",
+      "-dev_user",
+      "demo-xiaolin",
+      "-dev_pw",
+      "<redacted>"
+    ],
+    "waits": {
+      "lock_seconds": 300,
+      "load_seconds": 300
+    },
+    "run": {
+      "udid": "280663C5-C40F-4F3E-8E88-2EB031CA689D",
+      "pid": 46043,
+      "ready_seconds": 12.677,
+      "ready_signal": "os_log",
+      "size": [
+        1206,
+        2622
+      ],
+      "runtime": "iOS-27-0",
+      "device": "iPhone 17 Pro"
+    },
+    "verdict": {
+      "non_blank": true,
+      "changed_from_baseline": true,
+      "stable": true,
+      "diff_baseline": 0.8713,
+      "diff_prev": 0.0
+    },
+    "screenshot": "perf/platforms/iphone/launch.png",
+    "screenshot_sha256": "02e7fdb6f2d9a171dc9b9273b8190e706d2a65a72a72e64f66357c1cabf87c1e",
+    "capture_reusable": false,
+    "capture_note": "启动参数含敏感值，本次不导出可复用运行原件"
+  },
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/launch_iphone/20261004T100424531359+0800-c7uni3ct",
+    "manifest_sha256": "f6d2cc3d7f97d1cb3f84be7949fcf90fa5a9a30776ed20d44302dcefbed4304a"
+  }
+}
