@@ -1,0 +1,120 @@
+{
+ "schema_version": 1,
+ "platform": "mac",
+ "app_id": "wrong-book-ios",
+ "input_sha256": "37463c45737f3710f11520970d6a8a4e0b3163c86152f50902831afa4545d340",
+ "measured_at": "2026-10-04T08:17:10+08:00",
+ "completed_at": "2026-10-04T08:21:10+08:00",
+ "build": {
+  "configuration": "Release",
+  "scheme": "WrongBook",
+  "bundle_id": "cyou.tianli.wrongbook",
+  "version": "1.0.1",
+  "build": "19",
+  "sdk": "macosx27.0",
+  "executable_sha256": "5466d18d5ddf68b575e3f7131234c535818dbfb19f22ed86f6da5ee3d641c097",
+  "signing": "ad-hoc, entitlements stripped, no sandbox, no hardened runtime (local lane build)",
+  "seconds": 89.6,
+  "xcode": {
+   "name": "Xcode.app",
+   "version": "27.0",
+   "build": "27A266a",
+   "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+  },
+  "reuse": null
+ },
+ "measurement": {
+  "environment": "native",
+  "device": "Mac16,12 / Apple M4",
+  "os": "macOS 27.2",
+  "samples": [
+   {
+    "run": 0,
+    "pid": 61930,
+    "ready_seconds": 1.266,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 1,
+    "pid": null,
+    "ready_seconds": 0.701,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 2,
+    "pid": null,
+    "ready_seconds": 0.618,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 3,
+    "pid": null,
+    "ready_seconds": 0.633,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 4,
+    "pid": null,
+    "ready_seconds": 0.651,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 5,
+    "pid": null,
+    "ready_seconds": 0.634,
+    "ready_signal": "os_log",
+    "errors": []
+   }
+  ],
+  "idle": {
+   "process": "62306",
+   "footprint_mb": 52.0,
+   "cpu_pct": 0.0,
+   "window_s": 60
+  },
+  "loads": {
+   "before_launches": [
+    8.4111328125,
+    8.38134765625,
+    9.77978515625
+   ],
+   "after_launches": [
+    8.38427734375,
+    8.40869140625,
+    9.73388671875
+   ],
+   "before_idle": [
+    5.53271484375,
+    7.6376953125,
+    9.3798828125
+   ]
+  },
+  "orientation": null,
+  "with_helpers": false,
+  "scope": "Local ad-hoc Release build, main process only, quiet launch (hidden, no Dock icon, window never on screen)",
+  "settle_s": 45
+ },
+ "size": {
+  "download_bytes": 4142756,
+  "installed_bytes": 9822046,
+  "download_mb": 4.14,
+  "installed_mb": 9.82
+ },
+ "speed": {
+  "cold_launch_ms": 634.0,
+  "runs": 5,
+  "discarded_runs": 1,
+  "ready_signal": "os_log",
+  "method": "launch command issued -> App os_log \"lane-ready\" (first data-bearing screen), App terminated 3 s before each run, first run after install discarded, median; only the discarded first launch carried the warm-up arguments (sign-in), timed launches reopen with the stored session"
+ },
+ "tool_sha256": {
+  "platform_measure.py": "8b477d9572258fad9afd2d42393b1d68453ed984fdccc640581049f8253e048c",
+  "measure.py": "9b4f3cb22190a295fade42759bdb19f27da7c5dbd13449e78cb14743472ed94c",
+  "sim_lane.py": "ba7cbd20ded10311bdc948675314205e5be797537da2eb9ae33ac2844e1d3d34"
+ }
+}

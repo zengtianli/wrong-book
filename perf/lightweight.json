@@ -52,6 +52,6 @@
  "why": "按具体发行构建回读体积；内存、CPU 和启动时间仍明确保留未测状态。",
  "why_en": "Sizes are read back for this exact distribution build. Memory, CPU and launch time remain explicitly unmeasured.",
  "runtime_measurement": {
-  "simulator": "perf/projections/iphone-cc3463785dda6247.json"
+  "simulator": "perf/simulator.json"
  }
 }

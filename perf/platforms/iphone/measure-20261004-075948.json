@@ -1,0 +1,197 @@
+{
+ "schema_version": 1,
+ "platform": "iphone",
+ "app_id": "wrong-book-ios",
+ "input_sha256": "37463c45737f3710f11520970d6a8a4e0b3163c86152f50902831afa4545d340",
+ "measured_at": "2026-10-04T07:59:48+08:00",
+ "completed_at": "2026-10-04T08:06:25+08:00",
+ "build": {
+  "configuration": "Release",
+  "scheme": "WrongBook",
+  "bundle_id": "cyou.tianli.wrongbook",
+  "version": "1.0.1",
+  "build": "19",
+  "sdk": "iphonesimulator27.0",
+  "executable_sha256": "9abfca71bf035d935d2cf17ababd1cdf60428c8e788cbd4cf50c049259207f6f",
+  "signing": "unsigned simulator build (CODE_SIGNING_ALLOWED=NO)",
+  "seconds": 133.7,
+  "xcode": {
+   "name": "Xcode.app",
+   "version": "27.0",
+   "build": "27A266a",
+   "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+  },
+  "reuse": null
+ },
+ "measurement": {
+  "environment": "simulator",
+  "device": "iPhone 17 Pro (iPhone-17-Pro)",
+  "os": "iOS 27.0",
+  "udid": "280663C5-C40F-4F3E-8E88-2EB031CA689D",
+  "install_seconds": 48.8,
+  "samples": [
+   {
+    "run": 0,
+    "pid": 53469,
+    "ready_seconds": 4.265,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 1,
+    "pid": 53646,
+    "ready_seconds": 4.504,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 2,
+    "pid": 53788,
+    "ready_seconds": 3.174,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 3,
+    "pid": 53894,
+    "ready_seconds": 2.823,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 4,
+    "pid": 54008,
+    "ready_seconds": 2.467,
+    "ready_signal": "os_log",
+    "errors": []
+   },
+   {
+    "run": 5,
+    "pid": 54116,
+    "ready_seconds": 2.957,
+    "ready_signal": "os_log",
+    "errors": []
+   }
+  ],
+  "idle": {
+   "process": "54233",
+   "footprint_mb": 37.0,
+   "cpu_pct": 0.02,
+   "window_s": 60
+  },
+  "loads": {
+   "before_launches": [
+    34.90380859375,
+    14.49951171875,
+    9.81201171875
+   ],
+   "counted_launches": [
+    {
+     "run": 1,
+     "before": [
+      28.9619140625,
+      14.18115234375,
+      9.77978515625
+     ],
+     "after": [
+      26.51416015625,
+      14.14208984375,
+      9.81689453125
+     ]
+    },
+    {
+     "run": 2,
+     "before": [
+      25.591796875,
+      14.15625,
+      9.84716796875
+     ],
+     "after": [
+      22.431640625,
+      13.8544921875,
+      9.7900390625
+     ]
+    },
+    {
+     "run": 3,
+     "before": [
+      22.431640625,
+      13.8544921875,
+      9.7900390625
+     ],
+     "after": [
+      20.32763671875,
+      13.6923828125,
+      9.7802734375
+     ]
+    },
+    {
+     "run": 4,
+     "before": [
+      20.32763671875,
+      13.6923828125,
+      9.7802734375
+     ],
+     "after": [
+      17.9580078125,
+      13.4052734375,
+      9.7236328125
+     ]
+    },
+    {
+     "run": 5,
+     "before": [
+      17.9580078125,
+      13.4052734375,
+      9.7236328125
+     ],
+     "after": [
+      15.73779296875,
+      13.0791015625,
+      9.650390625
+     ]
+    }
+   ],
+   "after_launches": [
+    15.73779296875,
+    13.0791015625,
+    9.650390625
+   ],
+   "before_idle": [
+    8.31982421875,
+    11.4794921875,
+    9.27001953125
+   ]
+  },
+  "orientation": null,
+  "rotation": null,
+  "device_selection": {
+   "mode": "configured/default",
+   "udid": "280663C5-C40F-4F3E-8E88-2EB031CA689D",
+   "name": "iPhone 17 Pro",
+   "state_before": "Shutdown",
+   "shutdown_verified": false
+  },
+  "with_helpers": false,
+  "scope": "Simulator App host process only; excludes CoreSimulator, system services and inactive extensions",
+  "settle_s": 45
+ },
+ "size": {
+  "download_bytes": 7141575,
+  "installed_bytes": 13953623,
+  "download_mb": 7.14,
+  "installed_mb": 13.95
+ },
+ "speed": {
+  "cold_launch_ms": 2957.0,
+  "runs": 5,
+  "discarded_runs": 1,
+  "ready_signal": "os_log",
+  "method": "launch command issued -> App os_log \"lane-ready\" (first data-bearing screen), App terminated 3 s before each run, first run after install discarded, median; only the discarded first launch carried the warm-up arguments (sign-in), timed launches reopen with the stored session"
+ },
+ "tool_sha256": {
+  "platform_measure.py": "8b477d9572258fad9afd2d42393b1d68453ed984fdccc640581049f8253e048c",
+  "measure.py": "9b4f3cb22190a295fade42759bdb19f27da7c5dbd13449e78cb14743472ed94c",
+  "sim_lane.py": "ba7cbd20ded10311bdc948675314205e5be797537da2eb9ae33ac2844e1d3d34"
+ }
+}
