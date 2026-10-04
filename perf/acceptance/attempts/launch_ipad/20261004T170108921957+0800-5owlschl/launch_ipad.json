@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "name": "launch_ipad",
+  "app_id": "wrong-book-ios",
+  "command": "bash scripts/accept/launch.sh ipad",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-04T08:51:47.845952+08:00",
+  "finished_at": "2026-10-04T08:55:23.638758+08:00",
+  "input_sha256": "fff16520a2c7ea985b326341825b455eabaa6925ef59ecbe1e39abeebdef5c39",
+  "log": "perf/acceptance/launch_ipad.log",
+  "log_sha256": "58ccd98e76d3c757f68b9a76ec69f450a7dd1a4389069abf65458e70b06fd510",
+  "summary": "iPad 模拟器 iPad Pro 13-inch (M5) 启动冒烟通过：os_log 4.313 s，截图 2064×2752",
+  "detail": {
+    "summary": "iPad 模拟器 iPad Pro 13-inch (M5) 启动冒烟通过：os_log 4.313 s，截图 2064×2752",
+    "passed": true,
+    "platform": "ipad",
+    "environment": "simulator",
+    "scheme": "WrongBook",
+    "sim_lane": "/Users/tianli/Dev/tools/dev/lib/tools/macapp/ios/sim_lane.py",
+    "method": "sim_lane 在仓外临时副本构建，在无窗口模拟器启动并截图；Mac 线静默启动（open -g -j + App -lane_quiet，不上屏不进 Dock，App 进程内离屏渲染截图）；不合成输入、不抢焦点",
+    "build": {
+      "app_path": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.vt_x_bby/dd/Build/Products/Debug-iphonesimulator/WrongBook.app",
+      "bundle_id": "cyou.tianli.wrongbook",
+      "version": "1.0.1",
+      "build": "19",
+      "configuration": "Debug",
+      "executable_sha256": "b752538d1c2920f4abe6a924cbc4b3d93260b14b0e01a8ff240945297a1a3bbc",
+      "sdk": "iphonesimulator27.0",
+      "xcode": {
+        "name": "Xcode.app",
+        "version": "27.0",
+        "build": "27A266a",
+        "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+      },
+      "log": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.vt_x_bby/build-ipad-Debug.log",
+      "reuse": null
+    },
+    "device": {
+      "udid": "A19C635F-A987-4E08-931A-A5874216E34D",
+      "name": "iPad Pro 13-inch (M5)",
+      "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+      "device_type": "iPad-Pro-13-inch-M5-12GB"
+    },
+    "launch_args": [
+      "-api_base",
+      "http://127.0.0.1:55472",
+      "-dev_user",
+      "demo-xiaolin",
+      "-dev_pw",
+      "<redacted>"
+    ],
+    "waits": {
+      "lock_seconds": 300,
+      "load_seconds": 300
+    },
+    "run": {
+      "udid": "A19C635F-A987-4E08-931A-A5874216E34D",
+      "pid": 85078,
+      "ready_seconds": 4.313,
+      "ready_signal": "os_log",
+      "size": [
+        2064,
+        2752
+      ],
+      "runtime": "iOS-27-0",
+      "device": "iPad Pro 13-inch (M5)"
+    },
+    "verdict": {
+      "non_blank": true,
+      "changed_from_baseline": true,
+      "stable": true,
+      "diff_baseline": 0.8283,
+      "diff_prev": 0.0
+    },
+    "screenshot": "perf/platforms/ipad/launch.png",
+    "screenshot_sha256": "be02eb78647798bf684582fa9fd1c4b518f96363f0c8ec48c204c80d2fc0ed49",
+    "capture_reusable": false,
+    "capture_note": "启动参数含敏感值，本次不导出可复用运行原件"
+  },
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/launch_ipad/20261004T085147843886+0800-yc1s43vh",
+    "manifest_sha256": "e500fe42a97bf080e4c442df2e0e8a67d81f31f8e70a75340e0c08a2279e613a"
+  }
+}

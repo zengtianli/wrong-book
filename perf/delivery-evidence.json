@@ -25,11 +25,11 @@
       "result": "passed",
       "scope": "media",
       "method": "ui_automation",
-      "checked_at": "2026-10-04T08:49:10.132657+08:00",
-      "input_sha256": "8ac7d2ca1e32fa405621e22f81ef515803a31afa644871b062f3bac9eac1063c",
+      "checked_at": "2026-10-04T15:49:54.092676+08:00",
+      "input_sha256": "ad239bebe91ee1cfd90cf2530583bb6e3506ea8ea43237544cb58a07a6640b29",
       "evidence": "perf/acceptance/media_playback.json",
-      "evidence_sha256": "61a06c63e96e1f49a41a8836bf9c5d8198b98a04c63f9063ae5a60bd9b7e40e2",
-      "detail": "builtin:media_playback：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/media_playback.py → 1 个本地视频 ffprobe/ffmpeg 全量解码通过（/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/../02-审核/当前版本/02-视频/成片/public-preview/tour.mp4 12.0s h264）；推广页 1 个视频在无界面浏览器中实际播放（1.1/12s）"
+      "evidence_sha256": "e9fdee8d4acb05b014bd91fb31e8e37b70158d4c10add3c66705ba6442471e5a",
+      "detail": "builtin:media_playback：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/media_playback.py → 1 个本地视频 ffprobe/ffmpeg 全量解码通过（/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/../02-审核/当前版本/02-视频/成片/public-preview/tour.mp4 12.0s h264）；推广页 1 个视频在无界面浏览器中实际播放（1.0/12s）"
     },
     "functionality": {
       "result": "passed",
@@ -95,11 +95,11 @@
       "result": "passed",
       "scope": "platform_ipad",
       "method": "ui_automation",
-      "checked_at": "2026-10-04T08:55:23.638758+08:00",
-      "input_sha256": "fff16520a2c7ea985b326341825b455eabaa6925ef59ecbe1e39abeebdef5c39",
+      "checked_at": "2026-10-04T17:15:49.439015+08:00",
+      "input_sha256": "284f342169a0bb882a06005ae1c46017e4c183b34095855a8160ad7a5170fd8c",
       "evidence": "perf/acceptance/launch_ipad.json",
-      "evidence_sha256": "5d10b9756745bcfdb828c1d3c867a320a85701361390816c033a724717adb59e",
-      "detail": "sop.accept：bash scripts/accept/launch.sh ipad → iPad 模拟器 iPad Pro 13-inch (M5) 启动冒烟通过：os_log 4.313 s，截图 2064×2752"
+      "evidence_sha256": "9907fa24e8ff7272a304a295219dbafc272e9a3d1ee1f5ecc9312aa360cabbc1",
+      "detail": "sop.accept：SOP_FUNCTIONAL_THIN=1 bash scripts/accept/launch.sh ipad → iPad 模拟器 iPad Pro 13-inch (M5) 启动冒烟通过：os_log 9.592 s，截图 2064×2752"
     },
     "launch_watch": {
       "result": "passed",
@@ -115,12 +115,12 @@
       "result": "passed",
       "scope": "platform_vision",
       "method": "ui_automation",
-      "checked_at": "2026-10-04T09:00:38.299410+08:00",
-      "input_sha256": "83adf455b1d8d375634d10a1adf3ad190ee130eb782e7b0d5c829c77249ffc40",
+      "checked_at": "2026-10-04T15:57:22.279337+08:00",
+      "input_sha256": "5113046222d7071a052dfb0c422de9b0646e33336822d73180d0faf93d3a4eff",
       "evidence": "perf/acceptance/launch_vision.json",
-      "evidence_sha256": "e8eebf6dcac1149b5452840be9ac19fd94b22cd367c11652619f128f375f2f65",
-      "detail": "sop.accept：bash scripts/accept/launch.sh vision → Apple Vision Pro 模拟器 Apple Vision Pro 启动冒烟通过：os_log 10.347 s，截图 3840×2160"
+      "evidence_sha256": "e8974bca4a9687b38963db61b1036db281abe2a629496bce78320bf5e3ffe761",
+      "detail": "sop.accept：bash scripts/accept/launch.sh vision → Apple Vision Pro 模拟器 Apple Vision Pro 启动冒烟通过：os_log 35.066 s，截图 3840×2160"
     }
   },
-  "updated_at": "2026-10-04T11:59:51.005142+08:00"
+  "updated_at": "2026-10-04T17:15:49.464587+08:00"
 }

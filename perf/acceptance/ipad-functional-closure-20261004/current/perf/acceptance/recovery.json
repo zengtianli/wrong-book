@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "name": "recovery",
+  "app_id": "wrong-book-ios",
+  "command": "bash scripts/accept/recovery.sh",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-04T11:32:47.191713+08:00",
+  "finished_at": "2026-10-04T11:32:54.230404+08:00",
+  "input_sha256": "8bff5793563d58128bfe2b01eb3451cc0002b95fe98cc1110deece8949e8cfee",
+  "log": "perf/acceptance/recovery.log",
+  "log_sha256": "58ae790b8b7d7335ecae4c35c24589106196d8cfdcb6986fa63efbb7d7968d2b",
+  "summary": "Api HTTP/JSON regression passed",
+  "detail": null,
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/recovery/20261004T113247190660+0800-eoyvuvl5",
+    "manifest_sha256": "7f019f6bdb011ab9175c115e7d32ed572dcfa1a18ea38f50fff5c41eb373186b"
+  }
+}

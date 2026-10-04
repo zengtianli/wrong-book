@@ -1,0 +1,134 @@
+{
+  "before.json": {
+    "size": 10000,
+    "sha256": "c6ca0874134c4566a70b15c0c359545ff60d396d7f9b5caf4effb857460b071d"
+  },
+  "job.json": {
+    "size": 795,
+    "sha256": "0d03846121e13deefeac484b237597424559d71d1105759f78e3b06a928eb742"
+  },
+  "five-item-proof.json": {
+    "size": 17212,
+    "sha256": "c63da25cff4cba17507159d9af0f11709f4722e3f8a29a5a4bc292d14046db30"
+  },
+  "queue.log": {
+    "size": 298,
+    "sha256": "c6231442d1aa9024dd1bb6ce1e4e807376c203a9dff11c0c0f706a7e6606ebaa"
+  },
+  "strict-reuse-after-functional-fix.json": {
+    "size": 872,
+    "sha256": "6742bd94250764513619af93a53edf5d4ec5d8007c01c8e5c88997e5818a0634"
+  },
+  "pre-rotate-io-failed/b7ead8b6e89a4b88ab2808304f8a1cbd.log": {
+    "size": 329,
+    "sha256": "806cca78b92a5a61c913be2730b8b64c7641459994d56ed7bcfd450a8d4daa0d"
+  },
+  "pre-rotate-io-failed/launch_ipad.log": {
+    "size": 201,
+    "sha256": "8ba9fd1f3bcc487d1caf64fc738937ee5ab9dc9017c61f9cf166b52af54e12a9"
+  },
+  "pre-rotate-io-failed/unchanged-old-launch.png": {
+    "size": 664368,
+    "sha256": "be02eb78647798bf684582fa9fd1c4b518f96363f0c8ec48c204c80d2fc0ed49"
+  },
+  "pre-rotate-io-failed/launch_ipad.detail.json": {
+    "size": 2789,
+    "sha256": "a257b1d35d5e87389ad242b0b6955babd08a2c58e515ee96e0373812d270c300"
+  },
+  "pre-rotate-io-failed/launch_ipad.json": {
+    "size": 3767,
+    "sha256": "391a2a9e2101d14930b01f168cdd1378a4e7c36f09bc677d25ca731404afc6bf"
+  },
+  "pre-rotate-io-failed/failure-proof.json": {
+    "size": 11683,
+    "sha256": "e41350162d1ed3c359154632bdf4a0f904a7b77c8681913a061e5e91640ac0a3"
+  },
+  "pre-rotate-io-failed/build.json": {
+    "size": 1900,
+    "sha256": "3e60335390489df4007bdff62148aaba044171fb4775e637649858de512c868e"
+  },
+  "current/perf/delivery-evidence.json": {
+    "size": 7564,
+    "sha256": "d9cb385b632789452207b10a2c3451ad3714d54b7dcac57026568d190d2a1ee6"
+  },
+  "current/perf/acceptance/functionality.json": {
+    "size": 851,
+    "sha256": "6ebadb0063faf3b6f4a6fcd26e5a554a43ca3ab16637391bf2975b08edd1629a"
+  },
+  "current/perf/acceptance/privacy.json": {
+    "size": 827,
+    "sha256": "265f405ae345c68211e40924437ddbe64d69533449155a5e89fc34d70a445618"
+  },
+  "current/perf/acceptance/launch_vision.json": {
+    "size": 3955,
+    "sha256": "e8974bca4a9687b38963db61b1036db281abe2a629496bce78320bf5e3ffe761"
+  },
+  "current/perf/acceptance/launch_mac.detail.json": {
+    "size": 2530,
+    "sha256": "f87691fa7b4ac972bc474a149a92ec82acc50cf7f9387b60ebf75756fe25d136"
+  },
+  "current/perf/acceptance/launch_vision.detail.json": {
+    "size": 2971,
+    "sha256": "5f5212dd2ba5b9bf967620d5b0d5f4c4175b61d48ef1f9770847f7bad927bf28"
+  },
+  "current/perf/acceptance/launch_iphone.detail.json": {
+    "size": 2204,
+    "sha256": "023c56c2399d6b9f15cb780c5ed1cb071534ee8920f36f3e5e4bdec1b31f4cf1"
+  },
+  "current/perf/acceptance/launch_ipad.log": {
+    "size": 171,
+    "sha256": "c3ead755c47ebbafe34c109ad4ae55efe2eba22038a854dd4daa1a2c8043e403"
+  },
+  "current/perf/acceptance/launch_watch.json": {
+    "size": 4018,
+    "sha256": "6e82c1771bc78fcf8f73a4906dda9d9a313e5bf96adcf8d11d9bb3c9edb5cfbf"
+  },
+  "current/perf/acceptance/launch_ipad.detail.json": {
+    "size": 3068,
+    "sha256": "1e4deeb6d30c82e37b8caa5b29ff9f881f1a6113184577a3d1e568d517e13d9a"
+  },
+  "current/perf/acceptance/launch_ipad.json": {
+    "size": 4062,
+    "sha256": "9907fa24e8ff7272a304a295219dbafc272e9a3d1ee1f5ecc9312aa360cabbc1"
+  },
+  "current/perf/acceptance/launch_watch.detail.json": {
+    "size": 3034,
+    "sha256": "6e2c30d62c70392abe46fcd5acbfc9ad0615edef63be8459e05322cb14bc6c8f"
+  },
+  "current/perf/acceptance/recovery.json": {
+    "size": 756,
+    "sha256": "0853637a9b1a280493e6313322acf4e4214186f91adfaa7900518d1c67404202"
+  },
+  "current/perf/acceptance/launch_iphone.json": {
+    "size": 3163,
+    "sha256": "bd613a2d6d0b95e53f6889864ce36f2e062d89b53e0a5b49856e8e78c48149e5"
+  },
+  "current/perf/acceptance/launch_mac.json": {
+    "size": 3452,
+    "sha256": "4acabd7723f68861b1430be57b3618e4ddcb512cdb9f6c4fb1196c6873f43549"
+  },
+  "current/perf/platforms/ipad/launch.png": {
+    "size": 633722,
+    "sha256": "f3f81370a59a96337f37f414f470e8e3330fcb76d55f68dda47fbe17fea1266f"
+  },
+  "before/perf/delivery-evidence.json": {
+    "size": 7542,
+    "sha256": "40f12f571c84eef450e1b530c3020ae46f416b3c11865a0eb7625a7d4e33ec33"
+  },
+  "before/perf/acceptance/launch_ipad.log": {
+    "size": 171,
+    "sha256": "58ccd98e76d3c757f68b9a76ec69f450a7dd1a4389069abf65458e70b06fd510"
+  },
+  "before/perf/acceptance/launch_ipad.detail.json": {
+    "size": 2317,
+    "sha256": "ee466f5ad8a3a6a6a15c33d37f482c7b19b3e112e8e720129262949f76cd3780"
+  },
+  "before/perf/acceptance/launch_ipad.json": {
+    "size": 3273,
+    "sha256": "5d10b9756745bcfdb828c1d3c867a320a85701361390816c033a724717adb59e"
+  },
+  "before/perf/platforms/ipad/launch.png": {
+    "size": 664368,
+    "sha256": "be02eb78647798bf684582fa9fd1c4b518f96363f0c8ec48c204c80d2fc0ed49"
+  }
+}

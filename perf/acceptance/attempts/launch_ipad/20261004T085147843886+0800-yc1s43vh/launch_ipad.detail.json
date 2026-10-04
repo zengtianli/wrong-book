@@ -1,0 +1,57 @@
+{
+  "summary": "iPad 启动冒烟未通过：sim_lane run 退出码 1（xcrun simctl io A19C635F-A987-4E08-931A-A5874216E34D 超过 60s）",
+  "passed": false,
+  "platform": "ipad",
+  "environment": "simulator",
+  "scheme": "WrongBook",
+  "sim_lane": "/Users/tianli/Dev/tools/dev/lib/tools/macapp/ios/sim_lane.py",
+  "method": "sim_lane 在仓外临时副本构建，在无窗口模拟器启动并截图；Mac 线静默启动（open -g -j + App -lane_quiet，不上屏不进 Dock，App 进程内离屏渲染截图）；不合成输入、不抢焦点",
+  "build": {
+    "app_path": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.5c5hhpkp/dd/Build/Products/Debug-iphonesimulator/WrongBook.app",
+    "bundle_id": "cyou.tianli.wrongbook",
+    "version": "1.0.1",
+    "build": "19",
+    "configuration": "Debug",
+    "executable_sha256": "b752538d1c2920f4abe6a924cbc4b3d93260b14b0e01a8ff240945297a1a3bbc",
+    "sdk": "iphonesimulator27.0",
+    "xcode": {
+      "name": "Xcode.app",
+      "version": "27.0",
+      "build": "27A266a",
+      "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+    },
+    "log": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.5c5hhpkp/build-ipad-Debug.log",
+    "reuse": null
+  },
+  "device": {
+    "udid": "A19C635F-A987-4E08-931A-A5874216E34D",
+    "name": "iPad Pro 13-inch (M5)",
+    "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-27-0",
+    "device_type": "iPad-Pro-13-inch-M5-12GB"
+  },
+  "launch_args": [
+    "-api_base",
+    "http://127.0.0.1:55105",
+    "-dev_user",
+    "demo-xiaolin",
+    "-dev_pw",
+    "<redacted>"
+  ],
+  "waits": {
+    "lock_seconds": 300,
+    "load_seconds": 300
+  },
+  "run": {
+    "udid": null,
+    "pid": null,
+    "ready_seconds": null,
+    "ready_signal": null,
+    "size": null,
+    "runtime": null,
+    "device": null
+  },
+  "verdict": {},
+  "screenshot": "perf/platforms/ipad/launch.png",
+  "screenshot_sha256": "10d1565e5989a602989967371e4869b4606c68348e5fcf92ca5887b050e6134a",
+  "run_tail": "{\"ok\": false, \"error\": \"xcrun simctl io A19C635F-A987-4E08-931A-A5874216E34D 超过 60s\"}\n"
+}

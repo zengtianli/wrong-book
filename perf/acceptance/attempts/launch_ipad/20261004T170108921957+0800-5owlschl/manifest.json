@@ -1,0 +1,23 @@
+{
+  "app_id": "wrong-book-ios",
+  "check": "launch_ipad",
+  "saved_at": "2026-10-04T17:01:08.922223+08:00",
+  "files": {
+    "launch_ipad.log": {
+      "sha256": "58ccd98e76d3c757f68b9a76ec69f450a7dd1a4389069abf65458e70b06fd510",
+      "bytes": 171,
+      "mode": 420
+    },
+    "launch_ipad.detail.json": {
+      "sha256": "ee466f5ad8a3a6a6a15c33d37f482c7b19b3e112e8e720129262949f76cd3780",
+      "bytes": 2317,
+      "mode": 420
+    },
+    "launch_ipad.json": {
+      "sha256": "5d10b9756745bcfdb828c1d3c867a320a85701361390816c033a724717adb59e",
+      "bytes": 3273,
+      "mode": 420
+    }
+  },
+  "missing": []
+}

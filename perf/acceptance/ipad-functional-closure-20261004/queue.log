@@ -1,0 +1,12 @@
+{
+ "ok": true,
+ "app_id": "wrong-book-ios",
+ "results": {
+  "launch_ipad": {
+   "status": "passed",
+   "method": "ui_automation",
+   "evidence": "perf/acceptance/launch_ipad.json",
+   "detail": "iPad 模拟器 iPad Pro 13-inch (M5) 启动冒烟通过：os_log 9.592 s，截图 2064×2752"
+  }
+ }
+}

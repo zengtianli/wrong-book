@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-04T17:14:57.540541+08:00",
+  "reuse": {
+    "receipt": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.ff253e9544dc24ea49ac6e2e6ab41754ee08986abc0846799ac699be3578c504/sim-lane-build.mnuv_hs3/build.json",
+    "receipt_sha256": "3e60335390489df4007bdff62148aaba044171fb4775e637649858de512c868e",
+    "source_copy": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.ff253e9544dc24ea49ac6e2e6ab41754ee08986abc0846799ac699be3578c504/sim-lane-build.mnuv_hs3/src",
+    "input_sha256": "d775eaa9e4bf4cb8a13b6b5df2193aee717393108f6f07e3895f872c9941bcea",
+    "source_file_count": 79
+  },
+  "configuration": "Release",
+  "executable_sha256": "a02e9d4a2abd47985fc7e6fb05c7e7c2b1049fe529b98328c0a0b58948628761",
+  "tool_sha256": "a38d60fe4241b862450d7b3a7388e42ec797d173071aa20567be25b2e5eb7684",
+  "new_sdk_count": 0
+}

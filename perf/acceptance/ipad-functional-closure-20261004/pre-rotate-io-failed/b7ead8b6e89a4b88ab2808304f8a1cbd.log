@@ -1,0 +1,12 @@
+{
+ "ok": false,
+ "app_id": "wrong-book-ios",
+ "results": {
+  "launch_ipad": {
+   "status": "failed",
+   "method": "ui_automation",
+   "evidence": "perf/acceptance/launch_ipad.json",
+   "detail": "iPad 启动冒烟未通过：sim_lane run 退出码 1（xcrun simctl io A19C635F-A987-4E08-931A-A5874216E34D 超过 60s）"
+  }
+ }
+}

@@ -1,0 +1,2 @@
+演示学习库 http://127.0.0.1:55105（demo-xiaolin，本机合成数据）
+iPad 启动冒烟未通过：sim_lane run 退出码 1（xcrun simctl io A19C635F-A987-4E08-931A-A5874216E34D 超过 60s）

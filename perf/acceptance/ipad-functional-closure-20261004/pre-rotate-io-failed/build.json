@@ -1,0 +1,44 @@
+{
+ "ok": true,
+ "platform": "iphone",
+ "configuration": "Release",
+ "scheme": "WrongBook",
+ "compilation_conditions": [],
+ "app_path": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.ff253e9544dc24ea49ac6e2e6ab41754ee08986abc0846799ac699be3578c504/sim-lane-build.mnuv_hs3/dd/Build/Products/Release-iphonesimulator/WrongBook.app",
+ "bundle_id": "cyou.tianli.wrongbook",
+ "version": "1.0.1",
+ "build": "19",
+ "executable_sha256": "a02e9d4a2abd47985fc7e6fb05c7e7c2b1049fe529b98328c0a0b58948628761",
+ "sdk": "iphonesimulator27.0",
+ "xcode": {
+  "name": "Xcode.app",
+  "version": "27.0",
+  "build": "27A266a",
+  "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+ },
+ "destination": "generic/platform=iOS Simulator",
+ "signing": "unsigned simulator build (CODE_SIGNING_ALLOWED=NO)",
+ "log": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.ff253e9544dc24ea49ac6e2e6ab41754ee08986abc0846799ac699be3578c504/sim-lane-build.mnuv_hs3/build-iphone-Release.log",
+ "work_dir": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.ff253e9544dc24ea49ac6e2e6ab41754ee08986abc0846799ac699be3578c504/sim-lane-build.mnuv_hs3",
+ "seconds": 132.6,
+ "generated_info_plists": [
+  {
+   "source_path": "src/Watch/Info.plist",
+   "backup_path": "cache-provenance/xcodegen-info.sigxk8v5/Watch/Info.plist",
+   "sha256": "696a260824464a87ef5b8584118c620fc164851e7a5f69cf7d99cea8d0d836f6",
+   "targets": [
+    "WrongBookWatch"
+   ],
+   "reason": "XcodeGen target info.path; absent from original sources"
+  },
+  {
+   "source_path": "src/Watch/Widget-Info.plist",
+   "backup_path": "cache-provenance/xcodegen-info.sigxk8v5/Watch/Widget-Info.plist",
+   "sha256": "53e1b982e486c15873df5b577394766be09e775d715becdef03e930dbec350ea",
+   "targets": [
+    "WrongBookWatchWidget"
+   ],
+   "reason": "XcodeGen target info.path; absent from original sources"
+  }
+ ]
+}
