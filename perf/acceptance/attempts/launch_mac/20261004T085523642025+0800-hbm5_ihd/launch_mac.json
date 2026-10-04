@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "name": "launch_mac",
+  "app_id": "wrong-book-ios",
+  "command": "bash scripts/accept/launch.sh mac",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-04T02:45:28.966898+08:00",
+  "finished_at": "2026-10-04T02:46:47.087248+08:00",
+  "input_sha256": "e7e58b05c1892f7c6cdbc095c39372c3d56b37c4ff02ec62283184d1acf59a76",
+  "log": "perf/acceptance/launch_mac.log",
+  "log_sha256": "f365e78b65d53fb791bba510b3a5bd503f4b010eb097be71920cb3ef8d722827",
+  "summary": "Mac 本机 启动冒烟通过：os_log 1.22 s，截图 2480×1640",
+  "detail": {
+    "summary": "Mac 本机 启动冒烟通过：os_log 1.22 s，截图 2480×1640",
+    "passed": true,
+    "platform": "mac",
+    "environment": "native",
+    "scheme": "WrongBook",
+    "sim_lane": "/Users/tianli/Dev/tools/dev/lib/tools/macapp/ios/sim_lane.py",
+    "method": "sim_lane 在仓外临时副本构建，在无窗口模拟器启动并截图；Mac 线静默启动（open -g -j + App -lane_quiet，不上屏不进 Dock，App 进程内离屏渲染截图）；不合成输入、不抢焦点",
+    "build": {
+      "app_path": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.g_hcrm6l/dd/Build/Products/Debug/WrongBook.app",
+      "bundle_id": "cyou.tianli.wrongbook",
+      "version": "1.0.1",
+      "build": "19",
+      "configuration": "Debug",
+      "executable_sha256": "cd310fdf9770759b56d2a342e25918a04be062bf51a509e9e9814e062a6d98a4",
+      "sdk": "macosx27.0",
+      "xcode": {
+        "name": "Xcode.app",
+        "version": "27.0",
+        "build": "27A266a",
+        "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+      },
+      "log": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.g_hcrm6l/build-mac-Debug.log",
+      "reuse": null
+    },
+    "launch_args": [
+      "-api_base",
+      "http://127.0.0.1:56992",
+      "-dev_user",
+      "demo-xiaolin",
+      "-dev_pw",
+      "<redacted>"
+    ],
+    "waits": {
+      "lock_seconds": 300,
+      "load_seconds": 300
+    },
+    "run": {
+      "udid": null,
+      "pid": null,
+      "ready_seconds": 1.22,
+      "ready_signal": "os_log",
+      "size": [
+        2480,
+        1640
+      ],
+      "runtime": null,
+      "device": null
+    },
+    "verdict": {
+      "non_blank": true,
+      "changed_from_baseline": null,
+      "stable": false,
+      "diff_baseline": null,
+      "diff_prev": null
+    },
+    "screenshot": "perf/platforms/mac/launch.png",
+    "screenshot_sha256": "fa113f9dc014f71d3bb5d02a8ecd4636344df13aaa64cff220a786f8ae08119a"
+  },
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/launch_mac/20261004T024528954941+0800-2upe2fu3",
+    "manifest_sha256": "72e3d1a964d7a66c951270ed50567e6d3616933f13904c50cd8464c4a0326f8f"
+  }
+}

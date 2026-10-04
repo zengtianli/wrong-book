@@ -1,0 +1,12 @@
+{
+ "ok": true,
+ "app_id": "wrong-book-ios",
+ "results": {
+  "launch_mac": {
+   "status": "passed",
+   "method": "ui_automation",
+   "evidence": "perf/acceptance/launch_mac.json",
+   "detail": "Mac 本机 启动冒烟通过：os_log 1.113 s，截图 2480×1640"
+  }
+ }
+}

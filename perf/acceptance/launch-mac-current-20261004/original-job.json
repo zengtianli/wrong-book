@@ -1,0 +1,17 @@
+{
+  "id": "4abd891927b247bc8cdf7cb7a62be767",
+  "app_id": "wrong-book-ios",
+  "action": "accept",
+  "stage": null,
+  "status": "succeeded",
+  "created_at": "2026-10-04T11:43:52+08:00",
+  "started_at": "2026-10-04T11:58:48+08:00",
+  "finished_at": "2026-10-04T11:59:00+08:00",
+  "log_path": "/Users/tianli/Library/Application Support/app-sop/workbench/logs/4abd891927b247bc8cdf7cb7a62be767.log",
+  "message": "验收通过",
+  "check": "launch_mac",
+  "retry": false,
+  "reuse_build_receipt": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.c436b762dd1384982c89d360cb6f17b895622213becc927b69a57195ff4eddf4/sim-lane-build.lpfibe59/build.json",
+  "reuse_build_receipt_sha256": "52d61b0799de1061edb753ac64f2a81b7411f3f6625af143c423c7239bb4903d",
+  "tmpdir": "/private/tmp"
+}

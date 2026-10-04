@@ -1,0 +1,67 @@
+{
+  "summary": "Apple Watch 模拟器 Apple Watch Series 12 (46mm) 启动冒烟通过：os_log 1.018 s，截图 416×496",
+  "passed": true,
+  "platform": "watch",
+  "environment": "simulator",
+  "scheme": "WrongBookWatch",
+  "sim_lane": "/Users/tianli/Dev/tools/dev/lib/tools/macapp/ios/sim_lane.py",
+  "method": "sim_lane 在仓外临时副本构建，在无窗口模拟器启动并截图；Mac 线静默启动（open -g -j + App -lane_quiet，不上屏不进 Dock，App 进程内离屏渲染截图）；不合成输入、不抢焦点",
+  "build": {
+    "app_path": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.vqm__yse/dd/Build/Products/Debug-watchsimulator/WrongBookWatch.app",
+    "bundle_id": "cyou.tianli.wrongbook.watchkitapp",
+    "version": "1.0.1",
+    "build": "19",
+    "configuration": "Debug",
+    "executable_sha256": "68eb529e75e00d01d69e55b1b68b4092e2c57fb18991f38a329e9574e649bdbc",
+    "sdk": "watchsimulator27.0",
+    "xcode": {
+      "name": "Xcode.app",
+      "version": "27.0",
+      "build": "27A266a",
+      "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+    },
+    "log": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.vqm__yse/build-watch-Debug.log",
+    "reuse": null
+  },
+  "device": {
+    "udid": "71612A23-0E31-4E0A-9C3A-F5EE4E69FCE1",
+    "name": "Apple Watch Series 12 (46mm)",
+    "runtime": "com.apple.CoreSimulator.SimRuntime.watchOS-27-0",
+    "device_type": "Apple-Watch-Series-12-46mm"
+  },
+  "launch_args": [
+    "-api_base",
+    "http://127.0.0.1:56448",
+    "-dev_user",
+    "demo-xiaolin",
+    "-dev_pw",
+    "<redacted>"
+  ],
+  "waits": {
+    "lock_seconds": 300,
+    "load_seconds": 300
+  },
+  "run": {
+    "udid": "71612A23-0E31-4E0A-9C3A-F5EE4E69FCE1",
+    "pid": 87101,
+    "ready_seconds": 1.018,
+    "ready_signal": "os_log",
+    "size": [
+      416,
+      496
+    ],
+    "runtime": "watchOS-27-0",
+    "device": "Apple Watch Series 12 (46mm)"
+  },
+  "verdict": {
+    "non_blank": true,
+    "changed_from_baseline": true,
+    "stable": true,
+    "diff_baseline": 0.6739,
+    "diff_prev": 0.0
+  },
+  "screenshot": "perf/platforms/watch/launch.png",
+  "screenshot_sha256": "60035aace76ae900ed2cabe39b3847fe573acca943648b68cfcfd4d5d3efa414",
+  "capture_reusable": false,
+  "capture_note": "启动参数含敏感值，本次不导出可复用运行原件"
+}

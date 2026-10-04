@@ -1,0 +1,47 @@
+{
+  "scope": "Private original bytes and actual binding/visual observation; no public push",
+  "files": [
+    {
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/launch_mac.json",
+      "file": "launch.json",
+      "size": 3452,
+      "sha256": "4acabd7723f68861b1430be57b3618e4ddcb512cdb9f6c4fb1196c6873f43549"
+    },
+    {
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/launch_mac.log",
+      "file": "launch.log",
+      "size": 145,
+      "sha256": "559806fe433e0f5350a7eb5dd1557470d0f3cdc757739b2021e2bf97114dab39"
+    },
+    {
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/launch_mac.detail.json",
+      "file": "launch.detail.json",
+      "size": 2530,
+      "sha256": "f87691fa7b4ac972bc474a149a92ec82acc50cf7f9387b60ebf75756fe25d136"
+    },
+    {
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/platforms/mac/launch.png",
+      "file": "launch.png",
+      "size": 499009,
+      "sha256": "fa113f9dc014f71d3bb5d02a8ecd4636344df13aaa64cff220a786f8ae08119a"
+    },
+    {
+      "original_path": "/Users/tianli/Library/Application Support/app-sop/workbench/logs/4abd891927b247bc8cdf7cb7a62be767.log",
+      "file": "original-job.log",
+      "size": 270,
+      "sha256": "bc22de3ef6c2c38329ccd706f1781a43708b606ce72da53fe894349894c97f2d"
+    },
+    {
+      "original_path": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.c436b762dd1384982c89d360cb6f17b895622213becc927b69a57195ff4eddf4/sim-lane-build.lpfibe59/build.json",
+      "file": "actual-build-receipt.json",
+      "size": 1895,
+      "sha256": "52d61b0799de1061edb753ac64f2a81b7411f3f6625af143c423c7239bb4903d"
+    },
+    {
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/delivery-evidence.json",
+      "file": "delivery-evidence.json",
+      "size": 7542,
+      "sha256": "48f437a99f5e153b65e24ccd957ac17deab0fee4a4936683606837e79b491ebc"
+    }
+  ]
+}

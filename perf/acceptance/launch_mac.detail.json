@@ -1,0 +1,65 @@
+{
+  "summary": "Mac 本机 启动冒烟通过：os_log 1.113 s，截图 2480×1640",
+  "passed": true,
+  "platform": "mac",
+  "environment": "native",
+  "scheme": "WrongBook",
+  "sim_lane": "/Users/tianli/Dev/tools/dev/lib/tools/macapp/ios/sim_lane.py",
+  "method": "核验仓外构建回执与当前源码、产物及工具链后复用；沿共享 sim_lane 静默启动并截图，不抢焦点",
+  "build": {
+    "app_path": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.c436b762dd1384982c89d360cb6f17b895622213becc927b69a57195ff4eddf4/sim-lane-build.lpfibe59/dd/Build/Products/Release/WrongBook.app",
+    "bundle_id": "cyou.tianli.wrongbook",
+    "version": "1.0.1",
+    "build": "19",
+    "configuration": "Release",
+    "executable_sha256": "c34bc56bc653fd8934bea04ce4b0d9eaaab025d55f3fc1cf006c43b41af8a7d5",
+    "sdk": "macosx27.0",
+    "xcode": {
+      "name": "Xcode.app",
+      "version": "27.0",
+      "build": "27A266a",
+      "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+    },
+    "log": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.c436b762dd1384982c89d360cb6f17b895622213becc927b69a57195ff4eddf4/sim-lane-build.lpfibe59/build-mac-Release.log",
+    "reuse": {
+      "receipt": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.c436b762dd1384982c89d360cb6f17b895622213becc927b69a57195ff4eddf4/sim-lane-build.lpfibe59/build.json",
+      "receipt_sha256": "52d61b0799de1061edb753ac64f2a81b7411f3f6625af143c423c7239bb4903d",
+      "source_copy": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.c436b762dd1384982c89d360cb6f17b895622213becc927b69a57195ff4eddf4/sim-lane-build.lpfibe59/src",
+      "input_sha256": "d775eaa9e4bf4cb8a13b6b5df2193aee717393108f6f07e3895f872c9941bcea",
+      "source_file_count": 79
+    }
+  },
+  "launch_args": [
+    "-api_base",
+    "http://127.0.0.1:57027",
+    "-dev_user",
+    "demo-xiaolin",
+    "-dev_pw",
+    "<redacted>"
+  ],
+  "waits": {
+    "lock_seconds": 300,
+    "load_seconds": 300
+  },
+  "run": {
+    "udid": null,
+    "pid": null,
+    "ready_seconds": 1.113,
+    "ready_signal": "os_log",
+    "size": [
+      2480,
+      1640
+    ],
+    "runtime": null,
+    "device": null
+  },
+  "verdict": {
+    "non_blank": true,
+    "changed_from_baseline": null,
+    "stable": false,
+    "diff_baseline": null,
+    "diff_prev": null
+  },
+  "screenshot": "perf/platforms/mac/launch.png",
+  "screenshot_sha256": "fa113f9dc014f71d3bb5d02a8ecd4636344df13aaa64cff220a786f8ae08119a"
+}

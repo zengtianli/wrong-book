@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "name": "launch_mac",
+  "app_id": "wrong-book-ios",
+  "command": "bash scripts/accept/launch.sh mac",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-03T17:31:32.425777+08:00",
+  "finished_at": "2026-10-03T17:32:33.462799+08:00",
+  "input_sha256": "444c7c28d1b0563e6ca03cc3756158c28ec92872111771a9fd90e0650f45154d",
+  "log": "perf/acceptance/launch_mac.log",
+  "log_sha256": "d18ce42a1de34d633e90c089e6657a8015b2eb34d607a4ccdfa65949731f49f1",
+  "summary": "Mac 本机 启动冒烟通过：os_log 1.513 s，截图 2880×1800",
+  "detail": {
+    "summary": "Mac 本机 启动冒烟通过：os_log 1.513 s，截图 2880×1800",
+    "passed": true,
+    "platform": "mac",
+    "environment": "native",
+    "scheme": "WrongBook",
+    "sim_lane": "/Users/tianli/Dev/tools/dev/lib/tools/macapp/ios/sim_lane.py",
+    "method": "sim_lane 在仓外临时副本构建，在无窗口模拟器启动并截图；Mac 线静默启动（open -g -j + App -lane_quiet，不上屏不进 Dock，App 进程内离屏渲染截图）；不合成输入、不抢焦点",
+    "build": {
+      "app_path": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.d92k3gb3/dd/Build/Products/Debug/WrongBook.app",
+      "bundle_id": "cyou.tianli.wrongbook",
+      "version": "1.0",
+      "build": "11",
+      "configuration": "Debug",
+      "executable_sha256": "c7e3ea70f9073ffff6e62889bb58f6d3d9d6019e11282b17f7bde84d3d807081",
+      "sdk": "macosx27.0",
+      "xcode": {
+        "name": "Xcode.app",
+        "version": "27.0",
+        "build": "27A266a",
+        "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+      },
+      "log": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.d92k3gb3/build-mac-Debug.log",
+      "reuse": null
+    },
+    "launch_args": [
+      "-api_base",
+      "http://127.0.0.1:51960",
+      "-dev_user",
+      "demo-xiaolin",
+      "-dev_pw",
+      "<redacted>"
+    ],
+    "waits": {
+      "lock_seconds": 300,
+      "load_seconds": 300
+    },
+    "run": {
+      "udid": null,
+      "pid": null,
+      "ready_seconds": 1.513,
+      "ready_signal": "os_log",
+      "size": [
+        2880,
+        1800
+      ],
+      "runtime": null,
+      "device": null
+    },
+    "verdict": {
+      "non_blank": true,
+      "changed_from_baseline": null,
+      "stable": false,
+      "diff_baseline": null,
+      "diff_prev": null
+    },
+    "screenshot": "perf/platforms/mac/launch.png",
+    "screenshot_sha256": "6ffb567d7a356873a06b20bc3777cda26267d8bc4a1a6225ee8f2ae4691d32d6"
+  }
+}

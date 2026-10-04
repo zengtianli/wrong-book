@@ -1,0 +1,47 @@
+{
+  "scope": "Private original bytes and actual binding/visual observation; no public push",
+  "files": [
+    {
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/launch_watch.json",
+      "file": "launch.json",
+      "size": 4018,
+      "sha256": "6e82c1771bc78fcf8f73a4906dda9d9a313e5bf96adcf8d11d9bb3c9edb5cfbf"
+    },
+    {
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/launch_watch.log",
+      "file": "launch.log",
+      "size": 183,
+      "sha256": "5cdfe03a4d5d0c65642a26a0ce9ffdfefe94e07f5465501345fda19c3717c36b"
+    },
+    {
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/acceptance/launch_watch.detail.json",
+      "file": "launch.detail.json",
+      "size": 3034,
+      "sha256": "6e2c30d62c70392abe46fcd5acbfc9ad0615edef63be8459e05322cb14bc6c8f"
+    },
+    {
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/platforms/watch/launch.png",
+      "file": "launch.png",
+      "size": 73677,
+      "sha256": "f79011ff79cebddb13c3a0e80b7f9dbb49660917f505907cdce11ec41ea3bdec"
+    },
+    {
+      "original_path": "/Users/tianli/Library/Application Support/app-sop/workbench/logs/b65d043a9e4943ac804c1cf118534fe1.log",
+      "file": "original-job.log",
+      "size": 312,
+      "sha256": "3c720f5d0288f9b5460c31c3dc299595613efcf319361d03b83284ded1b0393a"
+    },
+    {
+      "original_path": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.f2d4962b1a41dac358dcabebc3774ef43b25849c943c9164d84f7765a16091e9/sim-lane-build.f7x7qaon/build.json",
+      "file": "actual-build-receipt.json",
+      "size": 1921,
+      "sha256": "1f8a19062bede883250b2f2f914910042e1493be9fcab19bcdcb6c36541343b6"
+    },
+    {
+      "original_path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/delivery-evidence.json",
+      "file": "delivery-evidence.json",
+      "size": 7542,
+      "sha256": "48f437a99f5e153b65e24ccd957ac17deab0fee4a4936683606837e79b491ebc"
+    }
+  ]
+}

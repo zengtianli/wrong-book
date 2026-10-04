@@ -1,0 +1,44 @@
+{
+ "ok": true,
+ "platform": "mac",
+ "configuration": "Release",
+ "scheme": "WrongBook",
+ "compilation_conditions": [],
+ "app_path": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.c436b762dd1384982c89d360cb6f17b895622213becc927b69a57195ff4eddf4/sim-lane-build.lpfibe59/dd/Build/Products/Release/WrongBook.app",
+ "bundle_id": "cyou.tianli.wrongbook",
+ "version": "1.0.1",
+ "build": "19",
+ "executable_sha256": "c34bc56bc653fd8934bea04ce4b0d9eaaab025d55f3fc1cf006c43b41af8a7d5",
+ "sdk": "macosx27.0",
+ "xcode": {
+  "name": "Xcode.app",
+  "version": "27.0",
+  "build": "27A266a",
+  "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+ },
+ "destination": "platform=macOS,arch=arm64",
+ "signing": "ad-hoc, entitlements stripped, no sandbox, no hardened runtime (local lane build)",
+ "log": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.c436b762dd1384982c89d360cb6f17b895622213becc927b69a57195ff4eddf4/sim-lane-build.lpfibe59/build-mac-Release.log",
+ "work_dir": "/Users/tianli/Library/Caches/sim-lane/platform-measure/sim-lane-build.c436b762dd1384982c89d360cb6f17b895622213becc927b69a57195ff4eddf4/sim-lane-build.lpfibe59",
+ "seconds": 110.7,
+ "generated_info_plists": [
+  {
+   "source_path": "src/Watch/Info.plist",
+   "backup_path": "cache-provenance/xcodegen-info.noqnwxmp/Watch/Info.plist",
+   "sha256": "696a260824464a87ef5b8584118c620fc164851e7a5f69cf7d99cea8d0d836f6",
+   "targets": [
+    "WrongBookWatch"
+   ],
+   "reason": "XcodeGen target info.path; absent from original sources"
+  },
+  {
+   "source_path": "src/Watch/Widget-Info.plist",
+   "backup_path": "cache-provenance/xcodegen-info.noqnwxmp/Watch/Widget-Info.plist",
+   "sha256": "53e1b982e486c15873df5b577394766be09e775d715becdef03e930dbec350ea",
+   "targets": [
+    "WrongBookWatchWidget"
+   ],
+   "reason": "XcodeGen target info.path; absent from original sources"
+  }
+ ]
+}

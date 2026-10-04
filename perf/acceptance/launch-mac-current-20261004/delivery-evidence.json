@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "checks": {
+    "homepage_desktop": {
+      "result": "passed",
+      "scope": "promo_ui",
+      "method": "ui_automation",
+      "checked_at": "2026-10-04T08:49:10.103486+08:00",
+      "input_sha256": "c77d45661546d17c1dfa0a8466cac34d8af40f9bdced43f8bf692bfd0dcf46a8",
+      "evidence": "perf/acceptance/homepage_desktop.json",
+      "evidence_sha256": "d22037646ae68737bef909a0d7a605aa65609738bba69dd6c08c762671127826",
+      "detail": "builtin:homepage_desktop：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/homepage.py --viewport desktop → desktop 1440px：HTTP 200，标题「Mistake Notebook · 错题本 · 整理自己的错题，留给下一次更有把握的作答。」，无横向溢出，5 张图片全部加载"
+    },
+    "homepage_mobile": {
+      "result": "passed",
+      "scope": "promo_ui",
+      "method": "ui_automation",
+      "checked_at": "2026-10-04T08:49:15.887340+08:00",
+      "input_sha256": "c77d45661546d17c1dfa0a8466cac34d8af40f9bdced43f8bf692bfd0dcf46a8",
+      "evidence": "perf/acceptance/homepage_mobile.json",
+      "evidence_sha256": "29269c41e41ba9f70c6a1046650887a793cc8d625704fa86f3c88d50218b1f2b",
+      "detail": "builtin:homepage_mobile：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/homepage.py --viewport mobile → mobile 390px：HTTP 200，标题「Mistake Notebook · 错题本 · 整理自己的错题，留给下一次更有把握的作答。」，无横向溢出，5 张图片全部加载"
+    },
+    "media_playback": {
+      "result": "passed",
+      "scope": "media",
+      "method": "ui_automation",
+      "checked_at": "2026-10-04T08:49:10.132657+08:00",
+      "input_sha256": "8ac7d2ca1e32fa405621e22f81ef515803a31afa644871b062f3bac9eac1063c",
+      "evidence": "perf/acceptance/media_playback.json",
+      "evidence_sha256": "61a06c63e96e1f49a41a8836bf9c5d8198b98a04c63f9063ae5a60bd9b7e40e2",
+      "detail": "builtin:media_playback：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/media_playback.py → 1 个本地视频 ffprobe/ffmpeg 全量解码通过（/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/../02-审核/当前版本/02-视频/成片/public-preview/tour.mp4 12.0s h264）；推广页 1 个视频在无界面浏览器中实际播放（1.1/12s）"
+    },
+    "functionality": {
+      "result": "passed",
+      "scope": "code",
+      "method": "real_product",
+      "checked_at": "2026-10-04T11:32:43.039847+08:00",
+      "input_sha256": "8bff5793563d58128bfe2b01eb3451cc0002b95fe98cc1110deece8949e8cfee",
+      "evidence": "perf/acceptance/functionality.json",
+      "evidence_sha256": "6ebadb0063faf3b6f4a6fcd26e5a554a43ca3ab16637391bf2975b08edd1629a",
+      "detail": "sop.accept：bash scripts/accept/functionality.sh → PASS import subjects: empty and single-subject libraries retain both choices; valid titles and unique keys"
+    },
+    "recovery": {
+      "result": "passed",
+      "scope": "code",
+      "method": "real_product",
+      "checked_at": "2026-10-04T11:32:54.230404+08:00",
+      "input_sha256": "8bff5793563d58128bfe2b01eb3451cc0002b95fe98cc1110deece8949e8cfee",
+      "evidence": "perf/acceptance/recovery.json",
+      "evidence_sha256": "0853637a9b1a280493e6313322acf4e4214186f91adfaa7900518d1c67404202",
+      "detail": "sop.accept：bash scripts/accept/recovery.sh → Api HTTP/JSON regression passed"
+    },
+    "privacy": {
+      "result": "passed",
+      "scope": "code",
+      "method": "real_product",
+      "checked_at": "2026-10-04T11:33:04.691270+08:00",
+      "input_sha256": "8bff5793563d58128bfe2b01eb3451cc0002b95fe98cc1110deece8949e8cfee",
+      "evidence": "perf/acceptance/privacy.json",
+      "evidence_sha256": "265f405ae345c68211e40924437ddbe64d69533449155a5e89fc34d70a445618",
+      "detail": "sop.accept：bash scripts/accept/privacy.sh → Production Swift code in an isolated local harness; no device UI, live AI, account or purchase validation."
+    },
+    "cli_entry": {
+      "result": "passed",
+      "scope": "cli_entry",
+      "method": "real_product",
+      "checked_at": "2026-10-04T08:49:03.707098+08:00",
+      "input_sha256": "031080ff19a29739fa0443d1a1de0b4b10f2897642628f62c7f2bd81afd090f1",
+      "evidence": "perf/acceptance/cli_entry.json",
+      "evidence_sha256": "371ef895d3995a6ba9817984d0980adb6674e11b109f966f8ceeb4f63a57c0a2",
+      "detail": "builtin:cli_entry：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/cli_entry.py → 命令行在 App 里：mistakes — Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。"
+    },
+    "launch_mac": {
+      "result": "passed",
+      "scope": "platform_mac",
+      "method": "ui_automation",
+      "checked_at": "2026-10-04T11:58:59.853048+08:00",
+      "input_sha256": "5e1511ebae09dc026f7e7331caf5bdbb877609472e54d19b7f251025bf660a1e",
+      "evidence": "perf/acceptance/launch_mac.json",
+      "evidence_sha256": "4acabd7723f68861b1430be57b3618e4ddcb512cdb9f6c4fb1196c6873f43549",
+      "detail": "sop.accept：bash scripts/accept/launch.sh mac → Mac 本机 启动冒烟通过：os_log 1.113 s，截图 2480×1640"
+    },
+    "launch_iphone": {
+      "result": "passed",
+      "scope": "platform_iphone",
+      "method": "ui_automation",
+      "checked_at": "2026-10-04T10:09:34.172754+08:00",
+      "input_sha256": "bd7345a47379160b9f07bf698f926c6f290607899fcf43f6b351017018389c22",
+      "evidence": "perf/acceptance/launch_iphone.json",
+      "evidence_sha256": "bd613a2d6d0b95e53f6889864ce36f2e062d89b53e0a5b49856e8e78c48149e5",
+      "detail": "sop.accept：bash scripts/accept/launch.sh iphone → iPhone 模拟器 iPhone 17 Pro 启动冒烟通过：os_log 12.677 s，截图 1206×2622"
+    },
+    "launch_ipad": {
+      "result": "passed",
+      "scope": "platform_ipad",
+      "method": "ui_automation",
+      "checked_at": "2026-10-04T08:55:23.638758+08:00",
+      "input_sha256": "fff16520a2c7ea985b326341825b455eabaa6925ef59ecbe1e39abeebdef5c39",
+      "evidence": "perf/acceptance/launch_ipad.json",
+      "evidence_sha256": "5d10b9756745bcfdb828c1d3c867a320a85701361390816c033a724717adb59e",
+      "detail": "sop.accept：bash scripts/accept/launch.sh ipad → iPad 模拟器 iPad Pro 13-inch (M5) 启动冒烟通过：os_log 4.313 s，截图 2064×2752"
+    },
+    "launch_watch": {
+      "result": "passed",
+      "scope": "platform_watch",
+      "method": "ui_automation",
+      "checked_at": "2026-10-04T11:59:50.940092+08:00",
+      "input_sha256": "cfcbce65040c4f20c5eb2e5b0b0329d4b17495c0a7c87996c6a617ebf90eaa77",
+      "evidence": "perf/acceptance/launch_watch.json",
+      "evidence_sha256": "6e82c1771bc78fcf8f73a4906dda9d9a313e5bf96adcf8d11d9bb3c9edb5cfbf",
+      "detail": "sop.accept：bash scripts/accept/launch.sh watch → Apple Watch 模拟器 Apple Watch Series 12 (46mm) 启动冒烟通过：os_log 1.032 s，截图 416×496"
+    },
+    "launch_vision": {
+      "result": "passed",
+      "scope": "platform_vision",
+      "method": "ui_automation",
+      "checked_at": "2026-10-04T09:00:38.299410+08:00",
+      "input_sha256": "83adf455b1d8d375634d10a1adf3ad190ee130eb782e7b0d5c829c77249ffc40",
+      "evidence": "perf/acceptance/launch_vision.json",
+      "evidence_sha256": "e8eebf6dcac1149b5452840be9ac19fd94b22cd367c11652619f128f375f2f65",
+      "detail": "sop.accept：bash scripts/accept/launch.sh vision → Apple Vision Pro 模拟器 Apple Vision Pro 启动冒烟通过：os_log 10.347 s，截图 3840×2160"
+    }
+  },
+  "updated_at": "2026-10-04T11:59:51.005142+08:00"
+}

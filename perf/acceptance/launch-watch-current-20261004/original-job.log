@@ -1,0 +1,12 @@
+{
+ "ok": true,
+ "app_id": "wrong-book-ios",
+ "results": {
+  "launch_watch": {
+   "status": "passed",
+   "method": "ui_automation",
+   "evidence": "perf/acceptance/launch_watch.json",
+   "detail": "Apple Watch 模拟器 Apple Watch Series 12 (46mm) 启动冒烟通过：os_log 1.032 s，截图 416×496"
+  }
+ }
+}

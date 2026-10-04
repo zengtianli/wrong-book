@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "name": "launch_watch",
+  "app_id": "wrong-book-ios",
+  "command": "bash scripts/accept/launch.sh watch",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-03T17:32:33.469621+08:00",
+  "finished_at": "2026-10-03T17:34:34.040037+08:00",
+  "input_sha256": "992d94b734b6033e2d28565cf9df97361150bcfd85f6895f6ff08103b611e778",
+  "log": "perf/acceptance/launch_watch.log",
+  "log_sha256": "1d2b6096e1937202f82a5d9becdb43f13e05e53168841e070a89e1185bf4cb5d",
+  "summary": "Apple Watch 模拟器 Apple Watch Series 12 (46mm) 启动冒烟通过：os_log 0.995 s，截图 416×496",
+  "detail": {
+    "summary": "Apple Watch 模拟器 Apple Watch Series 12 (46mm) 启动冒烟通过：os_log 0.995 s，截图 416×496",
+    "passed": true,
+    "platform": "watch",
+    "environment": "simulator",
+    "scheme": "WrongBookWatch",
+    "sim_lane": "/Users/tianli/Dev/tools/dev/lib/tools/macapp/ios/sim_lane.py",
+    "method": "sim_lane 在仓外临时副本构建，在无窗口模拟器启动并截图；Mac 线静默启动（open -g -j + App -lane_quiet，不上屏不进 Dock，App 进程内离屏渲染截图）；不合成输入、不抢焦点",
+    "build": {
+      "app_path": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.9nwzrauq/dd/Build/Products/Debug-watchsimulator/WrongBookWatch.app",
+      "bundle_id": "cyou.tianli.wrongbook.watchkitapp",
+      "version": "1.0",
+      "build": "11",
+      "configuration": "Debug",
+      "executable_sha256": "68eb529e75e00d01d69e55b1b68b4092e2c57fb18991f38a329e9574e649bdbc",
+      "sdk": "watchsimulator27.0",
+      "xcode": {
+        "name": "Xcode.app",
+        "version": "27.0",
+        "build": "27A266a",
+        "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+      },
+      "log": "/private/var/folders/x7/qptxw08j00v__67yzr3gcd000000gp/T/sim-lane-build.9nwzrauq/build-watch-Debug.log",
+      "reuse": null
+    },
+    "device": {
+      "udid": "71612A23-0E31-4E0A-9C3A-F5EE4E69FCE1",
+      "name": "Apple Watch Series 12 (46mm)",
+      "runtime": "com.apple.CoreSimulator.SimRuntime.watchOS-27-0",
+      "device_type": "Apple-Watch-Series-12-46mm"
+    },
+    "launch_args": [
+      "-api_base",
+      "http://127.0.0.1:52177",
+      "-dev_user",
+      "demo-xiaolin",
+      "-dev_pw",
+      "<redacted>"
+    ],
+    "waits": {
+      "lock_seconds": 300,
+      "load_seconds": 300
+    },
+    "run": {
+      "udid": "71612A23-0E31-4E0A-9C3A-F5EE4E69FCE1",
+      "pid": 38831,
+      "ready_seconds": 0.995,
+      "ready_signal": "os_log",
+      "size": [
+        416,
+        496
+      ],
+      "runtime": "watchOS-27-0",
+      "device": "Apple Watch Series 12 (46mm)"
+    },
+    "verdict": {
+      "non_blank": true,
+      "changed_from_baseline": true,
+      "stable": true,
+      "diff_baseline": 0.6268,
+      "diff_prev": 0.0
+    },
+    "screenshot": "perf/platforms/watch/launch.png",
+    "screenshot_sha256": "3a83dd75488799246170c40675e0d3bfa109964e10319298dc3361a40142f572",
+    "capture_reusable": false,
+    "capture_note": "启动参数含敏感值，本次不导出可复用运行原件"
+  }
+}

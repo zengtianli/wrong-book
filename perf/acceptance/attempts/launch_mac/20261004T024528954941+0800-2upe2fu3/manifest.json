@@ -1,0 +1,23 @@
+{
+  "app_id": "wrong-book-ios",
+  "check": "launch_mac",
+  "saved_at": "2026-10-04T02:45:28.955938+08:00",
+  "files": {
+    "launch_mac.log": {
+      "sha256": "d18ce42a1de34d633e90c089e6657a8015b2eb34d607a4ccdfa65949731f49f1",
+      "bytes": 145,
+      "mode": 420
+    },
+    "launch_mac.detail.json": {
+      "sha256": "4547b9887d8609390ed2cb6f96c1fd819287261322862560a90b217906323e07",
+      "bytes": 1868,
+      "mode": 420
+    },
+    "launch_mac.json": {
+      "sha256": "f63e9877b0740ebbaaaf5e0d2683df3d6510c71e6c80a9f2de41f15d44008f1f",
+      "bytes": 2568,
+      "mode": 420
+    }
+  },
+  "missing": []
+}
