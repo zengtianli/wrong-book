@@ -45,6 +45,11 @@ struct MeView: View {
                     entry("离线课程", detail: "\(pack.lessons.count) 课 · \(sync.note ?? "已下载内容可离线练习")",
                           icon: "arrow.down.circle", destination: .downloads, key: "d")
                 }
+                #if os(iOS)
+                Section("应用") {
+                    AppLifecycleMobileEntry()
+                }
+                #endif
                 Section("今天") {
                     if let p = profile {
                         row("已经做了", "\(p.doneToday) / \(p.goal) 题")

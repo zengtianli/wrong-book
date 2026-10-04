@@ -14,7 +14,12 @@ struct WrongBookApp: App {
     var body: some Scene {
         WindowGroup {
             RootView().environmentObject(session).lightAppearance().tint(Ink.accent)
+                #if os(iOS)
+                // Keep the system TabView clear; configuration lives in account settings and login.
+                .appLifecycleMobile(productID: "wrong-book", channel: MobileProductLifecycle.channel, configuration: MobileProductLifecycle.configuration, placement: .settings)
+                #else
                 .appLifecycleMobile(productID: "wrong-book", channel: MobileProductLifecycle.channel, configuration: MobileProductLifecycle.configuration)
+                #endif
                 #if os(macOS)
                 // 侧栏 + 错题列表 + 题目三栏并排，再窄就挤了
                 .frame(minWidth: 900, minHeight: 620)

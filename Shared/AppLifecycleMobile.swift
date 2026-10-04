@@ -440,15 +440,37 @@ struct AppLifecycleMobilePanel: View {
     }
 }
 
+enum AppLifecycleMobilePlacement {
+    case footer
+    // The product puts AppLifecycleMobileEntry in its existing settings/login UI.
+    case settings
+}
+
+struct AppLifecycleMobileEntry: View {
+    @EnvironmentObject private var model: MobileLifecycleModel
+    @State private var showing = false
+
+    var body: some View {
+        Button { showing = true } label: { Label("配置与更新", systemImage: "gearshape") }
+            .accessibilityIdentifier("app.configurationAndUpdates")
+            .sheet(isPresented: $showing) { AppLifecycleMobilePanel(model: model) }
+    }
+}
+
 private struct AppLifecycleMobileModifier: ViewModifier {
     @StateObject private var model: MobileLifecycleModel
     @State private var showing = false
-    init(productID: String, channel: MobileUpdateChannel, configuration: AppConfiguration?) {
+    let placement: AppLifecycleMobilePlacement
+
+    init(productID: String, channel: MobileUpdateChannel, configuration: AppConfiguration?, placement: AppLifecycleMobilePlacement) {
         _model = StateObject(wrappedValue: MobileLifecycleModel(productID: productID, channel: channel, configuration: configuration))
+        self.placement = placement
     }
-    func body(content: Content) -> some View {
-        content
-            .safeAreaInset(edge: .bottom, spacing: 0) {
+
+    @ViewBuilder private func placed(_ content: Content) -> some View {
+        switch placement {
+        case .footer:
+            content.safeAreaInset(edge: .bottom, spacing: 0) {
                 HStack {
                     Spacer()
                     Button { showing = true } label: { Label("配置与更新", systemImage: "gearshape") }
@@ -456,6 +478,14 @@ private struct AppLifecycleMobileModifier: ViewModifier {
                     Spacer()
                 }.font(.footnote).padding(.vertical, 7).background(.bar)
             }
+        case .settings:
+            content
+        }
+    }
+
+    func body(content: Content) -> some View {
+        placed(content)
+            .environmentObject(model)
             .task { model.start() }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AppConfigurationStatusChanged"), object: model.configuration)) { _ in
                 model.refreshConfiguration()
@@ -468,8 +498,9 @@ private struct AppLifecycleMobileModifier: ViewModifier {
 }
 
 extension View {
-    func appLifecycleMobile(productID: String, channel: MobileUpdateChannel, configuration: AppConfiguration? = nil) -> some View {
-        modifier(AppLifecycleMobileModifier(productID: productID, channel: channel, configuration: configuration))
+    func appLifecycleMobile(productID: String, channel: MobileUpdateChannel, configuration: AppConfiguration? = nil,
+                            placement: AppLifecycleMobilePlacement = .footer) -> some View {
+        modifier(AppLifecycleMobileModifier(productID: productID, channel: channel, configuration: configuration, placement: placement))
     }
 }
 #endif
