@@ -16,7 +16,7 @@ sop:
     # 平台线启动冒烟：先起虚构演示学习库（scripts/demo/fixture.py：随机端口、随机密码、合成账号「小林」），
     # 再交给 Chapter 内置的 platform_launch（共享 sim_lane：仓外构建、无窗口模拟器 / Mac 静默启动不上屏、截图）
     launch_iphone: bash scripts/accept/launch.sh iphone
-    launch_ipad: bash scripts/accept/launch.sh ipad
+    launch_ipad: SOP_FUNCTIONAL_THIN=1 bash scripts/accept/launch.sh ipad
     launch_mac: bash scripts/accept/launch.sh mac
     launch_watch: bash scripts/accept/launch.sh watch
     launch_vision: bash scripts/accept/launch.sh vision
