@@ -201,9 +201,12 @@ def record(report: dict, summary: Path) -> None:
         "current_sha256": {k: v["current_sha256"] for k, v in report["screens"].items()},
         "report": "01-源程序/perf/media/compact-unchanged.json", "report_sha256": sha(kept),
         "tool": "01-源程序/scripts/media/compact_unchanged.py",
+        # The note must follow the verdict: a changed result once carried the "nothing moved" sentence (2026-10-05).
         "note": ("iPhone 窄屏（预览视频与 iPhone 商店截图所示布局）在当前工作树与五平台改动前的 base 之间逐屏比对：宽屏布局、"
                  "Watch、Vision、Mac 等改动没有碰到 iPhone 画面。录像仍是 1.0 (18) 真机原片，不因此变成新录制；"
-                 "界面源码再改就重跑本工具。")})
+                 "界面源码再改就重跑本工具。" if report["unchanged"] else
+                 "iPhone 窄屏在当前工作树与 base 之间逐屏比对，有画面与 base 不同（见 screens）：现有 iPhone 素材不能凭本条沿用，"
+                 "需按变化的画面重录或重截。")})
     meta.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
