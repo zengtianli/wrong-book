@@ -16,8 +16,8 @@ struct AIAccessSection: View {
                         Text("当前有效期至 \(expires.formatted(date: .numeric, time: .omitted))").font(.footnote)
                     }
                 } else {
-                    Text("免费识别剩余 \(access.remaining) / 10 张")
-                    Text("前 10 张免费，之后订阅继续识别。已导入的题目可继续复习。")
+                    Text("免费识别剩余 \(access.remaining) / \(access.trialPages) 张")
+                    Text("前 \(access.trialPages) 张免费，之后订阅继续识别。已导入的题目可继续复习。")
                         .font(.footnote)
                 }
             } else {
@@ -49,7 +49,7 @@ struct AIAccessSection: View {
         } header: {
             Text("AI 识别与订阅")
         } footer: {
-            Text("月订阅和年订阅均可在有效期内继续识别。订阅由 Apple 收费并自动续期，可在系统订阅设置中取消。免费 10 张为账号一次性额度，识别失败不扣次数。AI 可能读错，请对照原图核对结果。")
+            Text("月订阅和年订阅均可在有效期内继续识别。订阅由 Apple 收费并自动续期，可在系统订阅设置中取消。免费 \(store.access?.trialPages ?? Api.AIAccess.builtinTrialPages) 张为账号一次性额度，识别失败不扣次数。AI 可能读错，请对照原图核对结果。")
         }
         .task(id: "\(session.status?.user ?? "")-\(refreshID)") { await store.refresh() }
         .onChange(of: store.access?.enabled) { _, value in enabled = value == true }

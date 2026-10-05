@@ -95,6 +95,8 @@ enum Api {
     struct AIAccess {
         let enabled: Bool
         let remaining: Int
+        /// 免费识别总张数，后台 `ai_access.py` 的 `TRIAL_PAGES` 说了算（随 `api/ai_access` 的 `trial_pages` 下发）。
+        let trialPages: Int
         let subscribed: Bool
         let token: UUID?
         let expires: Date?
@@ -102,9 +104,20 @@ enum Api {
         init(_ result: [String: Any]) {
             enabled = result["enabled"] as? Bool == true
             remaining = result["remaining"] as? Int ?? 0
+            trialPages = Self.trialPages(result["trial_pages"])
             subscribed = result["subscribed"] as? Bool == true
             token = (result["app_account_token"] as? String).flatMap(UUID.init(uuidString:))
             expires = (result["subscription_expires"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) }
+        }
+
+        /// 后台没给额度总数时显示用的自带值。
+        static let builtinTrialPages = 10
+
+        /// 后台给的额度总数；缺失、类型不对用自带值，超出 0…1000 夹住。
+        static func trialPages(_ raw: Any?) -> Int {
+            guard let n = raw as? NSNumber, CFGetTypeID(n) != CFBooleanGetTypeID(),
+                  let pages = Int(exactly: n.doubleValue) else { return builtinTrialPages }
+            return min(max(pages, 0), 1000)
         }
     }
 
