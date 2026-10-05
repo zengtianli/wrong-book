@@ -1,0 +1,122 @@
+{
+ "schema_version": 1,
+ "app": "wrong-book-ios",
+ "checked_at": "2026-10-05T22:53:42+08:00",
+ "base_commit": "86f3afa17e541f929d193272992c5f4d72f7220e",
+ "ui_source": {
+  "globs": [
+   "Sources/**",
+   "Shared/**",
+   "Watch/**"
+  ],
+  "sha256": "8f6528311747982445f7156d0227d555dfe14b2c552057ccf978e2228f1c4094",
+  "file_count": 44
+ },
+ "ui_source_unchanged_during_check": true,
+ "device": "iPhone 17 Pro (iPhone-17-Pro) / iOS-27-0 simulator",
+ "builds": {
+  "base": {
+   "configuration": "Debug",
+   "version": "1.0.1",
+   "build": "19",
+   "executable_sha256": "b752538d1c2920f4abe6a924cbc4b3d93260b14b0e01a8ff240945297a1a3bbc",
+   "code_sha256": "e196770b340a3c6feffd7ddbe569ce9e21c33025019ce81375a7224fb8692ec2",
+   "embeds_watch_app": true,
+   "sdk": "iphonesimulator27.0"
+  },
+  "current": {
+   "configuration": "Debug",
+   "version": "1.0.1",
+   "build": "19",
+   "executable_sha256": "b752538d1c2920f4abe6a924cbc4b3d93260b14b0e01a8ff240945297a1a3bbc",
+   "code_sha256": "b621ee6995b2b4a228db3d922cb11ff6d67d34071b711e613202e0c19c3e2579",
+   "embeds_watch_app": true,
+   "sdk": "iphonesimulator27.0"
+  }
+ },
+ "data": "fictional demo library (scripts/demo/fixture.py), same fixture for both builds, status bar 9:41",
+ "rule": "identical, or no pixel differs by more than 2/255 in any channel (system glass dither / scroll indicator / clock; layout changes are far above it)",
+ "verdict_screens": [
+  "login",
+  "library",
+  "review",
+  "question"
+ ],
+ "screens": {
+  "login": {
+   "identical": true,
+   "ok": true,
+   "diff_pixels": 0,
+   "size": [
+    1206,
+    2622
+   ],
+   "base_sha256": "5f0ead56ac096c236b8196ae9214c7afb4872799e35b70c75ae0aa55547891bf",
+   "current_sha256": "5f0ead56ac096c236b8196ae9214c7afb4872799e35b70c75ae0aa55547891bf"
+  },
+  "library": {
+   "identical": false,
+   "ok": true,
+   "diff_pixels": 1355,
+   "diff_bbox": [
+    184,
+    2372,
+    1022,
+    2591
+   ],
+   "max_channel_diff": 2,
+   "diff_band": "y 90.5%–98.8%, x 15.3%–84.7%",
+   "size": [
+    1206,
+    2622
+   ],
+   "why": null,
+   "base_sha256": "5853d6c933033bb27bf81e751c331264d629f7c9467e677ab6ae816fa36007ea",
+   "current_sha256": "fc755cf26b27d99275c5d848d1a35f924abf71e30696804349ad70e3e4e151f7"
+  },
+  "import": {
+   "identical": false,
+   "ok": false,
+   "diff_pixels": 101106,
+   "diff_bbox": [
+    48,
+    1206,
+    1158,
+    2561
+   ],
+   "max_channel_diff": 255,
+   "diff_band": "y 46.0%–97.7%, x 4.0%–96.0%",
+   "size": [
+    1206,
+    2622
+   ],
+   "why": "pixels differ by up to 255 of 255",
+   "base_sha256": "ad5422781e6eb8db51a334d0317b1c531434d2718629894802c9bcd85049ff19",
+   "current_sha256": "fc268872a1040ff8614e9afcc9730bce7bf7cb65fc0ac67cc0ab4225a54be2a3",
+   "report_only": "no published asset shows it; opened directly with -tab 1 it fetches the recognition quota before the lesson sync finishes, so two launches of the same build can render differently"
+  },
+  "review": {
+   "identical": true,
+   "ok": true,
+   "diff_pixels": 0,
+   "size": [
+    1206,
+    2622
+   ],
+   "base_sha256": "7cbd05dcdd7c64d40ae396228823f8ee0e6f805fd8e60abb5e3bfb2c2ab3852f",
+   "current_sha256": "7cbd05dcdd7c64d40ae396228823f8ee0e6f805fd8e60abb5e3bfb2c2ab3852f"
+  },
+  "question": {
+   "identical": true,
+   "ok": true,
+   "diff_pixels": 0,
+   "size": [
+    1206,
+    2622
+   ],
+   "base_sha256": "231bc0466ba513baeb4113cf2a5fa2553a9a84db3079f83d00d705c72e1cafff",
+   "current_sha256": "231bc0466ba513baeb4113cf2a5fa2553a9a84db3079f83d00d705c72e1cafff"
+  }
+ },
+ "unchanged": true
+}

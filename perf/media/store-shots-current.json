@@ -1,0 +1,335 @@
+{
+ "schema_version": 1,
+ "app": "wrong-book-ios",
+ "checked_at": "2026-10-02T23:22:35+08:00",
+ "subject": "App Store screenshots per platform lane (shots/appstore/<lane>/; shots/ stays local per .gitignore)",
+ "data": "fictional demo library (scripts/demo/fixture.py: account 小林, five demo lessons, random per-start password); no real student data, never edu.tianli.cyou",
+ "ui_source_now": {
+  "globs": [
+   "Sources/**",
+   "Shared/**",
+   "Watch/**"
+  ],
+  "sha256": "18451dc40fe2f71cf8b410c4d8f87d5aab08932087ff3e286a464b7c0a650fd4",
+  "file_count": 40
+ },
+ "lanes": {
+  "iphone": {
+   "device": "iPhone 17 Pro Max simulator (6.9-inch, 1320×2868), iOS 27.0, status bar 9:41",
+   "build": "Debug simulator build of the current working tree via sim_lane (outside the repo; the same build as the iPad shots)",
+   "files": [
+    {
+     "file": "shots/appstore/iphone/01-library.png",
+     "sha256": "5332a4d80c0c1898695f6dd02c08ba2b61e44814c20af5ba0ef63ad457abf792",
+     "screen": "library",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/iphone/library.png",
+     "captured_at": "2026-10-02T23:21:23+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 5.089,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       1320,
+       2868
+      ]
+     }
+    },
+    {
+     "file": "shots/appstore/iphone/02-question.png",
+     "sha256": "0e071e980948f9fa53a36786a095a981b1c46a374beea0421f77a8562b1a53b5",
+     "screen": "question",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/iphone/question.png",
+     "captured_at": "2026-10-02T23:21:42+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 3.353,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       1320,
+       2868
+      ]
+     }
+    },
+    {
+     "file": "shots/appstore/iphone/03-review.png",
+     "sha256": "ee89b6ab4ae618204857470513d50cb28fc2a9ae37c5a4d186df71b0fd8499bd",
+     "screen": "review",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/iphone/review.png",
+     "captured_at": "2026-10-02T23:21:48+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 3.519,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       1320,
+       2868
+      ]
+     }
+    },
+    {
+     "file": "shots/appstore/iphone/04-login.png",
+     "sha256": "3e81206370099206de20b7a36c12990c85eab978830d2fb362d360507314c4a8",
+     "screen": "login",
+     "captured_from": "Mac mini: ~/Library/Caches/chapter-mini/wb-login/login.png (one-off capture_login.py through the shared sim_lane Session, headless)",
+     "captured_at": "2026-10-05T22:53:37+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 3.078,
+      "ready_signal": "screenshot_stable",
+      "errors": [],
+      "size": [
+       1320,
+       2868
+      ]
+     },
+     "device": "iPhone 17 Pro Max simulator (1320×2868), iOS 27.0, status bar 9:41",
+     "build": {
+      "configuration": "Debug",
+      "version": "1.0.1",
+      "build": "19",
+      "executable_sha256": "b752538d1c2920f4abe6a924cbc4b3d93260b14b0e01a8ff240945297a1a3bbc",
+      "sdk": "iphonesimulator27.0",
+      "signing": "unsigned simulator build (CODE_SIGNING_ALLOWED=NO)"
+     },
+     "ui_source_sha256": "8f6528311747982445f7156d0227d555dfe14b2c552057ccf978e2228f1c4094",
+     "replaces": {
+      "sha256": "e84be06f072357261710fc3244bc019cd760ef850410cf30505e27f26ffeff8e",
+      "captured_at": "2026-10-02T23:21:59+08:00",
+      "why": "the login screen gained the 配置与更新 entry (86f3afa); the 2026-10-02 shot no longer matched",
+      "kept_at": "~/.Trash/wrongbook-media-20261005/04-login.before-20261005.png"
+     }
+    }
+   ]
+  },
+  "ipad": {
+   "device": "iPad Pro 13-inch (M5) simulator, iPadOS 27.0, turned to landscape by the shared LaneRotator, status bar 9:41",
+   "build": "Debug simulator build of the current working tree via sim_lane (outside the repo)",
+   "files": [
+    {
+     "file": "shots/appstore/ipad/01-library-landscape.png",
+     "sha256": "d424be010b8cd88b48fc5096ec0b60d64bd76c3dfad21d64ba5c56d9c94275a9",
+     "screen": "library",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/ipad-land/library.png",
+     "captured_at": "2026-10-02T23:04:13+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 5.471,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       2752,
+       2064
+      ]
+     }
+    },
+    {
+     "file": "shots/appstore/ipad/02-question-landscape.png",
+     "sha256": "4a4cdabc125282da61c39710d4b26f4cc0e3cadc6276306735012f20ca935f47",
+     "screen": "question",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/ipad-land/question.png",
+     "captured_at": "2026-10-02T23:04:30+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 3.891,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       2752,
+       2064
+      ]
+     }
+    },
+    {
+     "file": "shots/appstore/ipad/03-review-landscape.png",
+     "sha256": "713a062de4a98d5cd18c173bac9ba07e131026eea6019b124c5631678b18d777",
+     "screen": "review",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/ipad-land/review.png",
+     "captured_at": "2026-10-02T23:04:35+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 2.679,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       2752,
+       2064
+      ]
+     }
+    }
+   ],
+   "rotation": {
+    "ok": true,
+    "orientation": "landscape",
+    "screen": [
+     2752,
+     2064
+    ],
+    "seconds": 45.9,
+    "load_1_5_15": [
+     20.0,
+     48.3,
+     55.6
+    ],
+    "simulator_app_opened": false
+   }
+  },
+  "mac": {
+   "device": "this Mac, quiet launch (LSUIElement copy cyou.tianli.wrongbook.lane, open -g -j, -lane_window 1440x900, in-process offscreen render)",
+   "build": "Debug macOS build of the current working tree via sim_lane (outside the repo)",
+   "files": [
+    {
+     "file": "shots/appstore/mac/01-library.png",
+     "sha256": "e06ec6c3942858b921d1a9aacf61e7f6fce83bd2163c2a824ed55d71fa2540ad",
+     "screen": "library",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/mac/library.png",
+     "captured_at": "2026-10-02T22:52:12+08:00",
+     "same_bytes_as_capture": true,
+     "ready": null
+    },
+    {
+     "file": "shots/appstore/mac/02-question.png",
+     "sha256": "f54addd089b3e8527f09e3f326f7695b32530f4a1b9d7bfbdbf690a9b60d831b",
+     "screen": "question",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/mac/question.png",
+     "captured_at": "2026-10-02T22:52:15+08:00",
+     "same_bytes_as_capture": true,
+     "ready": null
+    },
+    {
+     "file": "shots/appstore/mac/03-review.png",
+     "sha256": "75b5f2b309c818762ff32d0c6e478a96e46f6e1c354a7ee517aa6638fab2961e",
+     "screen": "review",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/mac/review.png",
+     "captured_at": "2026-10-02T22:52:18+08:00",
+     "same_bytes_as_capture": true,
+     "ready": null
+    }
+   ]
+  },
+  "watch": {
+   "device": "Apple Watch Series 12 (46mm) simulator, watchOS 27.0",
+   "build": "Debug watchOS build (code phase builds6, 20:19); its Watch/**, Shared/** and every Sources/ file in the WrongBookWatch target are byte-identical to the current tree (only Sources/LoginView.swift differs, which the watch target does not compile)",
+   "files": [
+    {
+     "file": "shots/appstore/watch/01-home.png",
+     "sha256": "4334ad6a7eb131da8d12d3b69d60db0d09f8be50053fcb455568bfea7b63155f",
+     "screen": "home",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/fleet/wrong-book/shots/watch6/home.png",
+     "captured_at": "2026-10-02T20:34:02+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 0.747,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       416,
+       496
+      ]
+     }
+    },
+    {
+     "file": "shots/appstore/watch/02-next.png",
+     "sha256": "42303a198d609fd293d1faf7b8b4a41945aaa1eaf095cc75af9d67b3728f39d0",
+     "screen": "next",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/fleet/wrong-book/shots/watch6/next.png",
+     "captured_at": "2026-10-02T20:34:07+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 0.612,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       416,
+       496
+      ]
+     }
+    },
+    {
+     "file": "shots/appstore/watch/03-complications.png",
+     "sha256": "dfc4c3f2f44bb208abbc3c7d8f50381b9d9feb1ac4685a6e12f690a689636712",
+     "screen": "complications",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/fleet/wrong-book/shots/watch6/complications.png",
+     "captured_at": "2026-10-02T20:34:11+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 0.537,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       416,
+       496
+      ]
+     }
+    }
+   ]
+  },
+  "vision": {
+   "device": "Apple Vision Pro simulator, visionOS 27.0",
+   "build": "Debug visionOS build of the current working tree via sim_lane (outside the repo)",
+   "files": [
+    {
+     "file": "shots/appstore/vision/01-library.png",
+     "sha256": "f5d02cddf9654103897d5099d8992ffca316034a32880fe7eb2d592dd1ca255f",
+     "screen": "library",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/vision/library.png",
+     "captured_at": "2026-10-02T23:07:40+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 21.533,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       3840,
+       2160
+      ]
+     }
+    },
+    {
+     "file": "shots/appstore/vision/02-question.png",
+     "sha256": "65325a75cd45ec26c5002f58b61ac375cf3d1e61a32a57fe824b79731bd52845",
+     "screen": "question",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/vision/question.png",
+     "captured_at": "2026-10-02T23:08:24+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 13.972,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       3840,
+       2160
+      ]
+     }
+    },
+    {
+     "file": "shots/appstore/vision/03-review.png",
+     "sha256": "2b54f8bab4f5a76dc39f3f48fc9007a6d54567b7cfc53baff97f6798b0754734",
+     "screen": "review",
+     "captured_from": "/private/tmp/claude-502/-Users-tianli-Apps/ecc6d09d-ff54-4b5d-b4b5-5610611f9949/scratchpad/wb-wire/shots/vision/review.png",
+     "captured_at": "2026-10-02T23:08:41+08:00",
+     "same_bytes_as_capture": true,
+     "ready": {
+      "ready_seconds": 9.165,
+      "ready_signal": "os_log",
+      "errors": [],
+      "size": [
+       3840,
+       2160
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "excluded": {
+  "import (all lanes)": "pre-existing: the import tab opened directly with -tab 1 shows '识别额度尚未同步' / '登录状态已改变' because it fetches the quota before the lesson sync finishes (same before and after the five-platform change); not a store-worthy screen",
+  "vision login": "code-phase capture predates the LoginView hint colour change (20:32)",
+  "ipad portrait (code phase ipad4)": "captured 20:06, before the last RegularHomeView change (20:07)"
+ },
+ "known_limits": {
+  "mac": "offscreen render (cacheDisplay) cannot draw system materials: the selected sidebar row is a black pill and there is no window title bar. The Mac lane is distribution: none; before any Mac App Store submission the owner should retake these with a visible window (sim_lane --visible, owner only)."
+ }
+}

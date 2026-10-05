@@ -16,10 +16,16 @@ glyph edges by 100+ levels); what does land under it is system-drawn noise that 
 the same build: the iOS 26+ glass tab bar's refraction dither, the scroll indicator fading out, the status-bar clock.
 The report keeps the count, bounding box and peak of every difference so a reviewer can see where it was.
 
+Four screens decide the verdict: the ones the published iPhone media show (store screenshots: wrong book, question,
+review, login; preview video: an opened question). The import tab is still rendered and reported, but does not decide
+it (REPORT_ONLY): no published asset shows that screen, and opened directly it is not stable between two launches.
+
 --record keeps the report as perf/media/compact-unchanged.json and appends the result to the media provenance
 (sop.media_meta) under ui_reviews, bound to the sop.ui source snapshot Chapter computes (app_sop.app_source_snapshot),
 so the existing iPhone media stay valid only while that review binds the current UI source (same as the Growth
-Treasury pilot). The base for the 2026-10-02 five-platform change is 89c699a, the last commit before it. Exit 0
+Treasury pilot). The base is the commit the existing iPhone media correspond to: 89c699a (the last commit before the
+2026-10-02 five-platform change) until 2026-10-05, 86f3afa since the login store screenshot was retaken for the
+配置与更新 entry that commit added. Exit 0
 unchanged, 1 changed or failed, 75 simulator lock held / machine loaded (run again later).
 """
 from __future__ import annotations
@@ -46,6 +52,11 @@ import sim_lane  # noqa: E402
 SCREENS = [("login", None, 0), ("library", ["-tab", "0"], 0), ("import", ["-tab", "1"], 0), ("review", ["-tab", "2"], 0),
            ("question", ["-tab", "0", "-library.openQuestion", "f2"], 10)]
 MAX_DIFF = 2          # of 255 per channel: perceptually identical; any layout / colour change is far above it
+# Rendered and reported, but not part of the verdict. The verdict keeps the existing iPhone media valid, so it follows
+# the screens those media show; perf/media/store-shots-current.json leaves import out of the store screenshots for the
+# same reason given here, and the preview video does not show it.
+REPORT_ONLY = {"import": "no published asset shows it; opened directly with -tab 1 it fetches the recognition quota "
+                         "before the lesson sync finishes, so two launches of the same build can render differently"}
 
 
 def sha(path: Path) -> str:
@@ -158,9 +169,11 @@ def main(argv=None) -> int:
     (out / "diff").mkdir(parents=True, exist_ok=True)
     screens = {name: {**compare(out / "base" / f"{name}.png", out / "current" / f"{name}.png",
                                 out / "diff" / f"{name}.png"),
-                      "base_sha256": hashes["base"][name], "current_sha256": hashes["current"][name]}
+                      "base_sha256": hashes["base"][name], "current_sha256": hashes["current"][name],
+                      **({"report_only": REPORT_ONLY[name]} if name in REPORT_ONLY else {})}
                for name, *_ in SCREENS}
-    unchanged = all(v["ok"] for v in screens.values()) and before_ui["sha256"] == after_ui["sha256"]
+    unchanged = (all(v["ok"] for k, v in screens.items() if k not in REPORT_ONLY)
+                 and before_ui["sha256"] == after_ui["sha256"])
     report = {"schema_version": 1, "app": APP_ID, "checked_at": started.isoformat(timespec="seconds"),
               "base_commit": base, "ui_source": before_ui, "ui_source_unchanged_during_check": before_ui == after_ui,
               "device": f"{dev['name']} ({dev['device_type']}) / {dev['runtime'].rsplit('.', 1)[-1]} simulator",
@@ -170,6 +183,7 @@ def main(argv=None) -> int:
               "data": "fictional demo library (scripts/demo/fixture.py), same fixture for both builds, status bar 9:41",
               "rule": f"identical, or no pixel differs by more than {MAX_DIFF}/255 in any channel "
                       "(system glass dither / scroll indicator / clock; layout changes are far above it)",
+              "verdict_screens": [name for name, *_ in SCREENS if name not in REPORT_ONLY],
               "screens": screens, "unchanged": unchanged}
     (out / "summary.json").write_text(json.dumps(report, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     if a.record:
@@ -177,7 +191,8 @@ def main(argv=None) -> int:
     shutil.rmtree(work / "base", ignore_errors=True)
     shutil.rmtree(work / "current", ignore_errors=True)
     print(json.dumps({"unchanged": unchanged, "out": str(out),
-                      "screens": {k: ("identical" if v.get("identical") else "ok" if v["ok"] else v.get("why"))
+                      "screens": {k: ("report only: " if k in REPORT_ONLY else "")
+                                  + ("identical" if v.get("identical") else "ok" if v["ok"] else str(v.get("why")))
                                   for k, v in screens.items()}}, ensure_ascii=False))
     return 0 if unchanged else 1
 
@@ -194,16 +209,20 @@ def record(report: dict, summary: Path) -> None:
         "checked_at": report["checked_at"], "base_commit": report["base_commit"],
         "ui_source_sha256": report["ui_source"]["sha256"], "ui_source_globs": report["ui_source"]["globs"],
         "unchanged": report["unchanged"], "device": report["device"], "rule": report["rule"],
-        "screens": {k: ("identical" if v.get("identical") else
-                        f"{v.get('diff_pixels')} px differ, max {v.get('max_channel_diff')}/255 ({v.get('diff_band')})"
-                        if v["ok"] else v.get("why"))
+        "verdict_screens": report["verdict_screens"],
+        "screens": {k: ("report only: " if k in REPORT_ONLY else "")
+                    + ("identical" if v.get("identical") else
+                       f"{v.get('diff_pixels')} px differ, max {v.get('max_channel_diff')}/255 ({v.get('diff_band')})"
+                       if v["ok"] else
+                       f"{v.get('why')}; {v.get('diff_pixels')} px ({v.get('diff_band')})" if v.get("diff_pixels") else
+                       str(v.get("why")))
                     for k, v in report["screens"].items()},
         "current_sha256": {k: v["current_sha256"] for k, v in report["screens"].items()},
         "report": "01-源程序/perf/media/compact-unchanged.json", "report_sha256": sha(kept),
         "tool": "01-源程序/scripts/media/compact_unchanged.py",
         # The note must follow the verdict: a changed result once carried the "nothing moved" sentence (2026-10-05).
-        "note": ("iPhone 窄屏（预览视频与 iPhone 商店截图所示布局）在当前工作树与五平台改动前的 base 之间逐屏比对：宽屏布局、"
-                 "Watch、Vision、Mac 等改动没有碰到 iPhone 画面。录像仍是 1.0 (18) 真机原片，不因此变成新录制；"
+        "note": ("iPhone 窄屏在当前工作树与 base 之间逐屏比对：预览视频与 iPhone 商店截图所示的画面（verdict_screens）"
+                 "与 base 相同，base 之后的改动没有碰到它们。录像仍是 1.0 (18) 真机原片，不因此变成新录制；"
                  "界面源码再改就重跑本工具。" if report["unchanged"] else
                  "iPhone 窄屏在当前工作树与 base 之间逐屏比对，有画面与 base 不同（见 screens）：现有 iPhone 素材不能凭本条沿用，"
                  "需按变化的画面重录或重截。")})
