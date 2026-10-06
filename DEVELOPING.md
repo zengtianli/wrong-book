@@ -57,10 +57,10 @@ bash install-to-iphone.sh
 xcrun --sdk macosx swiftc Sources/ImportSubjectOptions.swift Tests/ImportSubjectRegression.swift -o /tmp/wrongbook-subject-test
 /tmp/wrongbook-subject-test
 
-xcrun --sdk macosx swiftc Sources/Api.swift Sources/AccountDeletion.swift Sources/PaperRequestSession.swift Tests/PaperSessionRegression.swift -o /tmp/wrongbook-paper-test
+xcrun --sdk macosx swiftc Shared/RemoteUI.swift Sources/Api.swift Sources/AccountDeletion.swift Sources/PaperRequestSession.swift Tests/PaperSessionRegression.swift -o /tmp/wrongbook-paper-test
 /tmp/wrongbook-paper-test
 
-xcrun --sdk macosx swiftc -target "$(uname -m)-apple-macos15.0" Sources/Api.swift Sources/AccountDeletion.swift Sources/PaperRequestSession.swift Sources/Session.swift Tests/SessionIdentityRegression.swift -o /tmp/wrongbook-identity-test
+xcrun --sdk macosx swiftc -target "$(uname -m)-apple-macos15.0" Shared/RemoteUI.swift Sources/Api.swift Sources/AccountDeletion.swift Sources/PaperRequestSession.swift Sources/Session.swift Tests/SessionIdentityRegression.swift -o /tmp/wrongbook-identity-test
 /tmp/wrongbook-identity-test
 ```
 
@@ -81,3 +81,5 @@ bash scripts/accept/privacy.sh        # 上传账号绑定、旧响应隔离与�
 实体设备权限、线上 AI/判题、服务端删除保留策略及真实购买/恢复。这些仍需独立的产品验收。
 
 编译和隔离回归只验证代码路径。正式发布仍需核对 Cloud 源提交、构建 ID、商店资格，以及最终包上的拍照、登录、导入、练习、同步、离线、提醒和注销；审核资料与账号凭证不进入公开仓。
+
+短信的本产品端到端准备使用 `python3 Tests/cli_phone_product_test.py`：命令行调用真实的隔离教育HTTP服务，持久账号、挑战、会话、学习资料与订阅投影都走生产实现，PNVS和邮件仅在测试进程注入替身，不发真实短信。六项覆盖注册后设密、旧账号绑定与双号码换绑、学习记录/AI额度/订阅归属保留、找回后会话失效、错码、未知发送幂等与号码占用。装机后用 `MISTAKES_CLI=/Applications/错题本.app/Contents/Resources/bin/mistakes python3 Tests/cli_phone_product_test.py` 检验随包CLI；验证码及密码不进入输出。这里的PASS仍不等于实际短信送达或原生完整账号闭环。

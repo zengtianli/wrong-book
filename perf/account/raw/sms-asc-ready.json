@@ -1,0 +1,61 @@
+{
+  "queried_at": "2026-10-06T06:38:32.309222+00:00",
+  "mode": "read-only official App Store Connect GET; no writes/uploads",
+  "preflight": {
+    "app_id": "6806626967",
+    "bundle_id": "cyou.tianli.wrongbook",
+    "platform": "IOS",
+    "marketing_version": "1.0.1",
+    "latest_approved_version": "1.0",
+    "latest_approved_state": "READY_FOR_SALE",
+    "next_build_number": 21
+  },
+  "workflow": {
+    "id": "EBCC624C-AAE4-4A2E-B097-1655D5C49431",
+    "name": "App Store iOS",
+    "isEnabled": true,
+    "containerFilePath": "WrongBook.xcodeproj",
+    "branch": "main",
+    "actionType": "ARCHIVE",
+    "scheme": "WrongBook",
+    "platform": "IOS",
+    "buildDistributionAudience": "APP_STORE_ELIGIBLE",
+    "documentation_exclusions_last_modified": "2026-09-28T17:05:57.772Z"
+  },
+  "toolchain": {
+    "policy": "Apple Latest Release",
+    "xcode_id": "31ce63a2-a54f-3e25-b883-dc13290abb7f",
+    "xcode_build": "27A266a",
+    "macos_id": "31ce63a2-a54f-3e25-b883-dc13290abb7f",
+    "macos_build": "26A428"
+  },
+  "bundle_registration": [
+    {
+      "identifier": "cyou.tianli.wrongbook",
+      "registered": true,
+      "id": "LKGDC43N74",
+      "active_store_profile": {"id": "2Z223UP2NM", "profileState": "ACTIVE", "profileType": "IOS_APP_STORE", "expirationDate": "2027-08-29T17:00:20.000+00:00"}
+    },
+    {
+      "identifier": "cyou.tianli.wrongbook.watchkitapp",
+      "registered": true,
+      "id": "7GNDHZ3XW2",
+      "active_store_profile": {"id": "AP7Y9264J5", "profileState": "ACTIVE", "profileType": "IOS_APP_STORE", "expirationDate": "2027-08-29T17:00:20.000+00:00"}
+    },
+    {
+      "identifier": "cyou.tianli.wrongbook.watchkitapp.widget",
+      "registered": true,
+      "id": "GBSN78SCT7",
+      "active_store_profile": {"id": "4NK923DRM4", "profileState": "ACTIVE", "profileType": "IOS_APP_STORE", "expirationDate": "2027-08-29T17:00:20.000+00:00"}
+    }
+  ],
+  "sources": [
+    "asc_release.preflight: GET /apps, /apps/{id}/appStoreVersions and all /builds pages",
+    "asc_cloud.workflow: GET /ciWorkflows/EBCC624C-AAE4-4A2E-B097-1655D5C49431",
+    "GET /bundleIds with exact identifier post-filter; GET /bundleIds/{id}/profiles with profileState,profileType,expirationDate fields",
+    "asc_cloud.py check-toolchain EBCC624C-AAE4-4A2E-B097-1655D5C49431"
+  ],
+  "prepared_archive": false,
+  "uploaded": false,
+  "store_submission_modified": false
+}

@@ -22,7 +22,7 @@ sop:
     launch_watch: bash scripts/accept/launch.sh watch
     launch_vision: bash scripts/accept/launch.sh vision
   # 第三段是手表 / Vision 的便宜编译车道（按 project.yml 各 target 源码清单 swiftc -typecheck，不起模拟器）
-  test: bash Tests/check-local-regressions.sh && python3 Tests/cli_mistakes_test.py && python3 Tests/cli_phone_test.py && bash Tests/check-platform-typecheck.sh
+  test: bash Tests/check-local-regressions.sh && python3 Tests/cli_mistakes_test.py && python3 Tests/cli_phone_test.py && python3 Tests/cli_phone_product_test.py && bash Tests/check-platform-typecheck.sh
   account:
     mode: password
     rationale: 家长手机号验证码登录和注册，保留邮箱及旧密码；旧账号绑定保持同一学习库和订阅。原生实际短信闭环待本版本验证。

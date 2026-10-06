@@ -1,0 +1,35 @@
+{
+  "scheme": "WrongBook",
+  "bundle_id": "cyou.tianli.wrongbook",
+  "marketing_version": "1.0.1",
+  "next_build_number": 21,
+  "latest_approved_version": "1.0",
+  "version_builds": [
+    {
+      "version": "1.0",
+      "state": "READY_FOR_SALE",
+      "build": {
+        "type": "builds",
+        "id": "567bec28-e5a2-413a-bd02-7b2e04bf2586"
+      }
+    }
+  ],
+  "app_id": "6806626967",
+  "platform": "IOS",
+  "toolchain": {
+    "checked_at": "2026-10-06T06:45:20.277122+00:00",
+    "policy": "Apple Latest Release",
+    "source": "https://api.appstoreconnect.apple.com/v1/ciXcodeVersions",
+    "developer_dir": "/Applications/Xcode.app/Contents/Developer",
+    "xcode_version": "27.0",
+    "xcode_build": "27A266a",
+    "sdk_name": "iphoneos27.0",
+    "sdk_build": "24A430",
+    "archive": {
+      "DTXcodeBuild": "27A266a",
+      "DTSDKName": "iphoneos27.0",
+      "DTSDKBuild": "24A430",
+      "BuildMachineOSBuild": "26B5091g"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+test_bound_number_collision_does_not_merge_accounts (__main__.ProductPhoneCLI.test_bound_number_collision_does_not_merge_accounts) ... ok
+test_existing_account_bind_swap_preserves_archive_trial_and_subscription (__main__.ProductPhoneCLI.test_existing_account_bind_swap_preserves_archive_trial_and_subscription) ... ok
+test_phone_recovery_revokes_old_session_and_retains_learning_archive (__main__.ProductPhoneCLI.test_phone_recovery_revokes_old_session_and_retains_learning_archive) ... ok
+test_register_then_set_password_keeps_account_instance (__main__.ProductPhoneCLI.test_register_then_set_password_keeps_account_instance) ... ok
+test_unknown_send_resume_does_not_send_again (__main__.ProductPhoneCLI.test_unknown_send_resume_does_not_send_again) ... ok
+test_wrong_code_never_creates_an_account (__main__.ProductPhoneCLI.test_wrong_code_never_creates_an_account) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 14.122s
+
+OK

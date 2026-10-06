@@ -1,0 +1,67 @@
+{
+  "status": "passed",
+  "recorded_at": "2026-10-06T06:35:04.493824+00:00",
+  "command": "MISTAKES_CLI=/Applications/错题本.app/Contents/Resources/bin/mistakes python3 Tests/cli_phone_product_test.py -v",
+  "client_entry": "/Applications/错题本.app/Contents/Resources/bin/mistakes",
+  "client_sha256": "40bc012ad6e1052920b3b70b670f724a16a404e5291ab07ef4f3d81dddceb005",
+  "service_environment": "production education HTTP implementation in temporary data directories and loopback ports; all temporary state removed after tests",
+  "sms_transport": "injected-test-double",
+  "mail_transport": "injected-test-double",
+  "real_sms_sent": false,
+  "native_account_lifecycle_pass": false,
+  "tests_run": 6,
+  "elapsed_seconds": 14.122,
+  "raw_output": "perf/account/raw/sms-cli-installed-product.log",
+  "raw_output_sha256": "e9cd635a86713990a0e929f91430c8267ff070f55bb2832aab0439c8ca22f08e",
+  "cases": [
+    "register_then_set_password_keeps_account_instance",
+    "existing_account_bind_swap_preserves_archive_trial_and_subscription",
+    "phone_recovery_revokes_old_session_and_retains_learning_archive",
+    "wrong_code_never_creates_an_account",
+    "unknown_send_resume_does_not_send_again",
+    "bound_number_collision_does_not_merge_accounts"
+  ],
+  "inputs": [
+    {
+      "path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/cli/mistakes",
+      "sha256": "40bc012ad6e1052920b3b70b670f724a16a404e5291ab07ef4f3d81dddceb005"
+    },
+    {
+      "path": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/Tests/cli_phone_product_test.py",
+      "sha256": "95890f00b3f0244ecbdf4166deed8efe47fd7303567aa828c53dc89c82462540"
+    },
+    {
+      "path": "/Users/tianli/Apps/edu/web/points/server.py",
+      "sha256": "9fdb6314b9c31e03e60020540806384bb99b376f82f6354a30ffa077868699ce"
+    },
+    {
+      "path": "/Users/tianli/Apps/edu/web/points/account_phone.py",
+      "sha256": "800e16dab79eda7539ef450c44c1e9fc3350dec9c30a56c96103f4db77734d8f"
+    },
+    {
+      "path": "/Users/tianli/Apps/edu/web/points/account_security.py",
+      "sha256": "39c24b5c38a9b68e46721ebdeb6d954411de1e79cee599288a23e771dec63035"
+    },
+    {
+      "path": "/Users/tianli/Apps/edu/web/points/ai_access.py",
+      "sha256": "ec7a1ce2451194fb071f305ad6c857c99a0794ac57e5d0ddb69badc6f3d75921"
+    },
+    {
+      "path": "/Users/tianli/Apps/edu/web/points/test_phone_account.py",
+      "sha256": "2a0ba57154085c7d51c1964c48fea7259d869c51c3504e645d48f4f15113f7d0"
+    },
+    {
+      "path": "/Users/tianli/Apps/edu/web/points/test_treasury_prd.py",
+      "sha256": "8a2ef886b61b1eec6b82946ae2a2201866c26db982fdf618344aebdd66f66bcf"
+    }
+  ],
+  "installed_app": "/Applications/错题本.app",
+  "installed_version": "1.0.1",
+  "installed_build": "75",
+  "installed_executable_sha256": "e2f4784e75f43685063f0f8c37007c2945fbe901319ae88a6b649eb04dfd5e4a",
+  "codesign_verified": true,
+  "cli_installer_check_exit": 0,
+  "phone_help_exit": 0,
+  "cli_link": "/Applications/错题本.app/Contents/Resources/bin/mistakes",
+  "launched_gui": false
+}
