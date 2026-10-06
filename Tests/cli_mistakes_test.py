@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import os
 import plistlib
+import re
 import shutil
 import socket
 import struct
@@ -31,7 +32,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 CLI = REPO / "cli" / "mistakes"
 SERVER = Path(os.environ.get("EDU_SERVER_PY") or REPO.parents[2] / "web" / "points" / "server.py")
-EMAIL, PW = "cli.mistakes@example.test", "mistakes1"
+EMAIL, PW = "cli.mistakes@example.test", "mistakes cli test phrase"  # 后端密码规则：15–128 个字符
 FAILS: list[str] = []
 
 
@@ -148,7 +149,10 @@ def main() -> int:
         if r.returncode:
             print(r.stdout, r.stderr)
             return 2
-        srv = subprocess.Popen([sys.executable, str(SERVER), "serve"], env=env,
+        # 注册要先过邮箱验证码（后端 2026-10-04 起）。隔离服务端经后端自带的 test_mail_service.py 启动：只把发信换成
+        # 写进本次临时目录的 test-outbox.json，验证码接口照常执行；生产没有这个入口。
+        mail_fixture = SERVER.with_name("test_mail_service.py")
+        srv = subprocess.Popen([sys.executable, str(mail_fixture if mail_fixture.is_file() else SERVER), "serve"], env=env,
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         for _ in range(60):
             time.sleep(0.1)
@@ -182,7 +186,11 @@ def main() -> int:
             return p.returncode, out, p.stdout + p.stderr
 
         # 同 App 注册页：邮箱账号（公开注册的新账号，前 10 张免费识别）
-        reg = http("/api/register", {"email": EMAIL, "p": PW})
+        sent = http("/api/email_send", {"email": EMAIL, "purpose": "register"})
+        mail = json.loads((home / "test-outbox.json").read_text())[-1]
+        code = re.search(r"验证码：(\d{6})", mail[2]).group(1)
+        grant = http("/api/email_verify", {"challenge": sent["challenge"], "code": code})["grant"]
+        reg = http("/api/register", {"email": EMAIL, "p": PW, "grant": grant})
         ck("隔离服务端里注册一次性邮箱账号", reg.get("ok") is True, str(reg))
         uname = reg.get("u", "")
 
