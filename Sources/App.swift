@@ -103,6 +103,9 @@ struct RootView: View {
         .onChange(of: session.phase) { _, phase in
             if phase == .loggedOut { WatchLink.shared.publishSignedOut() }
         }
+        .onChange(of: session.credentialRevision) { _, _ in
+            if session.status != nil { WatchLink.shared.publishSession() }
+        }
         .alert("继续订阅", isPresented: Binding(
             get: { subscriptions.purchaseIntent != nil && session.phase == .loggedIn },
             set: { if !$0 { subscriptions.purchaseIntent = nil } }), presenting: subscriptions.purchaseIntent) { product in

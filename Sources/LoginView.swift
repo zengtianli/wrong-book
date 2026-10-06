@@ -6,6 +6,13 @@ struct LoginView: View {
     @State private var user = ""
     @State private var password = ""
     @State private var showRegister = false
+    @State private var showRecovery = false
+    @State private var phoneMode = true
+    @State private var phone = ""
+    @State private var grant = ""
+    @State private var riskPassword = ""
+    @State private var riskEmail = ""
+    @State private var emailGrant = ""
 
     var body: some View {
         ZStack {
@@ -13,7 +20,7 @@ struct LoginView: View {
             Ink.paper.ignoresSafeArea()
             #endif
 
-            VStack(spacing: 22) {
+            ScrollView { VStack(spacing: 22) {
                 Spacer()
                 #if os(visionOS)
                 // Vision Pro：窗口是玻璃，表单是浮在上面的一张纸（亮色输入框摊在玻璃上读不清）
@@ -39,10 +46,13 @@ struct LoginView: View {
                 AppLifecycleMobileEntry().font(.footnote)
                 #endif
             }
-            .padding(.horizontal, 30).frame(maxWidth: 450)
+            .padding(.horizontal, 30).padding(.vertical, 24).frame(maxWidth: 450)
+            }.frame(maxWidth: .infinity)
         }
         .animation(.easeInOut(duration: 0.2), value: session.error)
-        .sheet(isPresented: $showRegister) { RegisterView() }
+        .sheet(isPresented: $showRegister) { PhoneRegisterView() }
+        .sheet(isPresented: $showRecovery) { AccountRecoveryView() }
+        .task { try? await Api.accountHints() }
     }
 
     /// 标题、输入框、登录按钮和两个链接 —— 窄屏原样摊在纸色整页上，Vision Pro 收进一张纸里。
@@ -56,14 +66,25 @@ struct LoginView: View {
                 .font(.footnote).foregroundStyle(Ink.dim)
         }
 
-        VStack(spacing: 10) {
-            field("用户名或邮箱", text: $user, secure: false)
-            field("密码", text: $password, secure: true)
-        }
+        Picker("登录方式", selection: $phoneMode) {
+            Text("短信登录").tag(true); Text("密码登录").tag(false)
+        }.pickerStyle(.segmented).disabled(session.busy)
 
-        if let e = session.error {
-            Text(e).font(.footnote).foregroundStyle(Ink.red)
-                .multilineTextAlignment(.center).transition(.opacity)
+        if phoneMode {
+            VStack(alignment: .leading, spacing: 12) {
+                TextField("+86 家长本人手机号", text: $phone).textContentType(.telephoneNumber)
+                    .keyboardType(.phonePad).privacySensitive().padding(14)
+                    .background(Ink.card, in: RoundedRectangle(cornerRadius: 14))
+                AccountVerification(address: phone, purpose: "login", grant: $grant)
+                AccountRiskVerification(password: $riskPassword, email: $riskEmail, emailGrant: $emailGrant)
+            }
+            Button(session.busy ? "登录中" : "登录") {
+                Task { await session.phoneAuthenticate(grant: grant, password: riskPassword, emailGrant: emailGrant) }
+            }.buttonStyle(.borderedProminent).frame(minHeight: 44).disabled(session.busy || grant.isEmpty)
+        } else {
+        VStack(spacing: 10) {
+            field("手机号、用户名或邮箱", text: $user, secure: false)
+            field("密码", text: $password, secure: true)
         }
 
         Button {
@@ -80,14 +101,24 @@ struct LoginView: View {
         .flatButton()
         .disabled(session.busy || user.isEmpty || password.isEmpty)
         .opacity(user.isEmpty || password.isEmpty ? 0.45 : 1)
+        }
+
+        if let e = session.error {
+            Text(e).font(.footnote).foregroundStyle(Ink.red)
+                .multilineTextAlignment(.center).transition(.opacity)
+        }
 
         HStack(spacing: 18) {
             Button("先看看") { session.skipLogin() }
-            Button("邮箱注册") { showRegister = true }
+            Button("注册账号") { showRegister = true }
+            Button("忘记密码") { showRecovery = true }
         }
         .flatButton()
         .font(.footnote).foregroundStyle(Ink.blue)
         .disabled(session.busy)
+        Text(T("account.login.note", "原账号和原密码可继续登录。短信暂不可用或其他地区可使用邮箱注册与密码登录。"))
+            .font(.footnote).foregroundStyle(Ink.dim)
+        AccountPolicyLinks().font(.footnote)
     }
 
     private var ruled: some View {

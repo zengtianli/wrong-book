@@ -110,6 +110,12 @@ GUI-only (pure interface or device-only): taking or picking photos, page preview
 
 Regression: `python3 Tests/cli_mistakes_test.py` first checks the packaging rule and `install.sh` (a fake .app in a temporary Applications folder), then starts an isolated local server (temporary directory, free port), never touches live accounts and never calls the AI; it needs `edu/web/points/server.py` from the same workspace, or `EDU_SERVER_PY` pointing to it.
 
+The 2026-10-06 source adds phone accounts: SMS login, phone registration and phone/email password recovery on the login screen; phone binding or two-number replacement, email verification, and password setup/change under Settings → Account and Privacy. Existing users should sign in first and bind a number to preserve the original internal account, mistakes and subscription. Phone registration creates an empty personal library. SMS currently supports an adult's own mainland China +86 number; email remains available for other regions. The client only calls the shared education service and contains no Alibaba Cloud credentials. Real delivery and the complete native cross-device flow for this source remain unverified; isolated tests are not delivery evidence.
+
+`mistakes account phone-login --phone <number>`, `phone-register --phone <number> --agreed`, and `phone-recover --phone <number>` work without a prior password session. Existing users run `mistakes account phone-bind --phone <new-number>` with their original login; replacement verifies both numbers. Passwordless phone users can start this process's session with `--sms-phone <number>` and run `account password-set`. Codes and new passwords use hidden interactive input or protected environment variables `EDU_SMS_CODE`, `EDU_SMS_OLD_CODE`, `EDU_SMS_IDENTITY_CODE`, and `EDU_NEW_PASSWORD`, never command arguments. Independent-email risk verification supports `--risk-email` and `EDU_EMAIL_CODE`. After an uncertain send, resume the returned `request_id` with `--request-id`; the client never automatically resends. Cookies only live in this process; a login command does not persist a session for other processes.
+
+SMS CLI contract checks: `python3 Tests/cli_phone_test.py` (9 loopback cases, no real messages). Work follows the shared `aliyun-sms` skill. Project boundaries and remaining real-flow validation are recorded locally in `handoffs/2026-10-06-sms-account.md`, which is internal and not published with this repository.
+
 ## Build
 
 ```bash

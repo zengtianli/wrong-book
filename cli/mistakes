@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import getpass
 import os
 import re
 import sys
@@ -26,6 +27,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from datetime import date
 from http.cookiejar import CookieJar
 from pathlib import Path
@@ -97,7 +99,7 @@ class Secrets:
     def account(self) -> str:
         if self._account is None:
             if getattr(self.args, "password_stdin", False):
-                lines = sys.stdin.read().splitlines() if not sys.stdin.isatty() else []
+                lines = [sys.stdin.readline().rstrip("\r\n")] if not sys.stdin.isatty() else []
                 if not lines:
                     raise Fail("stdin 里缺少账号密码（一行）", code=2)
                 self._account = lines[0]
@@ -107,12 +109,27 @@ class Secrets:
                     raise Fail("缺账号密码：设 EDU_PASSWORD 或用 --password-stdin", code=2)
         return self._account
 
+    def value(self, env: str, label: str) -> str:
+        value = os.environ.get(env)
+        if value is not None:
+            return value
+        if sys.stdin.isatty():
+            return getpass.getpass(label + ": ")
+        value = sys.stdin.readline().rstrip("\r\n")
+        if not value:
+            raise Fail(f"缺少{label}：使用交互输入或受保护环境变量 {env}", code=2)
+        return value
+
 
 def session(args, sec: Secrets) -> Client:
     user = args.user or os.environ.get("EDU_USER") or ""
-    if not user:
+    if not user and not getattr(args, "sms_phone", None):
         raise Fail("缺账号：设 EDU_USER 或用 --user", code=2)
     c = Client(args.api or os.environ.get("EDU_API_BASE") or DEFAULT_API, timeout=args.timeout)
+    if getattr(args, "sms_phone", None):
+        grant = phone_verify(c, args.sms_phone, "login", sec, getattr(args, "login_request_id", None))
+        c.call("api/phone_login", {"grant": grant, "password": os.environ.get("EDU_PASSWORD", "")})
+        return c
     c.call("api/login", {"u": user, "p": sec.account()})
     return c
 
@@ -466,6 +483,70 @@ def cmd_account_delete(c, a, sec):
 
 # ───────────────────────────── 命令行 ─────────────────────────────
 
+def phone_verify(c, phone, purpose, sec, request_id=None, password="", identity="", code_env="EDU_SMS_CODE"):
+    request_id = request_id or str(uuid.uuid4())
+    c.sms_request_id = request_id
+    try:
+        sent = c.call("api/phone_send", {"phone": phone, "purpose": purpose, "password": password,
+                                       "identity_grant": identity, "request_id": request_id})
+    except Fail as failure:
+        failure.request_id = request_id
+        raise
+    c.sms_request_id = None
+    challenge = sent.get("challenge")
+    if not challenge:
+        raise Fail("服务端未返回短信挑战编号")
+    code = sec.value(code_env, "短信验证码")
+    grant = c.call("api/phone_verify", {"challenge": challenge, "code": code}).get("grant")
+    if not grant:
+        raise Fail("服务端未返回验证授权")
+    return grant
+
+
+def cmd_phone_auth(c, a, sec):
+    if a.sub == "phone-register" and not a.agreed:
+        raise Fail("先阅读 App 的用户协议与隐私政策；确认同意后加 --agreed", code=2)
+    purpose = {"phone-login": "login", "phone-register": "register", "phone-recover": "phone_recover"}[a.sub]
+    grant = phone_verify(c, a.phone, purpose, sec, a.request_id)
+    body = {"grant": grant, "password": os.environ.get("EDU_PASSWORD", "")}
+    if a.sub == "phone-register":
+        body["agreed"] = True
+    elif a.sub == "phone-recover":
+        body["new"] = sec.value("EDU_NEW_PASSWORD", "新密码")
+    if getattr(a, "risk_email", None):
+        sent = c.call("api/email_send", {"email": a.risk_email, "purpose": "recover"})
+        body["email_grant"] = c.call("api/email_verify", {"challenge": sent["challenge"],
+            "code": sec.value("EDU_EMAIL_CODE", "独立邮箱验证码")})["grant"]
+    r = c.call("api/" + a.sub.replace("-", "_"), body)
+    return {"ok": True, **{k: r[k] for k in ("u", "has_password", "message") if k in r}}, lambda: r.get("message", "手机账号操作成功")
+
+
+def cmd_phone_bind(c, a, sec):
+    me = c.call("api/me")
+    current = me.get("phone", "") if me.get("phone_verified") else ""
+    identity = ""
+    password = sec.account() if me.get("has_password", True) else ""
+    if not me.get("has_password", True):
+        identity = phone_verify(c, current, "phone_identity", sec, a.identity_request_id,
+                                code_env="EDU_SMS_IDENTITY_CODE")
+    grant = phone_verify(c, a.phone, "phone_change_new" if current else "phone_new", sec,
+                         a.request_id, password=password, identity=identity)
+    old = phone_verify(c, current, "phone_old", sec, a.old_request_id, password=password,
+                       identity=identity, code_env="EDU_SMS_OLD_CODE") if current else ""
+    r = c.call("api/phone_bind", {"phone": a.phone, "password": password, "identity_grant": identity,
+                                "grant": grant, "old_grant": old})
+    return {"ok": True, "message": r.get("message"), "has_password": r.get("has_password")}, lambda: r.get("message", "手机号已保存")
+
+
+def cmd_password_set(c, a, sec):
+    me = c.call("api/me")
+    if me.get("has_password", True):
+        raise Fail("已有密码，请使用 App 内修改密码或找回流程", code=2)
+    grant = phone_verify(c, me.get("phone", ""), "phone_identity", sec, a.request_id,
+                         code_env="EDU_SMS_IDENTITY_CODE")
+    r = c.call("api/password_set", {"identity_grant": grant, "new": sec.value("EDU_NEW_PASSWORD", "新密码")})
+    return {"ok": True, "message": r.get("message")}, lambda: r.get("message", "登录密码已设置")
+
 EXAMPLES = """示例：
   EDU_USER=me@example.com EDU_PASSWORD=… mistakes status --json
   mistakes wrongs --subject math --json            # 服务器存档里的错题本（按课）
@@ -482,6 +563,8 @@ def build() -> argparse.ArgumentParser:
                                  epilog=EXAMPLES)
     ap.add_argument("--api", help="服务端地址（默认 $EDU_API_BASE 或 https://edu.tianli.cyou）")
     ap.add_argument("--user", help="账号：邮箱或用户名（默认 $EDU_USER）")
+    ap.add_argument("--sms-phone", help="使用 +86 手机验证码建立本次命令的会话（密码未设置也可用）")
+    ap.add_argument("--login-request-id", help="短信登录发送超时后复用原请求 ID，避免重复发送")
     ap.add_argument("--password-stdin", action="store_true", help="账号密码从 stdin 第 1 行读（默认 $EDU_PASSWORD）")
     ap.add_argument("--timeout", type=float, default=20, help="单次请求超时秒数（默认 20；上传固定 90）")
     sub = ap.add_subparsers(dest="cmd", metavar="命令")
@@ -555,6 +638,22 @@ def build() -> argparse.ArgumentParser:
     p.add_argument("--receipt", help="注销回执 id（不给则查当前账号）")
     p = cmd(asub, "delete", cmd_account_delete, "注销本账号：先即时删除，不行再递申请（不可恢复，须 --yes）")
     p.add_argument("--yes", action="store_true")
+    for name in ("phone-login", "phone-register", "phone-recover"):
+        p = cmd(asub, name, cmd_phone_auth, {"phone-login": "手机验证码登录", "phone-register": "验证手机号并创建空白账号；旧账号先登录再绑定", "phone-recover": "验证绑定手机并重置密码，保留原学习资料"}[name])
+        p.add_argument("--phone", required=True)
+        p.add_argument("--request-id", help="发送超时后用原请求 ID 接续，不自动重发")
+        p.set_defaults(anonymous=True)
+        if name == "phone-register":
+            p.add_argument("--agreed", action="store_true")
+        else:
+            p.add_argument("--risk-email", help="号码风险验证时使用已绑定验证的独立邮箱")
+    p = cmd(asub, "phone-bind", cmd_phone_bind, "当前账号绑定/双号码换绑，保留错题及订阅，不合并账号")
+    p.add_argument("--phone", required=True)
+    p.add_argument("--request-id", help="新号码发送请求 ID")
+    p.add_argument("--old-request-id", help="旧号码发送请求 ID")
+    p.add_argument("--identity-request-id", help="无密码账号身份验证发送请求 ID")
+    p = cmd(asub, "password-set", cmd_password_set, "无密码手机账号验证当前手机后设置登录密码")
+    p.add_argument("--request-id", help="短信发送请求 ID")
     return ap
 
 
@@ -567,11 +666,14 @@ def main(argv: list[str]) -> int:
     as_json = getattr(a, "json", False)
     sec = Secrets(a)
     try:
-        c = session(a, sec)
+        c = (Client(a.api or os.environ.get("EDU_API_BASE") or DEFAULT_API, timeout=a.timeout)
+             if getattr(a, "anonymous", False) else session(a, sec))
         v, text = a.fn(c, a, sec)
     except Fail as f:
         if as_json:
-            print(json.dumps({"ok": False, "err": f.msg, **({"status": f.status} if f.status else {})},
+            retry = getattr(f, "request_id", None) or getattr(locals().get("c"), "sms_request_id", None)
+            print(json.dumps({"ok": False, "err": f.msg, **({"status": f.status} if f.status else {}),
+                              **({"request_id": retry} if retry else {})},
                              ensure_ascii=False))
         else:
             print(f"✘ {f.msg}", file=sys.stderr)

@@ -55,6 +55,7 @@ targets:
       - path: Shared/LaneSignal.swift
       # iPhone → 手表登录态转交（Mac / Vision 上编译为空操作）
       - path: Shared/WatchCookieLink.swift
+      - path: Shared/RemoteUI.swift
       - path: Shared/AppLifecycle.swift
       - path: Shared/AppConfiguration.swift
       - path: Shared/AppLifecycleMobile.swift
@@ -106,6 +107,7 @@ targets:
       - path: Shared/LaneSignal.swift
       - path: Shared/WatchCookieLink.swift
       - path: Sources/Api.swift
+      - path: Shared/RemoteUI.swift
       - path: Sources/AccountDeletion.swift
       - path: Sources/PaperRequestSession.swift
       - path: Sources/LessonPaths.swift

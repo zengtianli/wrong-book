@@ -12,6 +12,7 @@ final class Session: ObservableObject {
     @Published var status: Status?
     @Published var error: String?
     @Published var busy = false
+    @Published var credentialRevision = 0
     @Published var deletionReceipt: DeletionReceipt?
     @Published var deletionNotice: String?
     @Published var deletionRefreshError: String?
@@ -159,7 +160,7 @@ final class Session: ObservableObject {
         }
     }
 
-    func register(email: String, password: String, nick: String) async {
+    func register(email: String, password: String, nick: String, grant: String) async {
         guard !busy else { return }
         identityGeneration = UUID()
         let generation = identityGeneration
@@ -168,7 +169,7 @@ final class Session: ObservableObject {
         LessonSync.shared.setUser(nil)
         status = nil
         do {
-            try await Api.register(email: email, password: password, nick: nick)
+            try await Api.register(email: email, password: password, nick: nick, grant: grant)
             guard generation == identityGeneration else { return }
             let signedIn = try await Api.status()
             guard generation == identityGeneration else { return }
@@ -178,6 +179,73 @@ final class Session: ObservableObject {
         } catch {
             guard generation == identityGeneration else { return }
             self.error = error.localizedDescription        // 邮箱已注册 / 格式不对 / 名额满，服务端文案原样
+            phase = .loggedOut
+        }
+    }
+
+    /// Cookie-changing authentication stays serialized with password login/logout.
+    func phoneAuthenticate(grant: String, registering: Bool = false, agreed: Bool = false,
+                           password: String = "", emailGrant: String = "") async {
+        guard !busy else { return }
+        identityGeneration = UUID()
+        let generation = identityGeneration
+        busy = true; error = nil
+        defer { busy = false }
+        LessonSync.shared.setUser(nil); status = nil
+        do {
+            _ = try await Api.accountRequest(registering ? "api/phone_register" : "api/phone_login",
+                body: ["grant": grant, "agreed": agreed, "password": password, "email_grant": emailGrant])
+            guard generation == identityGeneration else { return }
+            let signedIn = try await Api.status()
+            guard generation == identityGeneration else { return }
+            status = signedIn
+            LessonSync.shared.setUser(signedIn.user)
+            phase = .loggedIn
+        } catch {
+            guard generation == identityGeneration else { return }
+            self.error = error.localizedDescription
+            phase = .loggedOut
+        }
+    }
+
+    /// Binding and password changes retain the server's internal user/library scope.
+    /// Refresh errors do not turn a successful write into a retry of that write.
+    func updateAccount(_ path: String, body: [String: Any]) async throws -> [String: Any] {
+        guard !busy, let user = status?.user else { throw Api.Failure(message: "请先联网登录") }
+        identityGeneration = UUID()
+        let generation = identityGeneration
+        busy = true; defer { busy = false }
+        do {
+            let response = try await Api.accountRequest(path, body: body)
+            guard generation == identityGeneration else { throw CancellationError() }
+            credentialRevision += 1
+            do {
+                let latest = try await Api.status()
+                guard generation == identityGeneration else { throw CancellationError() }
+                guard latest.user == user else { throw Api.Failure(message: "账号身份已变化，请重新登录", statusCode: 401) }
+                status = latest
+            } catch {
+                authenticationFailure(error)
+            }
+            return response
+        } catch {
+            authenticationFailure(error)
+            throw error
+        }
+    }
+
+    func authenticationFailure(_ error: Error) {
+        guard let failure = error as? Api.Failure, failure.statusCode == 401 else { return }
+        identityGeneration = UUID()
+        clearLocalLogin()
+        self.error = failure.localizedDescription
+    }
+
+    private func clearLocalLogin() {
+        LessonSync.shared.setUser(nil)
+        status = nil; phase = .loggedOut
+        for cookie in HTTPCookieStorage.shared.cookies(for: Api.base) ?? [] where cookie.name == "edu_sess" {
+            HTTPCookieStorage.shared.deleteCookie(cookie)
         }
     }
 
@@ -222,12 +290,16 @@ final class Session: ObservableObject {
         // Offline libraries may probe again to reconnect their previously confirmed user.
         guard phase == .loggedIn, !busy, status != nil || LessonPaths.offlineReadOnly else { return }
         let generation = identityGeneration
-        if let s = try? await Api.status() {
+        do {
+            let s = try await Api.status()
             guard generation == identityGeneration, phase == .loggedIn, !busy else { return }
             let reconnecting = LessonPaths.offlineReadOnly
             status = s
             LessonSync.shared.setUser(s.user)
             if reconnecting { await LessonSync.shared.sync(force: true) }
+        } catch {
+            guard generation == identityGeneration, !busy else { return }
+            authenticationFailure(error)
         }
     }
 
@@ -242,8 +314,7 @@ final class Session: ObservableObject {
         LessonSync.shared.setUser(nil)
         await Api.logout()
         guard generation == identityGeneration else { return }
-        status = nil
-        phase = .loggedOut
+        clearLocalLogin()
     }
 
     /// Guest preview has no personal courses or historic storage.

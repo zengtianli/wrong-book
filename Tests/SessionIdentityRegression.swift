@@ -79,7 +79,7 @@ private final class IdentityProtocol: URLProtocol {
             payload = ["ok": true, "receipt_id": "synthetic-receipt", "status": "pending", "expected_by": "2026-10-10"]
         case "/api/account_delete_status":
             payload = ["ok": true, "receipt_id": "synthetic-receipt", "status": "completed"]
-        case "/api/login", "/api/register", "/api/logout": payload = ["ok": true]
+        case "/api/login", "/api/register", "/api/logout", "/api/phone_login", "/api/phone_register", "/api/phone_bind", "/api/password_set", "/api/passwd": payload = ["ok": true]
         default:
             Self.lock.unlock()
             client!.urlProtocol(self, didFailWithError: URLError(.unsupportedURL))
@@ -180,7 +180,7 @@ private final class IdentityProtocol: URLProtocol {
         let count = IdentityProtocol.requestCount
         serialized.skipLogin()
         await serialized.login(user: "b", password: "synthetic")
-        await serialized.register(email: "b@example.invalid", password: "synthetic", nick: "b")
+        await serialized.register(email: "b@example.invalid", password: "synthetic", nick: "b", grant: "synthetic")
         await serialized.logout()
         let deleted = await serialized.deleteAccount(password: "synthetic")
         await serialized.refresh()
@@ -194,7 +194,7 @@ private final class IdentityProtocol: URLProtocol {
 
         await serialized.logout()
         IdentityProtocol.configure(user: "b", hold: "/api/register")
-        let registration = Task { await serialized.register(email: "b@example.invalid", password: "synthetic", nick: "b") }
+        let registration = Task { await serialized.register(email: "b@example.invalid", password: "synthetic", nick: "b", grant: "synthetic") }
         try await waitUntilHeld()
         let registrationCount = IdentityProtocol.requestCount
         serialized.skipLogin()
@@ -205,6 +205,34 @@ private final class IdentityProtocol: URLProtocol {
         await registration.value
         assertUser(serialized, "b")
         print("PASS production register: busy preserves registration until its status response completes")
+
+        await serialized.logout()
+        IdentityProtocol.configure(user: "phone-user", hold: "/api/phone_login")
+        let phoneLogin = Task { await serialized.phoneAuthenticate(grant: "synthetic") }
+        try await waitUntilHeld()
+        let phoneCount = IdentityProtocol.requestCount
+        await serialized.logout()
+        await serialized.login(user: "a", password: "synthetic")
+        serialized.skipLogin()
+        precondition(serialized.busy && IdentityProtocol.requestCount == phoneCount)
+        IdentityProtocol.release()
+        await phoneLogin.value
+        assertUser(serialized, "phone-user")
+        print("PASS production SMS login: overlapping cookie changes and guest choice remain serialized")
+
+        IdentityProtocol.configure(user: "phone-user", hold: "/api/phone_bind")
+        let binding = Task { try await serialized.updateAccount("api/phone_bind", body: ["grant": "synthetic"]) }
+        try await waitUntilHeld()
+        let bindCount = IdentityProtocol.requestCount
+        await serialized.logout()
+        precondition(serialized.busy && IdentityProtocol.requestCount == bindCount)
+        IdentityProtocol.release()
+        _ = try await binding.value
+        assertUser(serialized, "phone-user")
+        precondition(serialized.credentialRevision == 1)
+        print("PASS production phone binding: original account/library retained; renewed cookie publication signalled")
+        IdentityProtocol.configure(user: "b")
+        await serialized.login(user: "b", password: "synthetic")
 
         IdentityProtocol.configure(user: "b", hold: "/api/account_delete_request")
         let oldReceipt = Task { await serialized.refreshDeletion() }

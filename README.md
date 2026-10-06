@@ -108,6 +108,12 @@ mistakes delete upload <照片 id> --yes
 
 回归：`python3 Tests/cli_mistakes_test.py` —— 先核打包规则与 `install.sh`（临时 Applications 目录里的假 .app），再起一个隔离的本地服务端（临时目录 + 空闲端口），不碰线上账号、不调 AI；需要同一工作区的 `edu/web/points/server.py`，或用 `EDU_SERVER_PY` 指过去。
 
+2026-10-06 源码增加手机号账号入口：登录页提供短信登录、手机注册及手机/邮箱找回；「设置 → 账号与隐私」可绑定或双号码换绑、验证邮箱、设置或修改密码。旧学习库应先登录再绑定，保留原内部账号、错题和订阅；新手机号注册创建空白学习库。短信当前仅支持家长本人中国大陆 +86 手机号，海外用户保留邮箱路径。客户端只调共享教育服务，不保存阿里云密钥。当前源码的真实原生收信与跨设备闭环仍待验，不能把下列隔离测试当作投递成功。
+
+`mistakes account phone-login --phone <手机号>`、`phone-register --phone <手机号> --agreed`、`phone-recover --phone <手机号>` 对应匿名操作；旧账号使用原登录凭据执行 `mistakes account phone-bind --phone <新号码>`，换绑会分别验证新旧号码。无密码手机户可通过 `--sms-phone <手机号>` 建立本次命令会话，再执行 `account password-set`。验证码和新密码走交互隐藏输入或受保护环境变量 `EDU_SMS_CODE` / `EDU_SMS_OLD_CODE` / `EDU_SMS_IDENTITY_CODE` / `EDU_NEW_PASSWORD`，不放命令参数；号码风险验证支持 `--risk-email` 和独立 `EDU_EMAIL_CODE`。发送超时保留返回的 `request_id`，以 `--request-id` 接续原请求；不自动重发。会话仅保存在本次进程内，登录命令不会替其他进程持久保存 Cookie。
+
+短信 CLI 契约门：`python3 Tests/cli_phone_test.py`（9 项，本机 loopback，无真实短信）。短信流程固定使用总部 `aliyun-sms` 技能；本项目边界及后续真实验收记在本机 `handoffs/2026-10-06-sms-account.md`（内部交接，不随公开仓发布）。
+
 ## 构建
 
 ```bash

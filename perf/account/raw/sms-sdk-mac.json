@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "platform": "mac",
+  "configuration": "Debug",
+  "scheme": "WrongBook",
+  "compilation_conditions": [],
+  "app_path": "/private/tmp/sms-apps-20261006/wrongbook-mac/dd/Build/Products/Debug/WrongBook.app",
+  "bundle_id": "cyou.tianli.wrongbook",
+  "version": "1.0.1",
+  "build": "19",
+  "executable_sha256": "5b9ffd657a8d6d1ec4d17811a29a5db7d2fabc27c49058192263f569c96d22d3",
+  "sdk": "macosx27.0",
+  "xcode": {
+    "name": "Xcode.app",
+    "version": "27.0",
+    "build": "27A266a",
+    "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+  },
+  "destination": "platform=macOS,arch=arm64",
+  "signing": "ad-hoc, entitlements stripped, no sandbox, no hardened runtime (local lane build)",
+  "log": "/private/tmp/sms-apps-20261006/wrongbook-mac/build-mac-Debug.log",
+  "work_dir": "/private/tmp/sms-apps-20261006/wrongbook-mac",
+  "seconds": 14.4,
+  "generated_info_plists": []
+}

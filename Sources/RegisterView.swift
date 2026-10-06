@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 邮箱注册。规则（邮箱格式 / 密码至少 6 位 / 邮箱是否已注册 / 名额）全在服务端，
+/// 邮箱注册先验证归属。规则、密码策略和容量由共享服务端判定。
 /// 这里只做「两次密码是否一致」—— 服务端收不到第二个字段，没法替我们判。
 struct RegisterView: View {
     @EnvironmentObject var session: Session
@@ -9,6 +9,8 @@ struct RegisterView: View {
     @State private var nick = ""
     @State private var pw1 = ""
     @State private var pw2 = ""
+    @State private var grant = ""
+    @State private var agreed = false
 
     private var mismatch: Bool { !pw2.isEmpty && pw1 != pw2 }
 
@@ -20,16 +22,21 @@ struct RegisterView: View {
                         .textContentType(.emailAddress).keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
                     TextField("昵称（可选）", text: $nick)
+                    AccountVerification(address: email, purpose: "register", phone: false, grant: $grant)
                 } footer: {
-                    Text("邮箱就是登录名，网页版 edu.tianli.cyou 用同一个账号。")
+                    Text(T("wrongbook.account.email.register_note", "验证本人邮箱后注册，网页版 edu.tianli.cyou 使用同一账号。已有账号请先登录再绑定邮箱，保留原学习资料。"))
                 }
                 Section {
-                    SecureField("密码（至少 6 位）", text: $pw1).textContentType(.newPassword)
-                    SecureField("再输一次", text: $pw2).textContentType(.newPassword)
+                    SecureField("密码（15–128字符）", text: $pw1).textContentType(.newPassword).privacySensitive()
+                    SecureField("再输一次", text: $pw2).textContentType(.newPassword).privacySensitive()
                     if mismatch { Text("两次输入不一致").font(.caption).foregroundStyle(Ink.red) }
                 } footer: {
                     Text("账号保存邮箱、昵称、做题记录与你上传的试卷及识别结果。" + AccountDeletionCopy.summary)
-                    Link("阅读隐私政策", destination: URL(string: "https://app-ios-wrong-book.tianli.cyou/privacy.html")!)
+                }
+                Section {
+                    AccountPolicyLinks()
+                    Toggle("我已阅读并同意用户协议与隐私政策", isOn: $agreed)
+                    Text(T("account.password.rule_note", "15–128 个字符，允许空格和中文。可使用系统生成密码或独特短语。")).font(.footnote)
                 }
                 if let e = session.error {
                     Section { Text(e).foregroundStyle(Ink.red) }
@@ -38,7 +45,7 @@ struct RegisterView: View {
                     Button {
                         Task {
                             await session.register(email: email.trimmingCharacters(in: .whitespaces),
-                                                   password: pw1, nick: nick.trimmingCharacters(in: .whitespaces))
+                                                   password: pw1, nick: nick.trimmingCharacters(in: .whitespaces), grant: grant)
                             if session.phase == .loggedIn { dismiss() }
                         }
                     } label: {
@@ -46,7 +53,7 @@ struct RegisterView: View {
                             if session.busy { ProgressView() } else { Text("注册并登录").fontWeight(.semibold) }
                             Spacer() }
                     }
-                    .disabled(session.busy || email.isEmpty || pw1.isEmpty || pw1 != pw2)
+                    .disabled(session.busy || grant.isEmpty || !agreed || pw1.count < 15 || pw1.count > 128 || pw1 != pw2)
                 }
             }
             .navigationTitle("邮箱注册")

@@ -10,7 +10,7 @@ accept_swift() {
   local name="$1"
   shift
   xcrun --sdk macosx swiftc -target "$(uname -m)-apple-macos15.0" \
-    "$@" -o "$ACCEPT_SCRATCH/$name"
+    Shared/RemoteUI.swift "$@" -o "$ACCEPT_SCRATCH/$name"
   "$ACCEPT_SCRATCH/$name"
 }
 

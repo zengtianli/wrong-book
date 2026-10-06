@@ -92,6 +92,15 @@ enum Api {
         _ = try await request("api/login", body: ["u": user, "p": password])
     }
 
+    /// Account operations use the existing cookie jar and server authorization.
+    static func accountRequest(_ path: String, body: [String: Any]? = nil) async throws -> [String: Any] {
+        try await request(path, body: body)
+    }
+
+    static func accountHints() async throws {
+        AccountHints.adopt(try await request("api/config"))
+    }
+
     struct AIAccess {
         let enabled: Bool
         let remaining: Int
@@ -134,8 +143,8 @@ enum Api {
     }
 
     /// 邮箱注册：`{email, p, nick}` → 服务端派生内部用户名并直接下发 cookie（注册即登录）。
-    static func register(email: String, password: String, nick: String) async throws {
-        _ = try await request("api/register", body: ["email": email, "p": password, "nick": nick])
+    static func register(email: String, password: String, nick: String, grant: String) async throws {
+        _ = try await request("api/register", body: ["email": email, "p": password, "nick": nick, "grant": grant])
     }
 
     /// 即时删除路径；需要跨系统核验时由服务端明确返回 409。
@@ -223,7 +232,36 @@ enum Api {
     /// ⚠ 这里的 `practiceLeft` / `balance` 一律**原样回显服务端算好的值**，
     /// 原生不做任何加减。~/Apps/edu/web 的口径：分值一律服务端算，请求里报什么都不算数。
     static func status(timeout: TimeInterval = 20) async throws -> Status {
-        Status(json: try await request("api/state", timeout: timeout))
+        let json = try await request("api/state", timeout: timeout)
+        AccountHints.adopt(json)
+        return Status(json: json)
+    }
+}
+
+/// Display hints come from the shared account service, including the public config
+/// before login. Invalid values never break authentication or disable resend forever.
+enum AccountHints {
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var resend = 60
+    nonisolated(unsafe) private static var ttl = 300
+    static func adopt(_ json: [String: Any]) {
+        lock.withLock {
+            resend = seconds(json["resend_seconds"], fallback: 60, in: 10...600)
+            ttl = seconds(json["code_ttl_seconds"], fallback: 300, in: 60...3600)
+        }
+        let ui = (json["ui"] as? [String: Any]).flatMap { try? JSONSerialization.data(withJSONObject: $0) }
+        Remote.ui = ui.flatMap { try? JSONDecoder().decode(FeedUI.self, from: $0) }
+    }
+    static func seconds(_ raw: Any?, fallback: Int, in range: ClosedRange<Int>) -> Int {
+        guard let number = raw as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+              number.doubleValue.isFinite else { return fallback }
+        return Int(min(max(number.doubleValue.rounded(), Double(range.lowerBound)), Double(range.upperBound)))
+    }
+    static func resendSeconds(_ receipt: Any? = nil) -> Int {
+        seconds(receipt, fallback: lock.withLock { resend }, in: 10...600)
+    }
+    static func codeMinutes(_ receipt: Any? = nil) -> Int {
+        seconds(receipt, fallback: lock.withLock { ttl }, in: 60...3600) / 60
     }
 }
 

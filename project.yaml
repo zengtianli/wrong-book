@@ -13,6 +13,7 @@ sop:
     functionality: bash scripts/accept/functionality.sh
     recovery: bash scripts/accept/recovery.sh
     privacy: bash scripts/accept/privacy.sh
+    account_lifecycle: bash scripts/accept/account_lifecycle.sh
     # 平台线启动冒烟：先起虚构演示学习库（scripts/demo/fixture.py：随机端口、随机密码、合成账号「小林」），
     # 再交给 Chapter 内置的 platform_launch（共享 sim_lane：仓外构建、无窗口模拟器 / Mac 静默启动不上屏、截图）
     launch_iphone: bash scripts/accept/launch.sh iphone
@@ -21,7 +22,18 @@ sop:
     launch_watch: bash scripts/accept/launch.sh watch
     launch_vision: bash scripts/accept/launch.sh vision
   # 第三段是手表 / Vision 的便宜编译车道（按 project.yml 各 target 源码清单 swiftc -typecheck，不起模拟器）
-  test: bash Tests/check-local-regressions.sh && python3 Tests/cli_mistakes_test.py && bash Tests/check-platform-typecheck.sh
+  test: bash Tests/check-local-regressions.sh && python3 Tests/cli_mistakes_test.py && python3 Tests/cli_phone_test.py && bash Tests/check-platform-typecheck.sh
+  account:
+    mode: password
+    rationale: 家长手机号验证码登录和注册，保留邮箱及旧密码；旧账号绑定保持同一学习库和订阅。原生实际短信闭环待本版本验证。
+    verification_channels: [phone, email]
+    phone_login: true
+    inputs:
+    - ../../../web/points/server.py
+    - ../../../web/points/account_security.py
+    - ../../../web/points/account_phone.py
+    - ../../../web/points/requirements-subscriptions.txt
+    - ../../../../../Dev/tools/dev/lib/tools/cloud/aliyun_sms.py
   ui:
   - Sources/**
   - Shared/**

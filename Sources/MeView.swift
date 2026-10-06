@@ -22,6 +22,9 @@ struct MeView: View {
     @State private var deleteErr: String?
     @State private var path: [Destination] = []
     @State private var aiEnabled = false
+    @State private var phoneBinding = false
+    @State private var emailBinding = false
+    @State private var accountPassword = false
 
     private enum Destination: Hashable {
         case account, scan, reminders, downloads, subscription
@@ -170,6 +173,9 @@ struct MeView: View {
                     }
                     if let s = session.status {
                         row("登录为", s.nick.isEmpty ? s.user : "\(s.nick)（\(s.user)）")
+                        Button("手机绑定与换绑") { phoneBinding = true }.disabled(session.busy)
+                        Button("邮箱验证与换绑") { emailBinding = true }.disabled(session.busy)
+                        Button("设置／修改登录密码") { accountPassword = true }.disabled(session.busy)
                         Button("退出登录", role: .destructive) { Task { await session.logout() } }
                             .disabled(session.busy)
                         Button("注销账号", role: .destructive) { deletePw = ""; askDelete = true }
@@ -183,7 +189,7 @@ struct MeView: View {
                         }
                     } else {
                         // 没登录也能做题，但要说清代价 —— 不然「分怎么不涨」查不出来
-                        Text("登录或邮箱注册后，导入自己的错题照片并同步学习资料。")
+                        Text(T("wrongbook.account.guest_note", "登录或验证手机／邮箱注册后，导入自己的错题照片并同步学习资料。"))
                             .font(.footnote).foregroundStyle(Ink.dim)
                         Button("去登录") { Task { await session.logout() } }
                     }
@@ -192,6 +198,9 @@ struct MeView: View {
         }
         .navigationTitle("账号与隐私")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $phoneBinding) { AccountBindingView(phone: true) }
+        .sheet(isPresented: $emailBinding) { AccountBindingView(phone: false) }
+        .sheet(isPresented: $accountPassword) { AccountPasswordView() }
         // App Store 5.1.1(v)：能注册就必须能在 app 内删号。要密码，二次确认，文案说清删什么。
         .alert("注销账号？", isPresented: $askDelete) {
             SecureField("当前密码", text: $deletePw)
