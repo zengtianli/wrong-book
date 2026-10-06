@@ -79,6 +79,7 @@ sh cli/install.sh --check  # 只核对；--uninstall 只删本产品入口的链
 凭据只从环境变量或 stdin 取，不落盘、不回显：`EDU_USER`（邮箱或用户名）、`EDU_PASSWORD`（或 `--password-stdin`）；`EDU_API_BASE` 默认 `https://edu.tianli.cyou`。
 
 ```bash
+mistakes version --json                        # 不登录：命令行与所在 App 版本、服务端是否可达、凭据是否已给
 mistakes status --json                         # 识别额度/订阅、待录入照片与卷子、识别中作业、注销状态
 mistakes wrongs --subject math --json          # 错题本（服务器上的学习存档快照，按课分组）
 mistakes progress --json                       # 今天做了几题、目标、经验、连续天数
@@ -87,7 +88,7 @@ mistakes job <作业号> --wait 60 --json
 mistakes delete upload <照片 id> --yes
 ```
 
-读命令都支持 `--json`，输出 `{"ok": true, …}`；失败输出 `{"ok": false, "err": …}` 且退出码非 0（1 = 服务端拒绝、网络失败或作业失败，2 = 用法错或缺凭据）。读命令不改任何状态。会把图片发给 AI 识别、占用识别额度的命令（`upload`、`import`、`recognize --kind auto|draft`）必须带 `--consent-ai`，同 App 的识别同意；删除和注销必须 `--yes`。
+读命令都支持 `--json`，输出 `{"ok": true, …}`；失败输出 `{"ok": false, "err": …}` 且退出码非 0（1 = 服务端拒绝、网络失败或作业失败，2 = 用法错或缺凭据）；失败输出另带 `error: {code, message}`（`usage` / `rejected` / `failed`），参数写错时带 `--json` 也按这个形状输出。读、写命令的完整清单、退出码表和仅在窗口中的项见 `mistakes --help`。读命令不改任何状态。会把图片发给 AI 识别、占用识别额度的命令（`upload`、`import`、`recognize --kind auto|draft`）必须带 `--consent-ai`，同 App 的识别同意；删除和注销必须 `--yes`。
 
 | App 里能做的 | 命令 |
 |---|---|
@@ -104,7 +105,7 @@ mistakes delete upload <照片 id> --yes
 
 说明：`wrongs` 与 `progress` 读的是服务器上的学习存档快照（设备联网时由练习页同步，后写覆盖），设备离线期间做的题要等下次同步后才看得到；App 的错题本还会显示课程包里的原题行，命令行只列存档里的错题类型。
 
-留在 App 的（纯界面或只在设备上）：拍照与相册选择、页面预览、答题练习本身、每日提醒、离线课程副本、Apple 订阅的购买与恢复（服务端只认 Apple 签名的交易）。
+留在 App 的（纯界面或要真人）：拍照与相册选择、页面预览、答题练习本身、Apple 订阅的购买与恢复（服务端只认 Apple 签名的交易）、先看看、退出登录、政策与支持链接、手表复杂功能的摆放。还没有命令的：每日提醒、离线课程副本的检查更新与停用、配置的 iCloud 同步/导出/导入、检查更新与升级到新版。邮箱注册、邮箱验证与换绑、邮箱找回和修改已有登录密码用同一后端的 `treasury account`。
 
 回归：`python3 Tests/cli_mistakes_test.py` —— 先核打包规则与 `install.sh`（临时 Applications 目录里的假 .app），再起一个隔离的本地服务端（临时目录 + 空闲端口），不碰线上账号、不调 AI；需要同一工作区的 `edu/web/points/server.py`，或用 `EDU_SERVER_PY` 指过去。
 

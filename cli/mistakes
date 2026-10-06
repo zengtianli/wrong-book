@@ -13,6 +13,7 @@ edu-wrong-worker 跑同一份 engine/wrong_ingest.py。这里只组装请求、�
 说明：错题本、今日进度读的是**服务器上的学习存档快照**（/api/archive，设备联网时由练习页同步，
 后写覆盖）；设备离线期间做的题要等它下次同步后才看得到。
 退出码：0 成功；1 服务端拒绝/网络失败/作业失败（--json 时输出 {"ok": false, "err": ...}）；2 用法或缺凭据。
+`mistakes version --json` 不登录：命令行版本、所在 App 的版本（从 .app 里运行时）、服务端是否可达、凭据是否已给。
 """
 from __future__ import annotations
 
@@ -21,6 +22,7 @@ import base64
 import json
 import getpass
 import os
+import plistlib
 import re
 import sys
 import time
@@ -33,7 +35,8 @@ from http.cookiejar import CookieJar
 from pathlib import Path
 
 DEFAULT_API = "https://edu.tianli.cyou"
-AGENT = "mistakes-cli/1.0"
+CLI_VERSION = "1.1"
+AGENT = f"mistakes-cli/{CLI_VERSION}"
 PAPER_SLUG_RE = re.compile(r"^20\d{2}s[12]-g[1-9]-[a-z]{2,12}-[a-z]{2,12}$")   # 同服务端白名单
 PAPER_KINDS = ("final", "mid", "unit", "quiz")                                  # 同 PaperScan.kinds
 
@@ -135,6 +138,35 @@ def session(args, sec: Secrets) -> Client:
 
 
 # ───────────────────────────── 读 ─────────────────────────────
+
+def app_version() -> dict | None:
+    """从 Mac 版 .app 的 Contents/Resources/bin/mistakes 运行时，读所在 App 的版本；仓内入口返回 None。"""
+    info = Path(__file__).resolve().parent.parent.parent / "Info.plist"
+    try:
+        d = plistlib.loads(info.read_bytes())
+    except (OSError, plistlib.InvalidFileException, ValueError):
+        return None
+    return {"bundle_id": d.get("CFBundleIdentifier"), "version": d.get("CFBundleShortVersionString"),
+            "build": d.get("CFBundleVersion"), "path": str(info.parent.parent)}
+
+
+def cmd_version(c, a, sec):
+    """不登录、不写任何东西：只探 /api/health。连不上不算命令失败 —— 这条命令要回答的就是「连得上吗」。"""
+    t0 = time.monotonic()
+    try:
+        c.call("api/health", timeout=min(a.timeout, 10))
+        server = {"reachable": True, "ms": round((time.monotonic() - t0) * 1000)}
+    except Fail as f:
+        server = {"reachable": False, "err": f.msg}
+    app = app_version()
+    creds = {"user": bool(a.user or os.environ.get("EDU_USER") or getattr(a, "sms_phone", None)),
+             "password": bool(os.environ.get("EDU_PASSWORD") or getattr(a, "password_stdin", False))}
+    v = {"ok": True, "cli": CLI_VERSION, "app": app, "api": c.base, "server": server, "credentials": creds}
+    where = f"（{app['bundle_id']} {app['version']} ({app['build']})）" if app else "（仓内入口）"
+    reach = (f"可达 {server['ms']} ms" if server["reachable"] else f"连不上：{server['err']}")
+    ready = "已给" if creds["user"] and creds["password"] else "未给（读写账号数据的命令会退出 2）"
+    return v, lambda: f"mistakes {CLI_VERSION}{where}\n服务端 {c.base}：{reach}\n凭据：{ready}"
+
 
 def _access(a: dict) -> dict:
     return {"enabled": a.get("enabled"), "remaining": a.get("remaining"), "trial_pages": a.get("trial_pages"),
@@ -547,20 +579,62 @@ def cmd_password_set(c, a, sec):
     r = c.call("api/password_set", {"identity_grant": grant, "new": sec.value("EDU_NEW_PASSWORD", "新密码")})
     return {"ok": True, "message": r.get("message")}, lambda: r.get("message", "登录密码已设置")
 
-EXAMPLES = """示例：
+EXAMPLES = """读命令（不改服务端数据；lesson / image 只写 --out 指定的本地文件）：
+  mistakes version                       不登录：命令行与所在 App 版本、服务端是否可达、凭据是否已给
+  mistakes status                        账号概况：AI 识别额度/订阅、待录入照片与卷子、识别中作业、注销状态
+  mistakes wrongs | progress | lessons | lesson | uploads | papers | image | job
+  mistakes account deletion-status       注销进度（或按回执查）
+写命令（改服务端数据；占额度或不可撤销的须显式确认参数，缺了退出 2、什么都不做）：
+  mistakes upload | import | recognize   上传并派 AI 读图（须 --consent-ai，占识别额度）
+  mistakes delete                        真删上传的原图或卷子（须 --yes）
+  mistakes account delete | phone-login | phone-register | phone-recover | phone-bind | password-set
+                                         注销须 --yes；注册须 --agreed；验证码、新密码只从隐藏输入、stdin 或受保护环境变量读
+  邮箱注册、邮箱验证与换绑、邮箱找回、修改已有登录密码用同族 treasury account（同一后端、同一账号）。
+
+--json 输出形状：成功 {"ok": true, …各命令自己的字段}；失败 {"ok": false, "err": "给人看的原因",
+  "error": {"code": "usage | rejected | failed", "message": 同 err}[, "status": HTTP 状态码][, "request_id": 可接续的短信请求]}，
+  同时退出码非零。参数写错时带 --json 也按这个形状输出。
+退出码：
+  0    成功（查无结果也算成功）
+  1    服务端拒绝、网络失败、读图/入库作业失败、读写本地文件失败
+  2    用法错误、缺凭据、缺确认参数（--yes / --consent-ai / --agreed）
+  130  被 Ctrl-C 中断
+
+示例：
   EDU_USER=me@example.com EDU_PASSWORD=… mistakes status --json
   mistakes wrongs --subject math --json            # 服务器存档里的错题本（按课）
   mistakes progress --json                         # 今天几题 / 目标 / 经验 / 连续天数
   mistakes import p1.jpg p2.jpg --year 2026 --term 1 --grade 3 --subject math --kind final --consent-ai --wait 120
   mistakes job auto-20260930-101010-abc123-1790000000-a1b2c3 --wait 60 --json
   mistakes delete upload 20260930-101010-abc123 --yes
-纯界面/设备本地的留在 App：拍照与相册选择、页面预览、每日提醒、离线课程副本、Apple 订阅购买、练习答题本身。"""
+仅在窗口中（要真人，或只在 App 窗口里有意义）：拍照与相册选择、导入前的页面预览与调页序、练习答题本身、
+  Apple 订阅的方案加载/购买/恢复/管理或取消、先看看（不登录）、退出登录（命令不保存登录态）、
+  用户协议/隐私政策/联系支持等链接、Apple Watch 表盘复杂功能的摆放。
+暂无命令（设置存在 App 自己的本机偏好里）：每日提醒的开关与时间、离线课程副本的检查更新与停用、
+  配置的 iCloud 同步/导出/导入、检查更新与升级到新版。"""
+
+
+class Parser(argparse.ArgumentParser):
+    """参数写错时，带 --json 也输出 {"ok": false, …}（退出码仍是 2）；不带 --json 照 argparse 原样。"""
+
+    def error(self, message):
+        if "--json" in sys.argv[1:]:
+            print(json.dumps(fail_json(f"用法错误：{message}", 2), ensure_ascii=False))
+            raise SystemExit(2)
+        super().error(message)
+
+
+def fail_json(msg: str, code: int = 1, status: int | None = None, request_id: str | None = None) -> dict:
+    """失败输出：原有的 err / status / request_id 不变，另带约定的 error: {code, message}。"""
+    return {"ok": False, "err": msg, "error": {"code": "usage" if code == 2 else "rejected" if status else "failed",
+                                                 "message": msg},
+            **({"status": status} if status else {}), **({"request_id": request_id} if request_id else {})}
 
 
 def build() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(prog="mistakes", formatter_class=argparse.RawDescriptionHelpFormatter,
-                                 description="Mistake Notebook · 错题本：错题、导入与识别的命令行。读命令加 --json 输出 {\"ok\": true, …}。",
-                                 epilog=EXAMPLES)
+    ap = Parser(prog="mistakes", formatter_class=argparse.RawDescriptionHelpFormatter,
+                description="Mistake Notebook · 错题本：错题、导入与识别的命令行。每条命令加 --json 输出 {\"ok\": true, …}。",
+                epilog=EXAMPLES)
     ap.add_argument("--api", help="服务端地址（默认 $EDU_API_BASE 或 https://edu.tianli.cyou）")
     ap.add_argument("--user", help="账号：邮箱或用户名（默认 $EDU_USER）")
     ap.add_argument("--sms-phone", help="使用 +86 手机验证码建立本次命令的会话（密码未设置也可用）")
@@ -575,6 +649,7 @@ def build() -> argparse.ArgumentParser:
         p.set_defaults(fn=fn)
         return p
 
+    cmd(sub, "version", cmd_version, "命令行版本、所在 App 版本、服务端是否可达、凭据是否已给（不登录、只读）").set_defaults(anonymous=True)
     cmd(sub, "status", cmd_status, "账号概况：AI 识别额度/订阅、待录入照片与卷子、识别中作业、注销状态")
     p = cmd(sub, "wrongs", cmd_wrongs, "错题本（服务器存档快照，按课分组；一条 = 一类题）")
     p.add_argument("--subject", help="只看一个科目（math / chinese …）")
@@ -632,7 +707,8 @@ def build() -> argparse.ArgumentParser:
     p.add_argument("--page", type=int, help="paper 用：只删这一页")
     p.add_argument("--yes", action="store_true")
 
-    pa = sub.add_parser("account", help="账号注销：状态 / 申请", description="账号注销：状态 / 申请")
+    pa = sub.add_parser("account", help="账号：手机验证码登录/注册/找回/绑定换绑、设登录密码、注销与注销进度",
+                        description="账号：手机验证码登录/注册/找回/绑定换绑、设登录密码、注销与注销进度")
     asub = pa.add_subparsers(dest="sub", metavar="动作", required=True)
     p = cmd(asub, "deletion-status", cmd_deletion_status, "本账号的注销状态（或按回执查）")
     p.add_argument("--receipt", help="注销回执 id（不给则查当前账号）")
@@ -672,15 +748,13 @@ def main(argv: list[str]) -> int:
     except Fail as f:
         if as_json:
             retry = getattr(f, "request_id", None) or getattr(locals().get("c"), "sms_request_id", None)
-            print(json.dumps({"ok": False, "err": f.msg, **({"status": f.status} if f.status else {}),
-                              **({"request_id": retry} if retry else {})},
-                             ensure_ascii=False))
+            print(json.dumps(fail_json(f.msg, f.code, f.status, retry), ensure_ascii=False))
         else:
             print(f"✘ {f.msg}", file=sys.stderr)
         return f.code
     except OSError as e:
         msg = f"读写本地文件失败：{e}"
-        print(json.dumps({"ok": False, "err": msg}, ensure_ascii=False) if as_json else f"✘ {msg}",
+        print(json.dumps(fail_json(msg), ensure_ascii=False) if as_json else f"✘ {msg}",
               file=sys.stdout if as_json else sys.stderr)
         return 1
     if as_json:

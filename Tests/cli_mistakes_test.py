@@ -204,6 +204,35 @@ def main() -> int:
         ck("账号密码错 → 1 且带 401", code == 1 and out["ok"] is False and out.get("status") == 401, str(out))
         code, out, _ = run(["status", "--json"], extra={"EDU_API_BASE": "http://127.0.0.1:9"})
         ck("连不上服务端 → 1", code == 1 and out["ok"] is False, str(out))
+
+        print("【给 Agent 的约定：顶层帮助四样、version 读回、失败形状】")
+        _, _, top = run(["--help"], user=None, pw=None)
+        for word in ("读命令", "写命令", "--json 输出形状", "退出码", "仅在窗口中", "暂无命令"):
+            ck(f"顶层帮助有「{word}」", word in top)
+        ck("顶层帮助的退出码表列了 0 / 1 / 2 / 130", all(re.search(rf"(?m)^\s+{n}\s", top) for n in (0, 1, 2, 130)), top[-900:])
+        for name in ("version", "status", "wrongs", "progress", "lessons", "lesson", "uploads", "papers", "image", "job",
+                     "upload", "import", "recognize", "delete", "account"):
+            ck(f"顶层帮助把 {name} 列为命令", re.search(rf"(?m)^\s+(?:mistakes\s+)?{name}(?![\w-])", top) is not None
+               or re.search(rf"\|\s*{name}(?![\w-])", top) is not None)
+        code, out, _ = run(["version", "--json"], user=None, pw=None)
+        ck("version 不登录 → 0，报版本、服务端可达、凭据未给",
+           code == 0 and out["ok"] is True and out["cli"] and out["server"]["reachable"] is True
+           and out["api"] == base and out["credentials"] == {"user": False, "password": False}, str(out))
+        code, out, _ = run(["version", "--json"])
+        ck("version 给了凭据也不登录，只报「已给」", code == 0 and out["credentials"] == {"user": True, "password": True}, str(out))
+        code, out, _ = run(["version", "--json"], user=None, pw=None, extra={"EDU_API_BASE": "http://127.0.0.1:9"})
+        ck("version 连不上服务端 → 仍 0，reachable:false 带原因",
+           code == 0 and out["server"]["reachable"] is False and out["server"]["err"], str(out))
+        code, out, _ = run(["wrongs", "--no-such-flag", "--json"])
+        ck("参数写错带 --json → 2，输出 ok:false 与 error.code=usage",
+           code == 2 and out is not None and out["ok"] is False and out["error"]["code"] == "usage" and out["err"], str(out))
+        code, out, text = run(["wrongs", "--no-such-flag"])
+        ck("参数写错不带 --json → 2，照 argparse 原样写 stderr", code == 2 and "unrecognized arguments" in text, text[-200:])
+        code, out, _ = run(["status", "--json"], pw="wrong-pass")
+        ck("服务端拒绝 → error.code=rejected，原有 err / status 不变",
+           code == 1 and out["error"] == {"code": "rejected", "message": out["err"]} and out["status"] == 401, str(out))
+        code, out, _ = run(["status", "--json"], extra={"EDU_API_BASE": "http://127.0.0.1:9"})
+        ck("网络失败 → error.code=failed", code == 1 and out["error"]["code"] == "failed", str(out))
         code, out, _ = run(["--password-stdin", "status", "--json"], pw=None, stdin=PW + "\n")
         ck("--password-stdin 也能登录", code == 0 and out["ok"] is True, str(out))
 

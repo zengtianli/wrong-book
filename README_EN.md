@@ -81,6 +81,7 @@ If the installed Mac edition is an older build without the command, `install.sh`
 Credentials come only from environment variables or stdin and are never stored or echoed: `EDU_USER` (email or username), `EDU_PASSWORD` (or `--password-stdin`); `EDU_API_BASE` defaults to `https://edu.tianli.cyou`.
 
 ```bash
+mistakes version --json                        # no sign-in: CLI and containing app version, server reachable or not, credentials present or not
 mistakes status --json                         # recognition quota/subscription, pending photos and papers, running jobs, deletion state
 mistakes wrongs --subject math --json          # the mistake notebook (server snapshot of the practice archive, grouped by lesson)
 mistakes progress --json                       # questions done today, daily goal, XP, streak
@@ -89,7 +90,7 @@ mistakes job <job-id> --wait 60 --json
 mistakes delete upload <photo-id> --yes
 ```
 
-Every read command supports `--json` and prints `{"ok": true, …}`; failures print `{"ok": false, "err": …}` and exit non-zero (1 = refused by the server, network failure or failed job; 2 = usage error or missing credentials). Read commands never change state. Commands that send images to AI recognition and use quota (`upload`, `import`, `recognize --kind auto|draft`) require `--consent-ai`, matching the app's consent step; deletions require `--yes`.
+Every read command supports `--json` and prints `{"ok": true, …}`; failures print `{"ok": false, "err": …}` and exit non-zero (1 = refused by the server, network failure or failed job; 2 = usage error or missing credentials); failures also carry `error: {code, message}` (`usage` / `rejected` / `failed`), and a mistyped argument with `--json` prints the same shape. `mistakes --help` lists every read and write command, the exit-code table and the window-only items. Read commands never change state. Commands that send images to AI recognition and use quota (`upload`, `import`, `recognize --kind auto|draft`) require `--consent-ai`, matching the app's consent step; deletions require `--yes`.
 
 | In the app | Command |
 |---|---|
@@ -106,7 +107,7 @@ Every read command supports `--json` and prints `{"ok": true, …}`; failures pr
 
 Note: `wrongs` and `progress` read the server snapshot of the practice archive (synced by the practice pages while a device is online, last write wins), so work done offline appears after the next sync; the app's notebook also shows the original question rows from the lesson pack, while the command line lists the mistake types stored in the archive.
 
-GUI-only (pure interface or device-only): taking or picking photos, page previews, answering practice questions, daily reminders, offline lesson copies, and buying or restoring the Apple subscription (the server only trusts Apple-signed transactions).
+GUI-only (pure interface or needs a person): taking or picking photos, page previews, answering practice questions, buying or restoring the Apple subscription (the server only trusts Apple-signed transactions), browsing without signing in, signing out, the policy and support links, and placing watch complications. No command yet: daily reminders, checking for updates to or disabling the offline lesson copies, iCloud sync/export/import of settings, checking for updates and upgrading. Email registration, email verification and change, email recovery and changing an existing password use `treasury account` on the same backend.
 
 Regression: `python3 Tests/cli_mistakes_test.py` first checks the packaging rule and `install.sh` (a fake .app in a temporary Applications folder), then starts an isolated local server (temporary directory, free port), never touches live accounts and never calls the AI; it needs `edu/web/points/server.py` from the same workspace, or `EDU_SERVER_PY` pointing to it.
 

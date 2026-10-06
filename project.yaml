@@ -107,6 +107,110 @@ sop:
   cli:
     commands:
     - mistakes
+  # 界面功能对照（每项功能都能不点界面完成，2026-10-07）：从 Sources/ 与 Watch/ 的界面源码逐项列。
+  # 邮箱注册/验证换绑/找回与修改已有密码走同族 treasury account（同一后端、同一账号，不在 mistakes 里再写一份）。
+  # 手机端没法装命令行，用本机 Mac 版自带的 mistakes 对应；读回 mistakes version 不登录、只读。
+  agent_cli:
+    readback: mistakes version
+    features:
+    - name: 手机验证码登录
+      command: mistakes account phone-login
+    - name: 账号密码登录
+      command: mistakes status
+    - name: 先看看（不登录浏览）
+      human: 只在 App 窗口里有意义：游客模式只显示随包的空白清单，没有服务端数据
+    - name: 手机号注册
+      command: mistakes account phone-register
+    - name: 邮箱注册
+      command: treasury account register
+    - name: 忘记密码（手机号）
+      command: mistakes account phone-recover
+    - name: 忘记密码（邮箱）
+      command: treasury account recover
+    - name: 阅读用户协议与隐私政策
+      human: 只在窗口里有意义：打开随包正文或网页，同帮助页
+    - name: 错题本列表（含下拉刷新）
+      command: mistakes wrongs
+    - name: 学科筛选
+      command: mistakes wrongs
+    - name: 只看待巩固
+      command: mistakes wrongs
+    - name: 搜索题目或来源（含 ⌘K）
+      command: mistakes wrongs
+    - name: 打开题目练习页
+      command: mistakes lesson
+    - name: 练习答题
+      human: 要孩子本人作答；判题在练习页里完成
+    - name: 复习列表
+      command: mistakes wrongs
+    - name: 今天的任务进度与连续天数
+      command: mistakes progress
+    - name: 拍照导入
+      human: 要真人用实机相机拍；已有图片文件时用 mistakes import
+    - name: 从相册或文件选图片导入
+      command: mistakes import
+    - name: 选科目、学年、学期、年级、卷种与备注
+      command: mistakes import
+    - name: 调整页序与删页
+      command: mistakes import
+    - name: 导入前的页面预览
+      human: 只在窗口里有意义：上传前在屏幕上看缩略图
+    - name: 同意 AI 识别并上传
+      command: mistakes import
+    - name: 上传与识别进度
+      command: mistakes job
+    - name: AI 识别额度与订阅状态
+      command: mistakes status
+    - name: 刷新额度与订阅
+      command: mistakes status
+    - name: 加载订阅方案并购买
+      human: Apple 付款面板须真人在设备上确认
+    - name: 恢复购买
+      human: StoreKit 绑定设备上登录的 Apple 账户，须真人在设备上确认
+    - name: 管理或取消订阅
+      human: 跳到 App Store 的订阅管理页，由本人操作
+    - name: 每日提醒的开关与时间
+      missing: 没有命令：设置存在 App 自己的本机偏好里，由 App 排本机通知
+    - name: 离线课程包清单
+      command: mistakes lessons
+    - name: 离线课程现在检查更新
+      missing: 没有命令：本机课程副本由 App 自己同步，命令只能读服务端清单
+    - name: 停用本机课程副本
+      missing: 没有命令：副本在 App 自己的本机存储里
+    - name: 账号信息
+      command: mistakes status
+    - name: 手机绑定与换绑
+      command: mistakes account phone-bind
+    - name: 邮箱验证与换绑
+      command: treasury account email-bind
+    - name: 设置登录密码（未设过）
+      command: mistakes account password-set
+    - name: 修改登录密码
+      command: treasury account passwd
+    - name: 退出登录
+      human: 只对 App 里那份登录态有意义：命令不保存登录态，cookie 只在本次进程内存里
+    - name: 注销账号
+      command: mistakes account delete
+    - name: 刷新注销进度
+      command: mistakes account deletion-status
+    - name: 联系支持与完整隐私说明链接
+      human: 只在窗口里有意义：打开网页或邮件
+    - name: 使用 iCloud 记住配置
+      missing: 共享生命周期模块暂无命令入口
+    - name: 导出配置
+      missing: 共享生命周期模块暂无命令入口
+    - name: 导入配置
+      missing: 共享生命周期模块暂无命令入口
+    - name: 检查更新
+      missing: 共享生命周期模块暂无命令入口
+    - name: 升级到新版
+      missing: 共享生命周期模块暂无命令入口
+    - name: Apple Watch 只读摘要（待巩固、今天几题、连续几天）
+      command: mistakes progress
+    - name: Apple Watch 先复习哪几类
+      command: mistakes wrongs
+    - name: Apple Watch 表盘复杂功能
+      human: 要真人在表盘上摆放；显示的数字同 mistakes progress
   runtime:
     kind: ios
     readback: builtin:asc-device
