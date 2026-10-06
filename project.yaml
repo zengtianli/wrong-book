@@ -130,19 +130,19 @@ sop:
     - name: 阅读用户协议与隐私政策
       human: 只在窗口里有意义：打开随包正文或网页，同帮助页
     - name: 错题本列表（含下拉刷新）
-      command: mistakes wrongs
+      command: mistakes questions
     - name: 学科筛选
-      command: mistakes wrongs
+      command: mistakes questions
     - name: 只看待巩固
-      command: mistakes wrongs
+      command: mistakes questions
     - name: 搜索题目或来源（含 ⌘K）
-      command: mistakes wrongs
+      command: mistakes questions
     - name: 打开题目练习页
       command: mistakes lesson
     - name: 练习答题
-      human: 要孩子本人作答；判题在练习页里完成
+      human: 要孩子本人作答：练习结果是孩子的学习记录，判题与写存档随作答在练习页里完成，命令不代答
     - name: 复习列表
-      command: mistakes wrongs
+      command: mistakes questions
     - name: 今天的任务进度与连续天数
       command: mistakes progress
     - name: 拍照导入
@@ -171,6 +171,8 @@ sop:
       human: 跳到 App Store 的订阅管理页，由本人操作
     - name: 每日提醒的开关与时间
       missing: 没有命令：设置存在 App 自己的本机偏好里，由 App 排本机通知
+    - name: 同步错题（顶栏按钮与 ⌘R）
+      missing: 没有命令：把课程包拉进 App 本机副本由 App 自己做；命令直读服务端（mistakes questions / lessons）
     - name: 离线课程包清单
       command: mistakes lessons
     - name: 离线课程现在检查更新
@@ -188,7 +190,7 @@ sop:
     - name: 修改登录密码
       command: treasury account passwd
     - name: 退出登录
-      human: 只对 App 里那份登录态有意义：命令不保存登录态，cookie 只在本次进程内存里
+      missing: 命令够不到 App 里那份登录态（App 退出还会清本机缓存并让手表下线）；命令自己不保存登录态
     - name: 注销账号
       command: mistakes account delete
     - name: 刷新注销进度
@@ -205,6 +207,8 @@ sop:
       missing: 共享生命周期模块暂无命令入口
     - name: 升级到新版
       missing: 共享生命周期模块暂无命令入口
+    - name: 选择 iCloud Drive 更新目录…（Mac 版）
+      human: 要真人在系统目录面板里选目录并授权；授权只保存在这台 Mac
     - name: Apple Watch 只读摘要（待巩固、今天几题、连续几天）
       command: mistakes progress
     - name: Apple Watch 先复习哪几类

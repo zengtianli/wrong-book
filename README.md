@@ -81,7 +81,8 @@ sh cli/install.sh --check  # 只核对；--uninstall 只删本产品入口的链
 ```bash
 mistakes version --json                        # 不登录：命令行与所在 App 版本、服务端是否可达、凭据是否已给
 mistakes status --json                         # 识别额度/订阅、待录入照片与卷子、识别中作业、注销状态
-mistakes wrongs --subject math --json          # 错题本（服务器上的学习存档快照，按课分组）
+mistakes questions --pending --json            # 错题本 / 复习列表：课程包里的原题行，这里只看待巩固
+mistakes wrongs --subject math --json          # 存档里的错题类型（服务器上的学习存档快照，按课分组）
 mistakes progress --json                       # 今天做了几题、目标、经验、连续天数
 mistakes import p1.jpg p2.jpg --year 2026 --term 1 --grade 3 --subject math --kind final --consent-ai --wait 120
 mistakes job <作业号> --wait 60 --json
@@ -93,7 +94,8 @@ mistakes delete upload <照片 id> --yes
 | App 里能做的 | 命令 |
 |---|---|
 | 设置里的账号、AI 识别额度与订阅状态、注销进度 | `mistakes status` / `mistakes account deletion-status [--receipt 回执]` |
-| 错题本 / 复习（按课、按科目、搜索） | `mistakes wrongs [--subject] [--search]` |
+| 错题本 / 复习列表（每道原题一行、按科目、只看待巩固、搜索） | `mistakes questions [--subject] [--pending] [--search]` |
+| 错题类型与错几次、已订正几次（手表「先复习哪几类」同源） | `mistakes wrongs [--subject] [--search]` |
 | 今日任务、经验、连续天数 | `mistakes progress` |
 | 个人课程包清单 / 下载一课 | `mistakes lessons` / `mistakes lesson <slug> --out 文件` |
 | 导入整卷（逐页上传、自动识别） | `mistakes import <图片…> --slug 或 --year --term --grade --subject --kind` |
@@ -103,9 +105,9 @@ mistakes delete upload <照片 id> --yes
 | 删除上传 | `mistakes delete upload\|paper <id> --yes` |
 | 注销账号（先即时删除，有扫描记录时转为注销申请） | `mistakes account delete --yes` |
 
-说明：`wrongs` 与 `progress` 读的是服务器上的学习存档快照（设备联网时由练习页同步，后写覆盖），设备离线期间做的题要等下次同步后才看得到；App 的错题本还会显示课程包里的原题行，命令行只列存档里的错题类型。
+说明：`wrongs` 与 `progress` 读的是服务器上的学习存档快照（设备联网时由练习页同步，后写覆盖），设备离线期间做的题要等下次同步后才看得到；`questions` 直读服务端课程包，列出与 App 错题本同样的原题行（不带答案与选项），待巩固按存档里同课同题型标出；`wrongs` 只列存档里的错题类型。
 
-留在 App 的（纯界面或要真人）：拍照与相册选择、页面预览、答题练习本身、Apple 订阅的购买与恢复（服务端只认 Apple 签名的交易）、先看看、退出登录、政策与支持链接、手表复杂功能的摆放。还没有命令的：每日提醒、离线课程副本的检查更新与停用、配置的 iCloud 同步/导出/导入、检查更新与升级到新版。邮箱注册、邮箱验证与换绑、邮箱找回和修改已有登录密码用同一后端的 `treasury account`。
+留在 App 的（纯界面或要真人）：拍照（已有图片文件用 `import`，参数顺序即页序）、页面预览、答题练习本身、Apple 订阅的购买与恢复（服务端只认 Apple 签名的交易）、先看看、Mac 版「选择 iCloud Drive 更新目录…」、政策与支持链接、手表复杂功能的摆放。还没有命令的：每日提醒、同步错题与离线课程副本的检查更新/停用（都在 App 本机存储里）、退出登录（命令够不到 App 里那份登录态）、配置的 iCloud 同步/导出/导入、检查更新与升级到新版。邮箱注册、邮箱验证与换绑、邮箱找回和修改已有登录密码用同一后端的 `treasury account`。
 
 回归：`python3 Tests/cli_mistakes_test.py` —— 先核打包规则与 `install.sh`（临时 Applications 目录里的假 .app），再起一个隔离的本地服务端（临时目录 + 空闲端口），不碰线上账号、不调 AI；需要同一工作区的 `edu/web/points/server.py`，或用 `EDU_SERVER_PY` 指过去。
 

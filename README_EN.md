@@ -83,7 +83,8 @@ Credentials come only from environment variables or stdin and are never stored o
 ```bash
 mistakes version --json                        # no sign-in: CLI and containing app version, server reachable or not, credentials present or not
 mistakes status --json                         # recognition quota/subscription, pending photos and papers, running jobs, deletion state
-mistakes wrongs --subject math --json          # the mistake notebook (server snapshot of the practice archive, grouped by lesson)
+mistakes questions --pending --json            # notebook / review list: original question rows from the lesson pack, here only those still to review
+mistakes wrongs --subject math --json          # mistake types in the archive (server snapshot of the practice archive, grouped by lesson)
 mistakes progress --json                       # questions done today, daily goal, XP, streak
 mistakes import p1.jpg p2.jpg --year 2026 --term 1 --grade 3 --subject math --kind final --consent-ai --wait 120
 mistakes job <job-id> --wait 60 --json
@@ -95,7 +96,8 @@ Every read command supports `--json` and prints `{"ok": true, …}`; failures pr
 | In the app | Command |
 |---|---|
 | Account, AI quota and subscription state, deletion progress in Settings | `mistakes status` / `mistakes account deletion-status [--receipt ID]` |
-| Mistake notebook / review (by lesson, by subject, search) | `mistakes wrongs [--subject] [--search]` |
+| Mistake notebook / review list (one row per original question, by subject, to-review only, search) | `mistakes questions [--subject] [--pending] [--search]` |
+| Mistake types with wrong and corrected counts (same source as the watch's "review first") | `mistakes wrongs [--subject] [--search]` |
 | Today's goal, XP, streak | `mistakes progress` |
 | Personal lesson pack / download one lesson | `mistakes lessons` / `mistakes lesson <slug> --out FILE` |
 | Import a paper (page-by-page upload, automatic recognition) | `mistakes import <images…> --slug or --year --term --grade --subject --kind` |
@@ -105,9 +107,9 @@ Every read command supports `--json` and prints `{"ok": true, …}`; failures pr
 | Delete an upload | `mistakes delete upload\|paper <id> --yes` |
 | Delete the account (immediate deletion first, a deletion request when scan history exists) | `mistakes account delete --yes` |
 
-Note: `wrongs` and `progress` read the server snapshot of the practice archive (synced by the practice pages while a device is online, last write wins), so work done offline appears after the next sync; the app's notebook also shows the original question rows from the lesson pack, while the command line lists the mistake types stored in the archive.
+Note: `wrongs` and `progress` read the server snapshot of the practice archive (synced by the practice pages while a device is online, last write wins), so work done offline appears after the next sync; `questions` reads the lesson pack from the server and lists the same original question rows as the app's notebook (no answers or options), marking those still to review from the archive; `wrongs` lists only the mistake types stored in the archive.
 
-GUI-only (pure interface or needs a person): taking or picking photos, page previews, answering practice questions, buying or restoring the Apple subscription (the server only trusts Apple-signed transactions), browsing without signing in, signing out, the policy and support links, and placing watch complications. No command yet: daily reminders, checking for updates to or disabling the offline lesson copies, iCloud sync/export/import of settings, checking for updates and upgrading. Email registration, email verification and change, email recovery and changing an existing password use `treasury account` on the same backend.
+GUI-only (pure interface or needs a person): taking photos (use `import` for existing image files; argument order is page order), page previews, answering practice questions, buying or restoring the Apple subscription (the server only trusts Apple-signed transactions), browsing without signing in, choosing the iCloud Drive update folder on the Mac, the policy and support links, and placing watch complications. No command yet: daily reminders, syncing mistakes and checking for updates to or disabling the offline lesson copies (all kept in the app's own storage), signing out (the command cannot reach the app's own session), iCloud sync/export/import of settings, checking for updates and upgrading. Email registration, email verification and change, email recovery and changing an existing password use `treasury account` on the same backend.
 
 Regression: `python3 Tests/cli_mistakes_test.py` first checks the packaging rule and `install.sh` (a fake .app in a temporary Applications folder), then starts an isolated local server (temporary directory, free port), never touches live accounts and never calls the AI; it needs `edu/web/points/server.py` from the same workspace, or `EDU_SERVER_PY` pointing to it.
 

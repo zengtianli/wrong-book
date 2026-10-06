@@ -35,7 +35,7 @@ from http.cookiejar import CookieJar
 from pathlib import Path
 
 DEFAULT_API = "https://edu.tianli.cyou"
-CLI_VERSION = "1.1"
+CLI_VERSION = "1.2"
 AGENT = f"mistakes-cli/{CLI_VERSION}"
 PAPER_SLUG_RE = re.compile(r"^20\d{2}s[12]-g[1-9]-[a-z]{2,12}-[a-z]{2,12}$")   # 同服务端白名单
 PAPER_KINDS = ("final", "mid", "unit", "quiz")                                  # 同 PaperScan.kinds
@@ -270,6 +270,99 @@ def cmd_wrongs(c, a, sec):
                 out.append(f"   {e['gname']}：{'手动收进' if e['manual'] and not e['wrong'] else '错 %d 次' % e['wrong']}{prog}"
                            + (f" —— {e['q']}" if e["q"] else ""))
         return "\n".join(out) or "（服务器存档里没有错题）"
+    return v, text
+
+
+def _plain(html: str) -> str:
+    """同 QuestionIndex.plain：去标签、还原常见实体、压空白。"""
+    text = re.sub(r"<[^>]+>", " ", html)
+    for src, dst in (("&lt;", "<"), ("&gt;", ">"), ("&quot;", '"'), ("&#x27;", "'"), ("&#39;", "'"), ("&nbsp;", " "),
+                     ("&amp;", "&")):
+        text = text.replace(src, dst)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _lesson_items(html: str):
+    """同 QuestionIndex.parse：只读练习页 PRACTICE.init(… items: [...]) 里的 uid / gid / q / ask / own，
+    不读答案与选项。认不出题目数组时返回 None（App 把这样的课显示成一行「练习资料」）。"""
+    i = html.rfind("PRACTICE.init(")
+    j = html.find("items:", i + 14) if i >= 0 else -1
+    start = html.find("[", j + 6) if j >= 0 else -1
+    if start < 0:
+        return None
+    quoted = escaped = False
+    depth, end = 0, -1
+    for k in range(start, len(html)):
+        ch = html[k]
+        if quoted:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                quoted = False
+        elif ch == '"':
+            quoted = True
+        elif ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth -= 1
+            if depth == 0:
+                end = k + 1
+                break
+    if end < 0:
+        return None
+    try:
+        rows = json.loads(html[start:end])
+    except ValueError:
+        return None
+    if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
+        return None
+    private = re.search(r"privateItems:\s*true", html[end:]) is not None
+    out = []
+    for r in rows:
+        uid, q = r.get("uid"), r.get("q")
+        if not (isinstance(uid, str) and uid and isinstance(q, str) and q and (private or r.get("own") == 1)):
+            continue
+        ask = r.get("ask") if isinstance(r.get("ask"), str) else ""
+        gid = "photo:" + uid if private else (r.get("gid") if isinstance(r.get("gid"), str) else "")
+        out.append({"uid": uid, "gid": gid, "text": _plain(q + (" " + ask if ask else "")), "private": private})
+    return out
+
+
+def cmd_questions(c, a, sec):
+    """同 App 的错题本 / 复习列表（FocusLibraryView + QuestionIndex）：课程包里的每道原题一行；
+    「待巩固」= 存档里同一课有同 gid 的错题类型。直读服务端课程包与存档，不经 App 的本机副本。"""
+    (arch, ts), man = _archive(c), c.call("api/lessons")
+    pending = {}
+    for key, raw in arch.items():
+        if key.startswith("edu:") and not key.startswith("edu:@"):
+            pending[key[4:]] = {j["gid"] for j in (_json_obj(raw) or {}).get("wrong") or []
+                                if isinstance(j, dict) and isinstance(j.get("gid"), str) and j["gid"]}
+    items, bare = [], []
+    for x in man.get("lessons") or []:
+        if not x.get("file") or (a.subject and x.get("subject") != a.subject):
+            continue
+        rows = _lesson_items(c.raw("api/lesson", {"file": x["file"]}).decode("utf-8", "replace"))
+        lesson = {"slug": x.get("slug") or "", "title": x.get("title") or "", "subject": x.get("subject") or "",
+                  "subject_name": x.get("subject_name") or ""}
+        if not rows:
+            bare.append({**lesson, "pending": bool(pending.get(lesson["slug"]))})
+            continue
+        items += [{**lesson, **r, "pending": r["gid"] in pending.get(lesson["slug"], ())} for r in rows]
+    if a.pending:
+        items, bare = [i for i in items if i["pending"]], [b for b in bare if b["pending"]]
+    if a.search:
+        t = a.search.lower()
+        items = [i for i in items if t in (i["text"] + i["title"] + i["subject_name"]).lower()]
+        bare = [b for b in bare if t in b["title"].lower()]
+    v = {"ok": True, "source": "lesson_pack", "archive_ts": ts or None, "count": len(items),
+         "pending": sum(1 for i in items if i["pending"]), "items": items, "lessons_without_items": bare}
+    def text():
+        out = [f"{i['subject_name'] or i['subject']} · {i['text']}  —— {i['title']}" + ("  [待巩固]" if i["pending"] else "")
+               for i in items]
+        out += [f"{b['subject_name'] or b['subject']} · {b['title']}  [练习资料：打开查看题目]" for b in bare]
+        return "\n".join(out) or ("（没有待巩固的题）" if a.pending else "（课程包里还没有题目：先导入错题图片）")
     return v, text
 
 
@@ -582,7 +675,7 @@ def cmd_password_set(c, a, sec):
 EXAMPLES = """读命令（不改服务端数据；lesson / image 只写 --out 指定的本地文件）：
   mistakes version                       不登录：命令行与所在 App 版本、服务端是否可达、凭据是否已给
   mistakes status                        账号概况：AI 识别额度/订阅、待录入照片与卷子、识别中作业、注销状态
-  mistakes wrongs | progress | lessons | lesson | uploads | papers | image | job
+  mistakes questions | wrongs | progress | lessons | lesson | uploads | papers | image | job
   mistakes account deletion-status       注销进度（或按回执查）
 写命令（改服务端数据；占额度或不可撤销的须显式确认参数，缺了退出 2、什么都不做）：
   mistakes upload | import | recognize   上传并派 AI 读图（须 --consent-ai，占识别额度）
@@ -602,16 +695,19 @@ EXAMPLES = """读命令（不改服务端数据；lesson / image 只写 --out �
 
 示例：
   EDU_USER=me@example.com EDU_PASSWORD=… mistakes status --json
-  mistakes wrongs --subject math --json            # 服务器存档里的错题本（按课）
+  mistakes questions --pending --json              # 同 App 复习页：课程包里待巩固的原题行
+  mistakes wrongs --subject math --json            # 服务器存档里的错题类型（按课）
   mistakes progress --json                         # 今天几题 / 目标 / 经验 / 连续天数
   mistakes import p1.jpg p2.jpg --year 2026 --term 1 --grade 3 --subject math --kind final --consent-ai --wait 120
   mistakes job auto-20260930-101010-abc123-1790000000-a1b2c3 --wait 60 --json
   mistakes delete upload 20260930-101010-abc123 --yes
-仅在窗口中（要真人，或只在 App 窗口里有意义）：拍照与相册选择、导入前的页面预览与调页序、练习答题本身、
-  Apple 订阅的方案加载/购买/恢复/管理或取消、先看看（不登录）、退出登录（命令不保存登录态）、
+仅在窗口中（要真人，或只在 App 窗口里有意义）：拍照（已有图片文件用 import：按参数顺序即页序，不给即删页）、
+  导入前的页面预览、练习答题本身（要孩子本人作答）、Apple 订阅的方案加载/购买/恢复/管理或取消、
+  先看看（不登录）、Mac 版「选择 iCloud Drive 更新目录…」（系统目录授权）、
   用户协议/隐私政策/联系支持等链接、Apple Watch 表盘复杂功能的摆放。
-暂无命令（设置存在 App 自己的本机偏好里）：每日提醒的开关与时间、离线课程副本的检查更新与停用、
-  配置的 iCloud 同步/导出/导入、检查更新与升级到新版。"""
+暂无命令：每日提醒的开关与时间、同步错题（顶栏按钮与 ⌘R）与离线课程副本的检查更新/停用（都在 App 自己的本机存储里）、
+  退出登录（命令够不到 App 里那份登录态；命令自己不保存登录态）、
+  配置的 iCloud 同步/导出/导入、检查更新与升级到新版（共享生命周期模块暂无命令入口）。"""
 
 
 class Parser(argparse.ArgumentParser):
@@ -654,6 +750,10 @@ def build() -> argparse.ArgumentParser:
     p = cmd(sub, "wrongs", cmd_wrongs, "错题本（服务器存档快照，按课分组；一条 = 一类题）")
     p.add_argument("--subject", help="只看一个科目（math / chinese …）")
     p.add_argument("--search", help="按题型名、题面摘要、课名搜索")
+    p = cmd(sub, "questions", cmd_questions, "错题本 / 复习列表（同 App：课程包里的每道原题一行，标出待巩固；不带答案）")
+    p.add_argument("--subject", help="只看一个科目（math / chinese / english）")
+    p.add_argument("--pending", action="store_true", help="只看待巩固（同 App 的「待巩固」开关与复习页）")
+    p.add_argument("--search", help="按题面、课名、科目名搜索")
     cmd(sub, "progress", cmd_progress, "今日任务与成长：今天做了几题、目标、经验、连续天数")
     cmd(sub, "lessons", cmd_lessons, "个人课程包清单（App 同步的那份）")
     p = cmd(sub, "lesson", cmd_lesson, "下载一份个人练习页 HTML（同网页「下载」）")

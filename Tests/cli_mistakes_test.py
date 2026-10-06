@@ -209,8 +209,12 @@ def main() -> int:
         _, _, top = run(["--help"], user=None, pw=None)
         for word in ("读命令", "写命令", "--json 输出形状", "退出码", "仅在窗口中", "暂无命令"):
             ck(f"顶层帮助有「{word}」", word in top)
+        window = top[top.index("仅在窗口中"):top.index("暂无命令")]
+        ck("「仅在窗口中」不再列 import 做得到的相册选择与调页序，列了 Mac 的 iCloud Drive 更新目录",
+           "相册" not in window and "调页序" not in window and "iCloud Drive 更新目录" in window, window)
+        ck("退出登录、同步错题列在「暂无命令」", "退出登录" not in window and all(w in top[top.index("暂无命令"):] for w in ("退出登录", "同步错题")))
         ck("顶层帮助的退出码表列了 0 / 1 / 2 / 130", all(re.search(rf"(?m)^\s+{n}\s", top) for n in (0, 1, 2, 130)), top[-900:])
-        for name in ("version", "status", "wrongs", "progress", "lessons", "lesson", "uploads", "papers", "image", "job",
+        for name in ("version", "status", "questions", "wrongs", "progress", "lessons", "lesson", "uploads", "papers", "image", "job",
                      "upload", "import", "recognize", "delete", "account"):
             ck(f"顶层帮助把 {name} 列为命令", re.search(rf"(?m)^\s+(?:mistakes\s+)?{name}(?![\w-])", top) is not None
                or re.search(rf"\|\s*{name}(?![\w-])", top) is not None)
@@ -253,7 +257,14 @@ def main() -> int:
         inst = json.loads((home / "users.json").read_text())["users"][uname]["account_instance"]
         root = home / "lessons" / uname / inst
         root.mkdir(parents=True)
-        (root / "scan-a.html").write_text("<!doctype html><title>scan</title><p>cli fixture</p>", encoding="utf-8")
+        # 练习页夹具带 PRACTICE.init(… items: [...])：同 App 的 QuestionIndex 读的那一段（题面里放了标签、实体和方括号）
+        (root / "scan-a.html").write_text(
+            "<!doctype html><title>scan</title><p>cli fixture</p><script>PRACTICE.init({slug: \"scan-a\", items: ["
+            + json.dumps({"uid": "u1", "gid": "carry-add", "q": "38+47=<b>?</b>", "ask": "列竖式 [进位]", "own": 1,
+                          "ans": "85"}, ensure_ascii=False) + ","
+            + json.dumps({"uid": "u2", "gid": "other", "q": "9&lt;10 对吗", "own": 1}, ensure_ascii=False) + ","
+            + json.dumps({"uid": "u3", "gid": "shared", "q": "不是自己的题", "own": 0}, ensure_ascii=False)
+            + "], privateItems: false});</script>", encoding="utf-8")
         (root / "manifest.json").write_text(json.dumps({"lessons": [
             {"slug": "scan-a", "title": "拍照错题 · 进位加法", "subject": "math", "file": "scan-a.html"}]}),
             encoding="utf-8")
@@ -288,6 +299,22 @@ def main() -> int:
         ck("wrongs --search 课名 → 这一课全部两类（同 App：课名也参与搜索）", code == 0 and wr["types"] == 2, str(wr)[:200])
         code, wr, _ = run(["wrongs", "--subject", "math", "--json"])
         ck("wrongs --subject math → 只剩课程包里的数学课", code == 0 and [x["slug"] for x in wr["groups"]] == ["scan-a"])
+        code, qs, _ = run(["questions", "--json"])
+        q1 = next((x for x in qs.get("items") or [] if x["uid"] == "u1"), {})
+        ck("questions：课程包里自己的两道原题（同 App 错题本列表），不带答案",
+           code == 0 and qs["count"] == 2 and qs["source"] == "lesson_pack" and [x["uid"] for x in qs["items"]] == ["u1", "u2"]
+           and all("ans" not in x for x in qs["items"]), str(qs)[:300])
+        ck("questions：题面去标签、还原实体；存档里同 gid 的标待巩固",
+           q1.get("text") == "38+47= ? 列竖式 [进位]" and q1.get("pending") is True and qs["pending"] == 1
+           and qs["items"][1]["text"] == "9<10 对吗" and qs["items"][1]["pending"] is False, str(qs)[:300])
+        code, qs, _ = run(["questions", "--pending", "--json"])
+        ck("questions --pending → 只剩待巩固那一道（同复习页）", code == 0 and [x["uid"] for x in qs["items"]] == ["u1"], str(qs)[:200])
+        code, qs, _ = run(["questions", "--search", "竖式", "--json"])
+        ck("questions --search 题面 → 1 道", code == 0 and qs["count"] == 1, str(qs)[:200])
+        code, qs, _ = run(["questions", "--search", "拍照错题", "--json"])
+        ck("questions --search 课名 → 这一课两道", code == 0 and qs["count"] == 2, str(qs)[:200])
+        code, qs, _ = run(["questions", "--subject", "chinese", "--json"])
+        ck("questions --subject chinese → 0 道，仍退出 0", code == 0 and qs["count"] == 0 and qs["ok"] is True, str(qs)[:200])
         code, pg, _ = run(["progress", "--json"])
         ck("progress：今天 5/12、经验 40、连续 3 天", code == 0 and pg["done_today"] == 5 and pg["goal"] == 12
            and pg["xp"] == 40 and pg["streak_days"] == 3 and pg["remaining"] == 7, str(pg))
