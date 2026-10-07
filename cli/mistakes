@@ -24,6 +24,7 @@ import getpass
 import os
 import plistlib
 import re
+import subprocess
 import sys
 import time
 import urllib.error
@@ -35,7 +36,7 @@ from http.cookiejar import CookieJar
 from pathlib import Path
 
 DEFAULT_API = "https://edu.tianli.cyou"
-CLI_VERSION = "1.2"
+CLI_VERSION = "1.3"
 AGENT = f"mistakes-cli/{CLI_VERSION}"
 PAPER_SLUG_RE = re.compile(r"^20\d{2}s[12]-g[1-9]-[a-z]{2,12}-[a-z]{2,12}$")   # 同服务端白名单
 PAPER_KINDS = ("final", "mid", "unit", "quiz")                                  # 同 PaperScan.kinds
@@ -672,6 +673,111 @@ def cmd_password_set(c, a, sec):
     r = c.call("api/password_set", {"identity_grant": grant, "new": sec.value("EDU_NEW_PASSWORD", "新密码")})
     return {"ok": True, "message": r.get("message")}, lambda: r.get("message", "登录密码已设置")
 
+# ───────────────────────────── 这台 Mac 上的 App（转调 App 自己的可执行文件）─────────────────────────────
+# 配置开关与导入导出、更新目录的授权、登录态和离线课程副本都在 Mac 版 App 的沙盒容器里，只有 App 自己的
+# 可执行文件读写得到。这四组命令原样转给 Contents/MacOS/<App> 的命令入口（Sources/AppCommand.swift），
+# 输出和退出码原样带回；本进程不碰容器、不收账号密码。
+
+APP_VERBS = ("config", "update", "offline", "app")
+APP_MARK = b"cyou.tianli.wrongbook.command"   # 带命令入口的可执行文件里才有；旧版会把这些参数当成普通启动而开窗口
+APP_HELP = """usage: mistakes config [status] [--json]
+       mistakes config export -o <file.json> [--force] [--json]
+       mistakes config import <file.json> --yes [--json]
+       mistakes config sync on|off --yes [--dry-run] [--json]
+       mistakes update check [--json]
+       mistakes update install --yes [--dry-run] [--json]
+       mistakes offline sync [--json]
+       mistakes offline reset --yes [--json]
+       mistakes app logout --yes [--json]
+这台 Mac 上的错题本 App 自己的东西（「配置与更新」面板、离线课程副本、登录态）。由 Mac 版 App 的可执行文件执行：
+读写的是 App 沙盒里的同一份设置与副本，不开窗口、不进 Dock、不弹框，不需要 EDU_USER / EDU_PASSWORD。
+读（不改任何设置）:
+  config status              「使用 iCloud 记住配置」开关、开关下面那句同步状态、可迁移的配置项（每日提醒的开关 remind_enabled
+                             与时间 remind_hour；从没改过的项不列）、App 是否在运行
+  update check               检查更新：当前版本、iCloud Drive 私有渠道的最新版本、有没有新版、怎么升级
+                             （用 App 里已授权的更新目录；没授权过要先在 App 里「选择 iCloud Drive 更新目录…」）
+写:
+  config export -o <file>    导出配置：与面板「导出配置」同一份文件（--force 覆盖；-o - 输出到标准输出）
+  config import <file> --yes 导入配置：先备份原配置再覆盖，与面板「导入配置」相同。改每日提醒就走这里：
+                             export 出来改 values 里的 "defaults.remind_enabled"（true/false）与 "defaults.remind_hour"（0–23）
+                             再 import，本机通知随之重排；清单外的键会被拒绝
+  config sync on|off --yes   拨动「使用 iCloud 记住配置」（--dry-run 只看会不会变；config status 回读）
+  update install --yes       升级到新版：核对 iCloud Drive 里的发行包（身份、大小、SHA256）并给出它的位置。
+                             沙盒里的 App 换不了自己，所以到此退出 1（manual_install），由拿到位置的一方替换 App；
+                             --dry-run 只看有没有新版、会从哪版到哪版
+  offline sync               同步错题：强制重拉这台 Mac 上的个人课程副本（同顶栏「同步」/ ⌘R 与「现在检查更新」），
+                             读回副本清单（file, sha256, on_disk, bytes）与同步结果
+  offline reset --yes        停用本机课程副本：清 App 的课程指针，个人文件照留；offline sync 重新启用
+  app logout --yes           退出登录：作废这台 Mac 上 App 的会话、清它的登录 Cookie、停用课程副本；账号与云端资料不动
+--json：成功 {"ok": true, "command": "config status", …}；失败 {"ok": false, "command": …, "error": {"code", "message"}}，退出码非零。
+  config status  → has_settings, sync_enabled, sync_status{text, at, from, live}, keys[], app_running, problem
+  config export  → path, bytes, keys[]
+  config import  → imported, path, sync_enabled, app_running, sync{completed, status}（仅同步开着时）
+  config sync    → action, changed, sync_enabled, status, app_running, check_with；--dry-run 给 would_change
+  update check   → current{version, build}, source{kind, channel, access}, latest{version, build, package, sha256, size_bytes, installation},
+                   update_available, state（update_available | up_to_date | ahead_of_channel）, message, upgrade{in_app, button, how, command}
+  update install → installed（总是 false）, state, message, current, latest, source, app_running；--dry-run 给 would_install{from, to}；
+                   核对通过后 error.code 为 manual_install，另有 package, package_verified
+  offline sync   → user, synced, note, active, directory, count, lessons[{file, sha256, on_disk, bytes}], app_running
+  offline reset  → reset, had_active_copy, files_kept, app_running, check_with
+  app logout     → logged_out, had_session, session_cookie_left, app_running
+退出码与 error.code：
+  0  成功（update install 没有新版时也是 0）
+  1  操作未完成：not_found · import_rejected · export_failed · sync_incomplete · no_settings（config）·
+     check_incomplete（没读到发行记录，或还没授权更新目录）· upgrade_failed（发行包未通过核对）·
+     manual_install（发行包已核对，要在 App 之外替换）· not_signed_in（App 没登录）· unreachable（连不上服务端）·
+     sync_failed（课程没同步下来）· timeout · failed；本命令自己的：找不到带命令入口的 Mac 版 App
+  2  用法错误或缺确认参数：usage · confirmation_required（import、sync、update install、offline reset、app logout 缺 --yes）·
+     file_exists（导出目标已存在，缺 --force）
+窗口开着时会跟上命令做的事（配置、停用副本、退出登录、重新同步）。只能在窗口里做：登录（要真人）、
+「选择 iCloud Drive 更新目录…」（系统目录授权）。"""
+
+
+def app_executable() -> Path:
+    """Mac 版 App 的可执行文件：本命令所在的那个 .app 里的。$MISTAKES_APP_EXECUTABLE 只给隔离测试指向替身。"""
+    override = os.environ.get("MISTAKES_APP_EXECUTABLE")
+    if override:
+        exe = Path(override)
+    else:
+        contents = Path(__file__).resolve().parent.parent.parent
+        try:
+            name = plistlib.loads((contents / "Info.plist").read_bytes()).get("CFBundleExecutable")
+        except (OSError, plistlib.InvalidFileException, ValueError):
+            raise Fail("这组命令由 Mac 版错题本 App 执行：请用装在 App 包里的 mistakes"
+                       "（sh cli/install.sh 会把 ~/.local/bin/mistakes 链到已装的 .app）")
+        exe = contents / "MacOS" / str(name)
+    try:
+        ready = exe.is_file() and os.access(exe, os.X_OK) and APP_MARK in exe.read_bytes()
+    except OSError:
+        ready = False
+    if not ready:
+        raise Fail(f"{exe} 没有命令入口（旧版 App，或不是 App 的可执行文件）：装上带命令入口的 Mac 版再用")
+    return exe
+
+
+def forward(argv: list[str]) -> int:
+    """原样转给 App 的可执行文件：不截输出、不设超时（发行包从 iCloud 读完可能要几分钟），退出码原样带回。"""
+    if len(argv) < 2 and argv[0] != "config" or any(x in ("-h", "--help") for x in argv):
+        print(APP_HELP)
+        return 0 if any(x in ("-h", "--help") for x in argv) else 2
+    try:
+        exe = app_executable()
+    except Fail as f:
+        if "--json" in argv:
+            body = fail_json(f.msg)
+            body["command"] = " ".join(x for x in argv[:2] if not x.startswith("-"))
+            print(json.dumps(body, ensure_ascii=False))
+        else:
+            print(f"✘ {f.msg}", file=sys.stderr)
+        return 1
+    sys.stdout.flush()
+    try:
+        return subprocess.run([str(exe), *argv]).returncode
+    except OSError as e:
+        print(f"✘ 启动不了 {exe}：{e}", file=sys.stderr)
+        return 1
+
+
 EXAMPLES = """读命令（不改服务端数据；lesson / image 只写 --out 指定的本地文件）：
   mistakes version                       不登录：命令行与所在 App 版本、服务端是否可达、凭据是否已给
   mistakes status                        账号概况：AI 识别额度/订阅、待录入照片与卷子、识别中作业、注销状态
@@ -683,6 +789,15 @@ EXAMPLES = """读命令（不改服务端数据；lesson / image 只写 --out �
   mistakes account delete | phone-login | phone-register | phone-recover | phone-bind | password-set
                                          注销须 --yes；注册须 --agreed；验证码、新密码只从隐藏输入、stdin 或受保护环境变量读
   邮箱注册、邮箱验证与换绑、邮箱找回、修改已有登录密码用同族 treasury account（同一后端、同一账号）。
+这台 Mac 上的 App（由 Mac 版 App 的可执行文件执行，读写它沙盒里的设置、副本与登录态；不需要凭据。详见 mistakes config --help）：
+  mistakes config status                 读：iCloud 配置开关与同步状态、可迁移的配置项（每日提醒的开关与时间）
+  mistakes update check                  读：检查更新（当前版本、渠道最新版本、有没有新版）
+  mistakes config export -o <file> | import <file> --yes | sync on|off --yes
+                                         写：导出 / 导入配置（改每日提醒的开关与时间走这里）、拨动「使用 iCloud 记住配置」
+  mistakes update install --yes          写：升级到新版——核对发行包并给出位置（沙盒里的 App 换不了自己，退出 1 manual_install）
+  mistakes offline sync                  写：同步错题 / 离线课程现在检查更新（强制重拉这台 Mac 上的副本，读回清单）
+  mistakes offline reset --yes           写：停用本机课程副本（个人文件照留）
+  mistakes app logout --yes              写：退出这台 Mac 上 App 的登录
 
 --json 输出形状：成功 {"ok": true, …各命令自己的字段}；失败 {"ok": false, "err": "给人看的原因",
   "error": {"code": "usage | rejected | failed", "message": 同 err}[, "status": HTTP 状态码][, "request_id": 可接续的短信请求]}，
@@ -703,11 +818,10 @@ EXAMPLES = """读命令（不改服务端数据；lesson / image 只写 --out �
   mistakes delete upload 20260930-101010-abc123 --yes
 仅在窗口中（要真人，或只在 App 窗口里有意义）：拍照（已有图片文件用 import：按参数顺序即页序，不给即删页）、
   导入前的页面预览、练习答题本身（要孩子本人作答）、Apple 订阅的方案加载/购买/恢复/管理或取消、
-  先看看（不登录）、Mac 版「选择 iCloud Drive 更新目录…」（系统目录授权）、
+  先看看（不登录）、在 App 里登录（要真人输密码或验证码）、Mac 版「选择 iCloud Drive 更新目录…」（系统目录授权）、
   用户协议/隐私政策/联系支持等链接、Apple Watch 表盘复杂功能的摆放。
-暂无命令：每日提醒的开关与时间、同步错题（顶栏按钮与 ⌘R）与离线课程副本的检查更新/停用（都在 App 自己的本机存储里）、
-  退出登录（命令够不到 App 里那份登录态；命令自己不保存登录态）、
-  配置的 iCloud 同步/导出/导入、检查更新与升级到新版（共享生命周期模块暂无命令入口）。"""
+只在那台设备本机（iPhone / iPad / Vision Pro 上的同名各项，Mac 与后端读不到也改不了）：那台设备的「配置与更新」面板、
+  它的离线课程副本与登录态。上面「这台 Mac 上的 App」只管这台 Mac。"""
 
 
 class Parser(argparse.ArgumentParser):
@@ -807,6 +921,14 @@ def build() -> argparse.ArgumentParser:
     p.add_argument("--page", type=int, help="paper 用：只删这一页")
     p.add_argument("--yes", action="store_true")
 
+    for verb, help_ in (("config", "这台 Mac 上的 App：配置 status / export / import / sync（mistakes config --help）"),
+                        ("update", "这台 Mac 上的 App：更新 check / install（mistakes config --help）"),
+                        ("offline", "这台 Mac 上的 App：离线课程副本 sync / reset（mistakes config --help）"),
+                        ("app", "这台 Mac 上的 App：logout（mistakes config --help）")):
+        p = sub.add_parser(verb, help=help_, description=help_, add_help=False)
+        p.add_argument("rest", nargs=argparse.REMAINDER)
+        p.set_defaults(forward=verb)
+
     pa = sub.add_parser("account", help="账号：手机验证码登录/注册/找回/绑定换绑、设登录密码、注销与注销进度",
                         description="账号：手机验证码登录/注册/找回/绑定换绑、设登录密码、注销与注销进度")
     asub = pa.add_subparsers(dest="sub", metavar="动作", required=True)
@@ -834,8 +956,12 @@ def build() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str]) -> int:
+    if argv and argv[0] in APP_VERBS:
+        return forward(argv)
     ap = build()
     a = ap.parse_args(argv)
+    if getattr(a, "forward", None):
+        return forward([a.forward, *a.rest])
     if not getattr(a, "fn", None):
         ap.print_help()
         return 2

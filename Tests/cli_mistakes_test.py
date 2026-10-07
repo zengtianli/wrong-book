@@ -207,15 +207,20 @@ def main() -> int:
 
         print("【给 Agent 的约定：顶层帮助四样、version 读回、失败形状】")
         _, _, top = run(["--help"], user=None, pw=None)
-        for word in ("读命令", "写命令", "--json 输出形状", "退出码", "仅在窗口中", "暂无命令"):
+        for word in ("读命令", "写命令", "这台 Mac 上的 App", "--json 输出形状", "退出码", "仅在窗口中", "只在那台设备本机"):
             ck(f"顶层帮助有「{word}」", word in top)
-        window = top[top.index("仅在窗口中"):top.index("暂无命令")]
+        ck("顶层帮助不再有「暂无命令」", "暂无命令" not in top)
+        window = top[top.index("仅在窗口中"):top.index("只在那台设备本机")]
         ck("「仅在窗口中」不再列 import 做得到的相册选择与调页序，列了 Mac 的 iCloud Drive 更新目录",
            "相册" not in window and "调页序" not in window and "iCloud Drive 更新目录" in window, window)
-        ck("退出登录、同步错题列在「暂无命令」", "退出登录" not in window and all(w in top[top.index("暂无命令"):] for w in ("退出登录", "同步错题")))
+        mac = top[top.index("这台 Mac 上的 App"):top.index("--json 输出形状")]
+        ck("退出登录、同步错题、停用副本、配置与更新列在「这台 Mac 上的 App」的命令里",
+           "退出登录" not in window and all(w in mac for w in ("app logout --yes", "offline sync", "offline reset --yes", "config status",
+                                                             "config export", "import <file> --yes", "sync on|off --yes",
+                                                             "update check", "update install --yes", "每日提醒")), mac)
         ck("顶层帮助的退出码表列了 0 / 1 / 2 / 130", all(re.search(rf"(?m)^\s+{n}\s", top) for n in (0, 1, 2, 130)), top[-900:])
         for name in ("version", "status", "questions", "wrongs", "progress", "lessons", "lesson", "uploads", "papers", "image", "job",
-                     "upload", "import", "recognize", "delete", "account"):
+                     "upload", "import", "recognize", "delete", "account", "config", "update", "offline", "app"):
             ck(f"顶层帮助把 {name} 列为命令", re.search(rf"(?m)^\s+(?:mistakes\s+)?{name}(?![\w-])", top) is not None
                or re.search(rf"\|\s*{name}(?![\w-])", top) is not None)
         code, out, _ = run(["version", "--json"], user=None, pw=None)

@@ -3,9 +3,11 @@ import Foundation
 // Product allowlist and release channel; shared lifecycle code owns transfer/checking.
 @MainActor
 enum MobileProductLifecycle {
+    /// Mac 版读 iCloud Drive 私有发行记录的渠道名；面板与命令（AppCommand）用同一个。
+    static let macChannel = "private"
     static var channel: MobileUpdateChannel {
         #if os(macOS)
-        return .sandboxCloud(channel: "private")
+        return .sandboxCloud(channel: macChannel)
         #else
         return .appStore(id: "6806626967")
         #endif

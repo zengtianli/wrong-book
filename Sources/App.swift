@@ -3,7 +3,18 @@ import SwiftUI
 import UIKit
 #endif
 
+/// 进程入口。Mac 版的可执行文件同时是 `mistakes` 转调的命令入口（config / update / offline / app，见 AppCommand）：
+/// 认出命令就在这里做完退出，不建任何窗口；其余照常进界面。
 @main
+enum WrongBookMain {
+    @MainActor static func main() {
+        #if os(macOS)
+        if let code = AppCommand.run(Array(CommandLine.arguments.dropFirst())) { exit(code) }
+        #endif
+        WrongBookApp.main()
+    }
+}
+
 struct WrongBookApp: App {
     #if os(macOS)
     // 平台验收车道的 Mac 静默启动（-lane_quiet）；不传那个参数时什么都不做
@@ -83,6 +94,20 @@ struct RootView: View {
             WatchLink.shared.activate()
         }
         .task { await session.restore(); await session.refreshDeletion() }
+        #if os(macOS)
+        // 窗口开着时跟上 `mistakes` 命令做的事（AppCommand）：导入或同步改了配置、停用副本、退出登录、重新同步。
+        // 验证车道与演示启动不跟（它们不碰正式配置）。
+        .task { if AppCommand.windowFollows { AppLifecycleCLI.follow(MobileProductLifecycle.configuration) } }
+        .onReceive(DistributedNotificationCenter.default().publisher(for: AppCommand.followName)) { note in
+            guard AppCommand.windowFollows else { return }
+            switch note.object as? String {
+            case "logout": Task { await session.logout() }
+            case "offline-reset": LessonSync.shared.reset()
+            case "offline-synced": Task { await LessonSync.shared.sync(force: true) }
+            default: break
+            }
+        }
+        #endif
         .task { await AISubscription.shared.listen() }
         .task { await subscriptions.listenForPurchaseIntents() }
         .task { await subscriptions.listenForStorefrontChanges() }
