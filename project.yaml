@@ -170,15 +170,23 @@ sop:
     - name: 管理或取消订阅
       human: 跳到 App Store 的订阅管理页，由本人操作
     - name: 每日提醒的开关与时间
-      missing: 没有命令：设置存在 App 自己的本机偏好里，由 App 排本机通知
+      missing: 开关和时间（remind_enabled、remind_hour）在可随 iCloud 迁移的配置清单里，本机装着的 Mac 版读写同一个 iCloud 键值存储，够得着但没有命令。需要 mistakes 加 config status / export / import（转调 Mac 版 App 里的共用配置命令）；手机那份要两边都开「使用 iCloud 记住配置」才跟得到，通知由各设备的 App 自己排
+    # 离线副本与登录态：手机、平板、Vision 上的那份只在设备本机，记 device；Mac 版就装在本机，它那份在这台 Mac 上 App 的
+    # 沙盒容器里，够得着但还没有命令，另列「（Mac 版）」留 missing（与下面「配置与更新」面板同一口径，不让 device 盖住够得着的缺口）。
     - name: 同步错题（顶栏按钮与 ⌘R）
-      missing: 没有命令：把课程包拉进 App 本机副本由 App 自己做；命令直读服务端（mistakes questions / lessons）
+      device: 只把服务端的个人课程包下载进这台设备的离线副本（App 自己的本机目录，按账号分区），不上传任何东西；副本新不新只有这台设备知道，命令与后端读不到。服务端那份用 mistakes lessons / questions 直读。范围是手机、平板、Vision；Mac 版另列
+    - name: 同步错题（Mac 版）
+      missing: Mac 版的离线副本在这台 Mac 上 App 的沙盒容器里（Application Support，按账号分区），够得着但没有命令。需要 mistakes 加 offline sync（转调 Mac 版 App 的可执行文件拉一次课程包，并读回副本清单与同步结果）
     - name: 离线课程包清单
       command: mistakes lessons
     - name: 离线课程现在检查更新
-      missing: 没有命令：本机课程副本由 App 自己同步，命令只能读服务端清单
+      device: 重拉这台设备的离线课程副本，并显示「已是最新 / 正在拉…」；这句状态只在 App 运行时的内存里，设备不上报，命令与后端读不到。服务端清单用 mistakes lessons 直读。范围是手机、平板、Vision；Mac 版另列
+    - name: 离线课程现在检查更新（Mac 版）
+      missing: 与「同步错题（Mac 版）」是同一个动作的另一个入口（都是强制重拉这台 Mac 上的副本），够得着但没有命令。同样需要 mistakes 加 offline sync（转调 Mac 版 App）
     - name: 停用本机课程副本
-      missing: 没有命令：副本在 App 自己的本机存储里
+      device: 只停用这台设备上的离线副本（清本机的账号指针，个人文件留在本机），不动服务端；命令与后端够不到设备里那份。范围是手机、平板、Vision；Mac 版另列
+    - name: 停用本机课程副本（Mac 版）
+      missing: Mac 版的账号指针在这台 Mac 上 App 的沙盒偏好里，够得着但没有命令。需要 mistakes 加 offline reset（转调 Mac 版 App 清它自己的指针，个人文件照留，须 --yes）
     - name: 账号信息
       command: mistakes status
     - name: 手机绑定与换绑
@@ -190,23 +198,37 @@ sop:
     - name: 修改登录密码
       command: treasury account passwd
     - name: 退出登录
-      missing: 命令够不到 App 里那份登录态（App 退出还会清本机缓存并让手表下线）；命令自己不保存登录态
+      device: 登录态就是这台设备上那枚会话 Cookie 加本机缓存。退出时服务端只回一个清 Cookie 的响应，不留会话记录，App 再清本机课程指针并让手表下线；命令自己不保存登录态，命令与后端够不到设备里那份。范围是手机、平板、Vision；Mac 版另列
+    - name: 退出登录（Mac 版）
+      missing: Mac 版的会话 Cookie 在这台 Mac 上 App 的沙盒容器里，够得着但没有命令。需要 mistakes 加 app logout（转调 Mac 版 App 清它自己的登录态与课程指针，须 --yes）；mistakes 自己不保存登录态，替不了这一步
     - name: 注销账号
       command: mistakes account delete
     - name: 刷新注销进度
       command: mistakes account deletion-status
     - name: 联系支持与完整隐私说明链接
       human: 只在窗口里有意义：打开网页或邮件
+    # 「配置与更新」面板（共享生命周期模块）。手机、平板、Vision 上的那份只在设备本机，记 device；
+    # Mac 版就装在本机（mistakes 所在的那个 App），同一面板的状态在这台 Mac 上，够得着但还没有命令，另列为 missing。
     - name: 使用 iCloud 记住配置
-      missing: 共享生命周期模块暂无命令入口
+      device: 手机、平板、Vision 上「配置与更新」面板里的开关，存在那台设备的本机偏好里，设备不上报；命令与后端够不到
     - name: 导出配置
-      missing: 共享生命周期模块暂无命令入口
+      device: 手机、平板、Vision 上导出的是那台设备的本机偏好，经设备上的系统文件面板存到本人选的位置；命令与后端读不到设备里那份
     - name: 导入配置
-      missing: 共享生命周期模块暂无命令入口
+      device: 手机、平板、Vision 上写的是那台设备的本机偏好，文件经设备上的系统文件面板选取；命令与后端写不到设备里那份
     - name: 检查更新
-      missing: 共享生命周期模块暂无命令入口
+      device: 手机、平板、Vision 上拿本机已装版本去比 App Store 上的版本，结论只显示在那台设备上，不留存也不上报；命令与后端读不到
     - name: 升级到新版
-      missing: 共享生命周期模块暂无命令入口
+      device: 手机、平板、Vision 上是「前往 App Store」，由系统在那台设备上安装；命令与后端替它装不了
+    - name: 使用 iCloud 记住配置（Mac 版）
+      missing: Mac 版的开关在这台 Mac 上，够得着但没有命令。需要 mistakes 加 config sync（转调 Mac 版 App 里的共用配置命令；沙盒加 iCloud 键值存储的同步要由 App 自己的可执行文件来跑）
+    - name: 导出配置（Mac 版）
+      missing: 需要 mistakes 加 config status / config export（转调 Mac 版 App 里的共用配置命令）
+    - name: 导入配置（Mac 版）
+      missing: 需要 mistakes 加 config import（转调 Mac 版 App 里的共用配置命令）
+    - name: 检查更新（Mac 版）
+      missing: 需要 mistakes 加 update check（转调 Mac 版 App 里的共用更新命令；Mac 版读的是 iCloud Drive 里的私有发行记录，目录授权只在 App 自己手里）
+    - name: 升级到新版（Mac 版）
+      missing: 需要 mistakes 加 update install（转调 Mac 版 App 里的共用更新命令）；现在只能在面板里点「打开发行包」
     - name: 选择 iCloud Drive 更新目录…（Mac 版）
       human: 要真人在系统目录面板里选目录并授权；授权只保存在这台 Mac
     - name: Apple Watch 只读摘要（待巩固、今天几题、连续几天）
