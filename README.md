@@ -104,10 +104,14 @@ mistakes delete upload <照片 id> --yes
 | 查看上传的原图 / 卷子某页 | `mistakes image upload <照片 id>` / `mistakes image paper <编号> --page N` |
 | 删除上传 | `mistakes delete upload\|paper <id> --yes` |
 | 注销账号（先即时删除，有扫描记录时转为注销申请） | `mistakes account delete --yes` |
+| Mac 版「配置与更新」：iCloud 配置开关与同步状态、导出 / 导入配置、每日提醒的开关与时间 | `mistakes config status` / `config export -o 文件` / `config import 文件 --yes` / `config sync on\|off --yes` |
+| Mac 版同步错题、离线课程现在检查更新 / 停用本机课程副本 | `mistakes offline sync` / `mistakes offline reset --yes` |
+| Mac 版退出登录 | `mistakes app logout --yes` |
+| Mac 版检查更新 / 升级到新版（核对发行包并给出位置） | `mistakes update check` / `mistakes update install --yes` |
 
 说明：`wrongs` 与 `progress` 读的是服务器上的学习存档快照（设备联网时由练习页同步，后写覆盖），设备离线期间做的题要等下次同步后才看得到；`questions` 直读服务端课程包，列出与 App 错题本同样的原题行（不带答案与选项），待巩固按存档里同课同题型标出；`wrongs` 只列存档里的错题类型。
 
-留在 App 的（纯界面或要真人）：拍照（已有图片文件用 `import`，参数顺序即页序）、页面预览、答题练习本身、Apple 订阅的购买与恢复（服务端只认 Apple 签名的交易）、先看看、Mac 版「选择 iCloud Drive 更新目录…」、政策与支持链接、手表复杂功能的摆放。还没有命令的：每日提醒、同步错题与离线课程副本的检查更新/停用（都在 App 本机存储里）、退出登录（命令够不到 App 里那份登录态）、配置的 iCloud 同步/导出/导入、检查更新与升级到新版。邮箱注册、邮箱验证与换绑、邮箱找回和修改已有登录密码用同一后端的 `treasury account`。
+留在 App 的（纯界面或要真人）：拍照（已有图片文件用 `import`，参数顺序即页序）、页面预览、答题练习本身、Apple 订阅的购买与恢复（服务端只认 Apple 签名的交易）、先看看、Mac 版「选择 iCloud Drive 更新目录…」、政策与支持链接、手表复杂功能的摆放。表里「Mac 版」那几行管的是这台 Mac 上 App 自己的设置、离线副本与登录态：由 Mac 版 App 的可执行文件执行（不开窗口、不需要账号密码），导出导入的文件由命令经手；改每日提醒是导出后改 `defaults.remind_enabled`、`defaults.remind_hour` 再导入。Mac 版在沙盒里换不了自己，`update install` 核对发行包（身份、大小、SHA256）后给出位置；检查更新要先在 App 里选过一次 iCloud Drive 更新目录。iPhone / iPad / Vision Pro 上的同名各项只在那台设备本机，命令够不到。详见 `mistakes config --help`。邮箱注册、邮箱验证与换绑、邮箱找回和修改已有登录密码用同一后端的 `treasury account`。
 
 回归：`python3 Tests/cli_mistakes_test.py` —— 先核打包规则与 `install.sh`（临时 Applications 目录里的假 .app），再起一个隔离的本地服务端（临时目录 + 空闲端口），不碰线上账号、不调 AI；需要同一工作区的 `edu/web/points/server.py`，或用 `EDU_SERVER_PY` 指过去。
 

@@ -169,24 +169,29 @@ sop:
       human: StoreKit 绑定设备上登录的 Apple 账户，须真人在设备上确认
     - name: 管理或取消订阅
       human: 跳到 App Store 的订阅管理页，由本人操作
+    # 读 mistakes config export -o -（从没改过的项不列），写 mistakes config import <file> --yes（键 defaults.remind_enabled、
+    # defaults.remind_hour）。写的是这台 Mac 上 App 的设置并重排它的通知；手机那份要两边都开「使用 iCloud 记住配置」才跟得到。
     - name: 每日提醒的开关与时间
-      missing: 开关和时间（remind_enabled、remind_hour）在可随 iCloud 迁移的配置清单里，本机装着的 Mac 版读写同一个 iCloud 键值存储，够得着但没有命令。需要 mistakes 加 config status / export / import（转调 Mac 版 App 里的共用配置命令）；手机那份要两边都开「使用 iCloud 记住配置」才跟得到，通知由各设备的 App 自己排
+      command: mistakes config import
     # 离线副本与登录态：手机、平板、Vision 上的那份只在设备本机，记 device；Mac 版就装在本机，它那份在这台 Mac 上 App 的
-    # 沙盒容器里，够得着但还没有命令，另列「（Mac 版）」留 missing（与下面「配置与更新」面板同一口径，不让 device 盖住够得着的缺口）。
+    # 沙盒容器里，另列「（Mac 版）」（与下面「配置与更新」面板同一口径，不让 device 盖住够得着的那份）。
+    # 装机版 1.0.1 (81) 起：下面几行由 mistakes 转调 Mac 版 App 自己的可执行文件（沙盒里的设置、副本、登录态只有它读写得到）。
+    # 会改本人真实状态的那一步（import / sync / reset / logout 带 --yes，以及 offline sync 的重拉）只在隔离环境对演示库跑过；
+    # 装机版上跑的是只读与拒绝路径（status、export、--dry-run、缺 --yes 退出 2、错参数退出 2）。
     - name: 同步错题（顶栏按钮与 ⌘R）
       device: 只把服务端的个人课程包下载进这台设备的离线副本（App 自己的本机目录，按账号分区），不上传任何东西；副本新不新只有这台设备知道，命令与后端读不到。服务端那份用 mistakes lessons / questions 直读。范围是手机、平板、Vision；Mac 版另列
     - name: 同步错题（Mac 版）
-      missing: Mac 版的离线副本在这台 Mac 上 App 的沙盒容器里（Application Support，按账号分区），够得着但没有命令。需要 mistakes 加 offline sync（转调 Mac 版 App 的可执行文件拉一次课程包，并读回副本清单与同步结果）
+      command: mistakes offline sync
     - name: 离线课程包清单
       command: mistakes lessons
     - name: 离线课程现在检查更新
       device: 重拉这台设备的离线课程副本，并显示「已是最新 / 正在拉…」；这句状态只在 App 运行时的内存里，设备不上报，命令与后端读不到。服务端清单用 mistakes lessons 直读。范围是手机、平板、Vision；Mac 版另列
     - name: 离线课程现在检查更新（Mac 版）
-      missing: 与「同步错题（Mac 版）」是同一个动作的另一个入口（都是强制重拉这台 Mac 上的副本），够得着但没有命令。同样需要 mistakes 加 offline sync（转调 Mac 版 App）
+      command: mistakes offline sync
     - name: 停用本机课程副本
       device: 只停用这台设备上的离线副本（清本机的账号指针，个人文件留在本机），不动服务端；命令与后端够不到设备里那份。范围是手机、平板、Vision；Mac 版另列
     - name: 停用本机课程副本（Mac 版）
-      missing: Mac 版的账号指针在这台 Mac 上 App 的沙盒偏好里，够得着但没有命令。需要 mistakes 加 offline reset（转调 Mac 版 App 清它自己的指针，个人文件照留，须 --yes）
+      command: mistakes offline reset
     - name: 账号信息
       command: mistakes status
     - name: 手机绑定与换绑
@@ -200,7 +205,7 @@ sop:
     - name: 退出登录
       device: 登录态就是这台设备上那枚会话 Cookie 加本机缓存。退出时服务端只回一个清 Cookie 的响应，不留会话记录，App 再清本机课程指针并让手表下线；命令自己不保存登录态，命令与后端够不到设备里那份。范围是手机、平板、Vision；Mac 版另列
     - name: 退出登录（Mac 版）
-      missing: Mac 版的会话 Cookie 在这台 Mac 上 App 的沙盒容器里，够得着但没有命令。需要 mistakes 加 app logout（转调 Mac 版 App 清它自己的登录态与课程指针，须 --yes）；mistakes 自己不保存登录态，替不了这一步
+      command: mistakes app logout
     - name: 注销账号
       command: mistakes account delete
     - name: 刷新注销进度
@@ -208,7 +213,7 @@ sop:
     - name: 联系支持与完整隐私说明链接
       human: 只在窗口里有意义：打开网页或邮件
     # 「配置与更新」面板（共享生命周期模块）。手机、平板、Vision 上的那份只在设备本机，记 device；
-    # Mac 版就装在本机（mistakes 所在的那个 App），同一面板的状态在这台 Mac 上，够得着但还没有命令，另列为 missing。
+    # Mac 版就装在本机（mistakes 所在的那个 App），同一面板的状态在这台 Mac 上，另列「（Mac 版）」。
     - name: 使用 iCloud 记住配置
       device: 手机、平板、Vision 上「配置与更新」面板里的开关，存在那台设备的本机偏好里，设备不上报；命令与后端够不到
     - name: 导出配置
@@ -220,15 +225,16 @@ sop:
     - name: 升级到新版
       device: 手机、平板、Vision 上是「前往 App Store」，由系统在那台设备上安装；命令与后端替它装不了
     - name: 使用 iCloud 记住配置（Mac 版）
-      missing: Mac 版的开关在这台 Mac 上，够得着但没有命令。需要 mistakes 加 config sync（转调 Mac 版 App 里的共用配置命令；沙盒加 iCloud 键值存储的同步要由 App 自己的可执行文件来跑）
+      command: mistakes config sync
     - name: 导出配置（Mac 版）
-      missing: 需要 mistakes 加 config status / config export（转调 Mac 版 App 里的共用配置命令）
+      command: mistakes config export
     - name: 导入配置（Mac 版）
-      missing: 需要 mistakes 加 config import（转调 Mac 版 App 里的共用配置命令）
+      command: mistakes config import
     - name: 检查更新（Mac 版）
-      missing: 需要 mistakes 加 update check（转调 Mac 版 App 里的共用更新命令；Mac 版读的是 iCloud Drive 里的私有发行记录，目录授权只在 App 自己手里）
+      missing: 命令已在装机版 1.0.1 (81) 里（mistakes update check），但这台 Mac 上的错题本从没选过 iCloud Drive 更新目录（面板里要真人做的那一步，授权只存在 App 的沙盒里），所以装机版上这条命令都停在 check_incomplete「请先选择 iCloud Drive 更新目录」，读到发行记录这一段没有跑通。在 App 里选一次目录后重跑即可改 command
+    # 主线口径：沙盒包不自行替换，面板的动作本来就是「打开发行包」；命令核对发行包（身份、大小、SHA256）后给出位置，替换由安装脚本完成。
     - name: 升级到新版（Mac 版）
-      missing: 需要 mistakes 加 update install（转调 Mac 版 App 里的共用更新命令）；现在只能在面板里点「打开发行包」
+      missing: 命令已在装机版 1.0.1 (81) 里（mistakes update install），但这台 Mac 上的错题本从没选过 iCloud Drive 更新目录（面板里要真人做的那一步，授权只存在 App 的沙盒里），所以装机版上 --dry-run 与缺 --yes 两条都停在 check_incomplete「请先选择 iCloud Drive 更新目录」，会从哪版到哪版、缺 --yes 退出 2、核对发行包这几段没有跑通。在 App 里选一次目录后重跑即可改 command（错参数退出 2 已跑通）
     - name: 选择 iCloud Drive 更新目录…（Mac 版）
       human: 要真人在系统目录面板里选目录并授权；授权只保存在这台 Mac
     - name: Apple Watch 只读摘要（待巩固、今天几题、连续几天）
