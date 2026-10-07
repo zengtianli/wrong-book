@@ -25,6 +25,11 @@ FAILS: list[str] = []
 FAKE = """#!/bin/sh
 # cyou.tianli.wrongbook.command
 printf '%s\\n' "$@" > "$FAKE_LOG"
+if [ "$1 $2 $3 $4" = "config export -o -" ]; then
+  [ "${FAKE_EXIT:-0}" = 0 ] || { echo "错题本 没有可迁移的配置" >&2; exit "$FAKE_EXIT"; }
+  echo '{"product":"wrong-book-mobile","values":{"defaults.remind_hour":7},"version":1}'; exit 0
+fi
+if [ "$1 $2 $3" = "config import -" ]; then cat > "$FAKE_LOG.stdin"; printf '%s' "$MISTAKES_IMPORT_PATH" > "$FAKE_LOG.label"; fi
 echo '{"ok": true, "from": "fake-app"}'
 echo "fake stderr" >&2
 exit "${FAKE_EXIT:-0}"
@@ -68,8 +73,8 @@ def main() -> int:
             ck(f"mistakes {verb}（缺子命令）→ 2，给用法，不启动 App", code == 2 and "usage: mistakes config" in out and not log.exists())
 
         print("【转调：参数、输出、退出码原样】")
-        cases = (["config", "status", "--json"], ["config"], ["config", "export", "-o", "/tmp/x.json", "--force", "--json"],
-                 ["config", "import", "a b.json", "--yes"], ["config", "sync", "on", "--yes", "--dry-run", "--json"],
+        cases = (["config", "status", "--json"], ["config"], ["config", "import", "-", "--yes"],
+                 ["config", "sync", "on", "--yes", "--dry-run", "--json"],
                  ["update", "check", "--json"], ["update", "install", "--yes", "--dry-run", "--json"],
                  ["offline", "sync", "--json"], ["offline", "reset", "--yes", "--json"], ["app", "logout", "--yes", "--json"])
         for args in cases:
@@ -84,6 +89,45 @@ def main() -> int:
         log.unlink(missing_ok=True)
         code, out, _ = run(["--timeout", "5", "offline", "sync", "--json"], env)
         ck("全局选项写在前面也转（全局选项不传给 App）", code == 0 and log.read_text().splitlines() == ["offline", "sync", "--json"], out)
+
+        print("【导出、导入：文件由命令读写，内容经标准输出 / 标准输入交给 App】")
+        config = '{"product":"wrong-book-mobile","values":{"defaults.remind_hour":7},"version":1}'
+        target = root / "out dir" / "配置.json"
+        target.parent.mkdir()
+        log.unlink(missing_ok=True)
+        code, out, _ = run(["config", "export", "-o", str(target), "--json"], env)
+        body = json.loads(out) if code == 0 else {}
+        ck("config export -o <文件> → App 只收到 -o -，文件由命令写成同一份内容",
+           code == 0 and log.read_text().splitlines() == ["config", "export", "-o", "-"] and target.read_text() == config
+           and body == {"ok": True, "command": "config export", "path": str(target), "bytes": len(config.encode()),
+                        "keys": ["defaults.remind_hour"]}, f"{code} {out!r}")
+        log.unlink(missing_ok=True)
+        target.write_text("old")
+        code, out, _ = run(["config", "export", "-o", str(target), "--json"], env)
+        ck("目标已存在、没给 --force → 2 file_exists，不启动 App、不动文件", code == 2 and json.loads(out)["error"]["code"] == "file_exists"
+           and not log.exists() and target.read_text() == "old", out)
+        code, out, _ = run(["config", "export", "--output=" + str(target), "--force"], env)
+        ck("--force 覆盖；不带 --json 给一句话", code == 0 and target.read_text() == config and "配置已导出" in out, out)
+        code, out, _ = run(["config", "export", "-o", str(root / "x.json"), "--json"], {**env, "FAKE_EXIT": "1"})
+        ck("App 导出失败 → 原退出码、失败形状，不留文件", code == 1 and json.loads(out)["error"]["code"] == "no_settings"
+           and not (root / "x.json").exists(), out)
+        log.unlink(missing_ok=True)
+        code, out, _ = run(["config", "export", "-o", "-"], env)
+        ck("config export -o - 原样转调，内容到标准输出", code == 0 and log.read_text().splitlines() == ["config", "export", "-o", "-"]
+           and out.strip() == config, out)
+        source = root / "in dir" / "导入.json"
+        source.parent.mkdir()
+        source.write_text(config)
+        log.unlink(missing_ok=True)
+        code, out, _ = run(["config", "import", str(source), "--yes", "--json"], env)
+        ck("config import <文件> → App 收到 config import - 与原参数，内容走标准输入，文件名另递",
+           code == 0 and log.read_text().splitlines() == ["config", "import", "-", "--yes", "--json"]
+           and Path(str(log) + ".stdin").read_text() == config and Path(str(log) + ".label").read_text() == str(source), out)
+        code, out, _ = run(["config", "import", str(source), "--json"], {**env, "FAKE_EXIT": "2"})
+        ck("App 要 --yes 而退出 2 → 命令退出 2", code == 2, out)
+        log.unlink(missing_ok=True)
+        code, out, _ = run(["config", "import", str(root / "nope.json"), "--yes", "--json"], env)
+        ck("要导入的文件不存在 → 1 not_found，不启动 App", code == 1 and json.loads(out)["error"]["code"] == "not_found" and not log.exists(), out)
 
         print("【找不到带命令入口的 App：退出 1，什么都不启动】")
         log.unlink(missing_ok=True)

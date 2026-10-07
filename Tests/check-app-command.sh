@@ -51,6 +51,7 @@ run() {
   local code=0
   env -i PATH=/usr/bin:/bin HOME="$home" CFFIXED_USER_HOME="$home" TMPDIR="$scratch" \
     APP_LIFECYCLE_SUPPORT_DIR="$scratch/support" APP_LIFECYCLE_CLOUD_DIR="$scratch/cloud" APP_LIFECYCLE_NO_RELAUNCH=1 \
+    ${IMPORT_LABEL:+MISTAKES_IMPORT_PATH="$IMPORT_LABEL"} \
     "$bin" "$@" > "$scratch/out" 2> "$scratch/err" || code=$?
   if [ "$code" = "$want" ]; then echo "  ✅ $label → $code"; else echo "  ❌ $label → $code (want $want)"; cat "$scratch/out" "$scratch/err" | head -12; fails=$((fails + 1)); fi
 }
@@ -77,6 +78,15 @@ run 2 "config import without --yes" config import "$scratch/import.json" --json
 has "config import asks for --yes" 'd["error"]["code"]=="confirmation_required"'
 run 0 "config import --yes" config import "$scratch/import.json" --yes --json
 run 0 "config export after import" config export -o "$scratch/after.json" --force --json
+run 2 "config import - (standard input) without --yes" config import - --json < "$scratch/import.json"
+has "import from standard input asks for --yes" 'd["error"]["code"]=="confirmation_required"'
+sed 's/"defaults.remind_hour": 7/"defaults.remind_hour": 21/' "$scratch/import.json" > "$scratch/import-stdin.json"
+IMPORT_LABEL="/caller/config.json" run 0 "config import - --yes (standard input)" config import - --yes --json < "$scratch/import-stdin.json"
+has "import from standard input applied; the path shown is the caller's file name" 'd["ok"] and d["imported"] and d["path"]=="/caller/config.json"'
+run 0 "config export -o - after the standard-input import" config export -o -
+has "the value imported from standard input reads back (remind_hour 21)" 'd["values"]["defaults.remind_hour"]==21'
+if ls "$scratch" | grep -q '^mistakes-import-'; then echo "  ❌ staged import file left behind"; fails=$((fails + 1)); else echo "  ✅ the staged import file is gone"; fi
+run 0 "config import --yes (back to hour 7)" config import "$scratch/import.json" --yes --json
 if python3 -c 'import json,sys; v=json.load(open(sys.argv[1]))["values"]; sys.exit(0 if v.get("defaults.remind_enabled") is True and v.get("defaults.remind_hour")==7 else 1)' "$scratch/after.json"
 then echo "  ✅ reminder switch and hour read back after import (remind_enabled true, remind_hour 7)"
 else echo "  ❌ reminder settings did not read back"; cat "$scratch/after.json"; fails=$((fails + 1)); fi

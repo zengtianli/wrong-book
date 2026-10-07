@@ -36,7 +36,7 @@ from http.cookiejar import CookieJar
 from pathlib import Path
 
 DEFAULT_API = "https://edu.tianli.cyou"
-CLI_VERSION = "1.3"
+CLI_VERSION = "1.4"
 AGENT = f"mistakes-cli/{CLI_VERSION}"
 PAPER_SLUG_RE = re.compile(r"^20\d{2}s[12]-g[1-9]-[a-z]{2,12}-[a-z]{2,12}$")   # 同服务端白名单
 PAPER_KINDS = ("final", "mid", "unit", "quiz")                                  # 同 PaperScan.kinds
@@ -691,6 +691,7 @@ APP_HELP = """usage: mistakes config [status] [--json]
        mistakes app logout --yes [--json]
 这台 Mac 上的错题本 App 自己的东西（「配置与更新」面板、离线课程副本、登录态）。由 Mac 版 App 的可执行文件执行：
 读写的是 App 沙盒里的同一份设置与副本，不开窗口、不进 Dock、不弹框，不需要 EDU_USER / EDU_PASSWORD。
+导出、导入的文件由本命令自己读写（沙盒里的 App 够不到容器外的路径），内容经标准输出 / 标准输入交给 App。
 读（不改任何设置）:
   config status              「使用 iCloud 记住配置」开关、开关下面那句同步状态、可迁移的配置项（每日提醒的开关 remind_enabled
                              与时间 remind_hour；从没改过的项不列）、App 是否在运行
@@ -755,8 +756,70 @@ def app_executable() -> Path:
     return exe
 
 
+def app_fail(argv: list[str], code: str, msg: str, exit_code: int) -> int:
+    """与 App 那一侧同形状的失败输出。"""
+    if "--json" in argv:
+        print(json.dumps({"ok": False, "command": " ".join(argv[:2]), "error": {"code": code, "message": msg}},
+                         ensure_ascii=False, indent=2))
+    else:
+        print(msg, file=sys.stderr)
+    return exit_code
+
+
+def config_export(exe: Path, argv: list[str]) -> int | None:
+    """`config export -o <文件>`：沙盒里的 App 写不了容器外的路径，所以让它把内容给到标准输出，文件由这里写。
+    `-o -` 与没给 -o 的情况返回 None，照常原样转调。"""
+    rest, out = argv[2:], None
+    for i, x in enumerate(rest):
+        if x in ("-o", "--output") and i + 1 < len(rest):
+            out = rest[i + 1]
+        elif x.startswith("--output="):
+            out = x[len("--output="):]
+    if out in (None, "-"):
+        return None
+    path = Path(os.path.abspath(os.path.expanduser(out)))
+    if path.exists() and "--force" not in rest:
+        return app_fail(argv, "file_exists", f"{path} 已存在；加 --force 覆盖", 2)
+    r = subprocess.run([str(exe), "config", "export", "-o", "-"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if r.returncode != 0:
+        msg = r.stderr.decode(errors="replace").strip() or f"导出未完成（App 退出 {r.returncode}）"
+        return app_fail(argv, "no_settings" if "没有可迁移的配置" in msg else "export_failed", msg, r.returncode)
+    data = r.stdout.rstrip(b"\n")
+    try:
+        keys = sorted((json.loads(data).get("values") or {}).keys())
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_bytes(data)
+        os.replace(tmp, path)
+    except (OSError, ValueError, AttributeError) as e:
+        return app_fail(argv, "export_failed", f"导出未完成：{e}", 1)
+    if "--json" in rest:
+        print(json.dumps({"ok": True, "command": "config export", "path": str(path), "bytes": len(data), "keys": keys},
+                         ensure_ascii=False, indent=2))
+    else:
+        print(f"配置已导出：{path}")
+    return 0
+
+
+def config_import(exe: Path, argv: list[str]) -> int | None:
+    """`config import <文件>`：沙盒里的 App 读不到容器外的文件，所以这里读出来经标准输入交给它（`config import -`）。
+    没给文件或给的就是 `-` 时返回 None，照常原样转调。"""
+    rest = argv[2:]
+    files = [x for x in rest if not x.startswith("-")]
+    if len(files) != 1:
+        return None
+    path = Path(os.path.abspath(os.path.expanduser(files[0])))
+    try:
+        data = path.read_bytes()
+    except OSError:
+        return app_fail(argv, "not_found", f"没有文件 {path}", 1)
+    args = ["-" if x == files[0] else x for x in rest]
+    return subprocess.run([str(exe), "config", "import", *args], input=data,
+                          env={**os.environ, "MISTAKES_IMPORT_PATH": str(path)}).returncode
+
+
 def forward(argv: list[str]) -> int:
-    """原样转给 App 的可执行文件：不截输出、不设超时（发行包从 iCloud 读完可能要几分钟），退出码原样带回。"""
+    """转给 App 的可执行文件：不截输出、不设超时（发行包从 iCloud 读完可能要几分钟），退出码原样带回。
+    只有导出、导入两条要经手文件（见 config_export / config_import），其余参数原样。"""
     if len(argv) < 2 and argv[0] != "config" or any(x in ("-h", "--help") for x in argv):
         print(APP_HELP)
         return 0 if any(x in ("-h", "--help") for x in argv) else 2
@@ -772,6 +835,10 @@ def forward(argv: list[str]) -> int:
         return 1
     sys.stdout.flush()
     try:
+        handled = (config_export(exe, argv) if argv[:2] == ["config", "export"]
+                   else config_import(exe, argv) if argv[:2] == ["config", "import"] else None)
+        if handled is not None:
+            return handled
         return subprocess.run([str(exe), *argv]).returncode
     except OSError as e:
         print(f"✘ 启动不了 {exe}：{e}", file=sys.stderr)

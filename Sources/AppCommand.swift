@@ -23,7 +23,7 @@ enum AppCommand {
     /// 不是命令返回 nil，照常进界面。App 自己的启动参数都以 `-` 开头，不会撞上这几个动词。
     static func run(_ arguments: [String]) -> Int32? {
         guard let verb = arguments.first, verbs.contains(verb) else { return nil }
-        if verb == "config" { return AppLifecycleCLI.run(arguments, product: product) }
+        if verb == "config" { return config(arguments) }
         let json = arguments.contains("--json")
         let name = arguments.prefix(2).filter { !$0.hasPrefix("-") }.joined(separator: " ")
         do {
@@ -61,6 +61,31 @@ enum AppCommand {
         + "\(command) update check | install --yes [--dry-run]；\(command) offline sync | reset --yes；\(command) app logout --yes（都可加 --json）"
 
     // MARK: config
+
+    /// 沙盒里的 App 读不到容器外的文件（实测 `/dev/stdin` 也打不开）：`config import -` 从继承来的标准输入收文件内容
+    /// （`mistakes` 负责读文件并喂进来），落到 App 自己的临时目录再交给共用层，用完即删；输出里的路径换回调用方的文件名。
+    /// 导出同理由 `mistakes` 用 `-o -` 取内容后自己写文件。
+    private static func config(_ arguments: [String]) -> Int32 {
+        var arguments = arguments, product = product
+        var staged: URL?
+        if arguments.count >= 3, arguments[1] == "import", arguments[2] == "-" {
+            let file = FileManager.default.temporaryDirectory.appendingPathComponent("mistakes-import-\(UUID().uuidString).json")
+            guard (try? FileHandle.standardInput.readDataToEndOfFile().write(to: file, options: .atomic)) != nil else {
+                let message = "导入未完成：标准输入的内容没能存进 App 的临时目录，原配置已保留"
+                if arguments.contains("--json") { emit(["ok": false, "command": "config import", "error": ["code": "failed", "message": message]], text: "", json: true) }
+                else { FileHandle.standardError.write(Data((message + "\n").utf8)) }
+                return 1
+            }
+            staged = file
+            arguments[2] = file.path
+            let label = ProcessInfo.processInfo.environment["MISTAKES_IMPORT_PATH"] ?? "-"
+            let out = product.out, err = product.err
+            product.out = { out($0.replacingOccurrences(of: file.path, with: label)) }
+            product.err = { err($0.replacingOccurrences(of: file.path, with: label)) }
+        }
+        defer { if let staged { try? FileManager.default.removeItem(at: staged) } }
+        return AppLifecycleCLI.run(arguments, product: product)
+    }
 
     private static var product: AppLifecycleCLI.Product {
         var product = AppLifecycleCLI.Product(command: command, name: "错题本", configuration: MobileProductLifecycle.configuration,
