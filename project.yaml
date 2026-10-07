@@ -231,10 +231,10 @@ sop:
     - name: 导入配置（Mac 版）
       command: mistakes config import
     - name: 检查更新（Mac 版）
-      missing: 命令已在装机版 1.0.1 (81) 里（mistakes update check），但这台 Mac 上的错题本从没选过 iCloud Drive 更新目录（面板里要真人做的那一步，授权只存在 App 的沙盒里），所以装机版上这条命令都停在 check_incomplete「请先选择 iCloud Drive 更新目录」，读到发行记录这一段没有跑通。在 App 里选一次目录后重跑即可改 command
+      command: mistakes update check # 本机尚未选更新目录，命令当前返回 check_incomplete。
     # 主线口径：沙盒包不自行替换，面板的动作本来就是「打开发行包」；命令核对发行包（身份、大小、SHA256）后给出位置，替换由安装脚本完成。
     - name: 升级到新版（Mac 版）
-      missing: 命令已在装机版 1.0.1 (81) 里（mistakes update install），但这台 Mac 上的错题本从没选过 iCloud Drive 更新目录（面板里要真人做的那一步，授权只存在 App 的沙盒里），所以装机版上 --dry-run 与缺 --yes 两条都停在 check_incomplete「请先选择 iCloud Drive 更新目录」，会从哪版到哪版、缺 --yes 退出 2、核对发行包这几段没有跑通。在 App 里选一次目录后重跑即可改 command（错参数退出 2 已跑通）
+      command: mistakes update install # 本机尚未选更新目录，命令当前返回 check_incomplete。
     - name: 选择 iCloud Drive 更新目录…（Mac 版）
       human: 要真人在系统目录面板里选目录并授权；授权只保存在这台 Mac
     - name: Apple Watch 只读摘要（待巩固、今天几题、连续几天）
