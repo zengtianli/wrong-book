@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "app_id": "wrong-book-ios",
+  "spec_digest": "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+  "checks": {
+    "icloud.conflict_or_corrupt_recovery": true,
+    "icloud.disable_preserves_data": true,
+    "icloud.push_pull": true,
+    "icloud.unavailable_local_fallback": true,
+    "settings.close_action": true,
+    "settings.controls_in_bounds": true,
+    "settings.credentials_excluded": true,
+    "settings.error_preserves_data": true,
+    "settings.export_import": true,
+    "settings.interaction": true,
+    "settings.offscreen": true,
+    "shortcuts.action_path": true,
+    "shortcuts.conflict_or_reserved_keys": true,
+    "shortcuts.disable_restore": true,
+    "updates.check_result": true,
+    "updates.data_preservation": true,
+    "updates.failure_recovery": true,
+    "updates.options_or_store_entry": true,
+    "settings.controls_readback": true,
+    "settings.persisted_readback": true,
+    "shortcuts.persisted_readback": true,
+    "settings.fresh_process": true,
+    "settings.process_completed": true,
+    "updates.real_http_fixture": true,
+    "settings.simulator_shutdown": true,
+    "settings.owner_configuration_unchanged": true,
+    "updates.installed_bundle_unchanged": true
+  },
+  "binding": {
+    "mac": {
+      "candidate": true,
+      "installed": false,
+      "receipt": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/product-basics-mac-build.json",
+      "receipt_sha256": "da8e404b6dbab65d51191d2e9e1eddb24754919704f3be8093182a1265fb334d",
+      "version": "1.0.1",
+      "build": "19",
+      "executable_sha256": "d0001252763d683bf4cee71cb316680f24cfad6f72d900fb4416451b1709505a"
+    },
+    "iphone": {
+      "candidate": true,
+      "simulator_installed": true,
+      "phone_installed": false,
+      "udid": "F421B846-66D9-45C0-A208-99654B02C011",
+      "receipt": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/product-basics-iphone-build.json",
+      "receipt_sha256": "3a6e564aeb1fc2e33ca75a9e637031ebf876e07f972dff753bca2b47c77bea37",
+      "version": "1.0.1",
+      "build": "19",
+      "executable_sha256": "b752538d1c2920f4abe6a924cbc4b3d93260b14b0e01a8ff240945297a1a3bbc"
+    }
+  },
+  "originals": {
+    "mac": {
+      "exercise": {
+        "app_id": "wrong-book-ios",
+        "build": "19",
+        "checks": {
+          "icloud.conflict_or_corrupt_recovery": true,
+          "icloud.disable_preserves_data": true,
+          "icloud.push_pull": true,
+          "icloud.unavailable_local_fallback": true,
+          "settings.close_action": true,
+          "settings.controls_in_bounds": true,
+          "settings.credentials_excluded": true,
+          "settings.error_preserves_data": true,
+          "settings.export_import": true,
+          "settings.interaction": true,
+          "settings.offscreen": true,
+          "shortcuts.action_path": true,
+          "shortcuts.conflict_or_reserved_keys": true,
+          "shortcuts.disable_restore": true,
+          "updates.check_result": true,
+          "updates.data_preservation": true,
+          "updates.failure_recovery": true,
+          "updates.options_or_store_entry": true
+        },
+        "facts": {
+          "configuration_status": "iCloud 配置同步已关闭",
+          "remind_hour": 7,
+          "screenshot": "settings-exercise.png",
+          "update_status": "发现新版本 99.0 (1)。"
+        },
+        "phase": "exercise",
+        "pid": 51154,
+        "schema_version": 1,
+        "scope": "真实产品内原生离屏控件及共享配置/更新/快捷键路径；独立偏好域与云目录；iOS 真实本地 HTTP 更新源；苹果跨设备传输未验。",
+        "spec_digest": "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+        "version": "1.0.1",
+        "process_exit": 0
+      },
+      "readback": {
+        "app_id": "wrong-book-ios",
+        "build": "19",
+        "checks": {
+          "settings.close_action": true,
+          "settings.controls_in_bounds": true,
+          "settings.controls_readback": true,
+          "settings.persisted_readback": true,
+          "shortcuts.persisted_readback": true
+        },
+        "facts": {
+          "configuration_status": "iCloud 配置同步已关闭",
+          "remind_hour": 7,
+          "screenshot": "settings-readback.png",
+          "update_status": "首次使用请选择 iCloud Drive 更新目录。"
+        },
+        "phase": "readback",
+        "pid": 51172,
+        "schema_version": 1,
+        "scope": "真实产品内原生离屏控件及共享配置/更新/快捷键路径；独立偏好域与云目录；iOS 真实本地 HTTP 更新源；苹果跨设备传输未验。",
+        "spec_digest": "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+        "version": "1.0.1",
+        "process_exit": 0
+      }
+    },
+    "iphone": {
+      "exercise": {
+        "app_id": "wrong-book-ios",
+        "build": "19",
+        "checks": {
+          "icloud.conflict_or_corrupt_recovery": true,
+          "icloud.disable_preserves_data": true,
+          "icloud.push_pull": true,
+          "icloud.unavailable_local_fallback": true,
+          "settings.credentials_excluded": true,
+          "settings.error_preserves_data": true,
+          "settings.export_import": true,
+          "settings.interaction": true,
+          "settings.offscreen": true,
+          "updates.check_result": true,
+          "updates.data_preservation": true,
+          "updates.failure_recovery": true,
+          "updates.options_or_store_entry": true
+        },
+        "facts": {
+          "configuration_status": "iCloud 配置同步已关闭",
+          "remind_hour": 7,
+          "screenshot": "settings-exercise.png",
+          "update_status": "发现新版本 99.0 (0)。"
+        },
+        "phase": "exercise",
+        "pid": 51764,
+        "schema_version": 1,
+        "scope": "真实产品内原生离屏控件及共享配置/更新/快捷键路径；独立偏好域与云目录；iOS 真实本地 HTTP 更新源；苹果跨设备传输未验。",
+        "spec_digest": "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+        "version": "1.0.1",
+        "launch_exit": 0,
+        "process_finished": true
+      },
+      "readback": {
+        "app_id": "wrong-book-ios",
+        "build": "19",
+        "checks": {
+          "settings.controls_readback": true,
+          "settings.persisted_readback": true
+        },
+        "facts": {
+          "configuration_status": "iCloud 配置同步已关闭",
+          "remind_hour": 7,
+          "screenshot": "settings-readback.png",
+          "update_status": "尚未检查"
+        },
+        "phase": "readback",
+        "pid": 51860,
+        "schema_version": 1,
+        "scope": "真实产品内原生离屏控件及共享配置/更新/快捷键路径；独立偏好域与云目录；iOS 真实本地 HTTP 更新源；苹果跨设备传输未验。",
+        "spec_digest": "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+        "version": "1.0.1",
+        "launch_exit": 0,
+        "process_finished": true
+      }
+    }
+  },
+  "original_sha256": {
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/settings-readback.png": "7dbd5eddb9e39a4f7a726e060730f7e90705c7e76e53f0d1a38c886362fa35e3",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/exercise.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/readback.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/readback.json": "43bf5d62976b5dc1b0b47bf5bd47093ecb65d4837df7abd049b809a25dd9d761",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/settings-exercise.png": "b6b459c5b3b95a440e94a76049252d3d64277065b85360153af64cd0c0cedb45",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/exercise.json": "8670a0fcb394ced2106ffc4689b413d71d63f28a9b3412ef9885ff75288c676a",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/iphone/settings-readback.png": "ed65ed749df96b071b53a64afbdc31d07b32e2ad7452400a8f529153edc5e11c",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/iphone/exercise.log": "3c2a59dfacc6cd49533811948aeea32d11c41f21c44fa5de4ea022b6b8486d4c",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/iphone/readback.log": "f821b9dae555b7cdab5178690a24d3814719ebe12d4f5dcbb105160d7f1e3fea",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/iphone/readback.json": "ed58033a5c4941a3852b84a18e76b905e5ad2f7fc653b7679cd75cd6d5110f32",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/iphone/settings-exercise.png": "4fefbb8f5a8ae4880296adef623d8713e70fb137fdc89e2e69e1f55ed83e9f08",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/iphone/exercise.json": "ced6c4e2cf7dd1b1d156fb3a6eb86969ed753585c9e52c48866dbd4dcfccf564",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/fixture/错题本.app/Contents/Resources/Lessons/manifest.json": "31f35ee01d266fbee66b4cfa4626dc6796607b1bf9a9e8f5740dbee669f37ad8",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/cloud/wrong-book-mobile.json": "ca9797a30c8c35e3e6c5d3d5324bc253189634821a7623ed068448b8c894e386",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/support/wrong-book-mobile/state.json": "9d90befc43a8518cc3b7943577c20895bd2e052fdc0294c30e5c2d2ac97c793c",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/support/wrong-book-mobile/status.json": "6e99aa1dfeb32e6ff4aad12c163e4a1de20b4a8b007a2e76a0b438454b74ac84",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/support/wrong-book-mobile/Backups/95AF8E87-365C-4FED-AE35-2CEF5E87ADBA/settings.json": "caea9b566fef9940d9a6fa4df567bff122bc2cfa70a26c6e8a333cfe3499fceb",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/support/wrong-book-mobile/Backups/9E3E2A89-707E-41A8-9294-0AB0A9A9AC9C/settings.json": "892ed0cfaaf10c1923eb4f077be48a24d615af664b810cd9fcd8fea960d4507a",
+    "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/mac/cloud/TianliApps/Updates/wrongbook.basics.bundle.7f900a516d3f4984a586fa0611ba8af8/private/release.json": "d7cd7041854c1f927f632b3acb8fa0d79a41c008c50c6df3cc0d48357278c101"
+  },
+  "owner_before": {
+    "preferences": {
+      "/Users/tianli/Library/Preferences/cyou.tianli.wrongbook.plist": null,
+      "/Users/tianli/Library/Containers/cyou.tianli.wrongbook/Data/Library/Preferences/cyou.tianli.wrongbook.plist": null
+    },
+    "installed_artifacts": {
+      "Contents/CodeResources": "28ac5f6ab02975ce2b81e917fb76aceade00709e29ef0c621ca9f21232308f93",
+      "Contents/Info.plist": "05db5320da5d0def2dfece42f80054e369e44d58f731600f49da4679e6a8439b",
+      "Contents/MacOS/WrongBook": "b162d8f27c4b5488ec43b58d6be7543a1824f948695c2b0c397325664c33c911",
+      "Contents/PkgInfo": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+      "Contents/Resources/AppIcon.icns": "ec160f28400d73c31da1534101f6dbf9fe0533e75f8a29ab9ce4203a72ec5ff2",
+      "Contents/Resources/Assets.car": "c7a07d3a346c62bcd87bcc6590d1fc81445f28f834dfa8f76cfb475dcbd62cce",
+      "Contents/Resources/Lessons/README.md": "e8e7dac60df7e7066453259b791e212a5de69208f0172c339a94bd19408e4daf",
+      "Contents/Resources/Lessons/manifest.json": "31f35ee01d266fbee66b4cfa4626dc6796607b1bf9a9e8f5740dbee669f37ad8",
+      "Contents/Resources/bin/mistakes": "41278e9470a51cb44b43d9130fef849a010d1fa28bb5cfa3ed7ebdaa9a25ffaf",
+      "Contents/_CodeSignature/CodeResources": "f7f38f6023b691149865f7b51bdca4dfd81f91bb0ca7eb4a65affc6105c6174c",
+      "Contents/embedded.provisionprofile": "56498f28856d86d93f0c31f215d0ac42e57d6d19c14477e50f7abeacc2886097"
+    }
+  },
+  "owner_after": {
+    "preferences": {
+      "/Users/tianli/Library/Preferences/cyou.tianli.wrongbook.plist": null,
+      "/Users/tianli/Library/Containers/cyou.tianli.wrongbook/Data/Library/Preferences/cyou.tianli.wrongbook.plist": null
+    },
+    "installed_artifacts": {
+      "Contents/CodeResources": "28ac5f6ab02975ce2b81e917fb76aceade00709e29ef0c621ca9f21232308f93",
+      "Contents/Info.plist": "05db5320da5d0def2dfece42f80054e369e44d58f731600f49da4679e6a8439b",
+      "Contents/MacOS/WrongBook": "b162d8f27c4b5488ec43b58d6be7543a1824f948695c2b0c397325664c33c911",
+      "Contents/PkgInfo": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+      "Contents/Resources/AppIcon.icns": "ec160f28400d73c31da1534101f6dbf9fe0533e75f8a29ab9ce4203a72ec5ff2",
+      "Contents/Resources/Assets.car": "c7a07d3a346c62bcd87bcc6590d1fc81445f28f834dfa8f76cfb475dcbd62cce",
+      "Contents/Resources/Lessons/README.md": "e8e7dac60df7e7066453259b791e212a5de69208f0172c339a94bd19408e4daf",
+      "Contents/Resources/Lessons/manifest.json": "31f35ee01d266fbee66b4cfa4626dc6796607b1bf9a9e8f5740dbee669f37ad8",
+      "Contents/Resources/bin/mistakes": "41278e9470a51cb44b43d9130fef849a010d1fa28bb5cfa3ed7ebdaa9a25ffaf",
+      "Contents/_CodeSignature/CodeResources": "f7f38f6023b691149865f7b51bdca4dfd81f91bb0ca7eb4a65affc6105c6174c",
+      "Contents/embedded.provisionprofile": "56498f28856d86d93f0c31f215d0ac42e57d6d19c14477e50f7abeacc2886097"
+    }
+  },
+  "scope": "Mac 离屏原生设置、菜单动作；iOS 私有模拟器内真实产品控件与 HTTP；仅本机隔离云链路，未验苹果跨设备传输；候选与已装版逐平台标记，未执行 Mac 装机或发布。"
+}

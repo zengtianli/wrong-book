@@ -50,7 +50,7 @@ struct MeView: View {
                 }
                 #if os(iOS)
                 Section("应用") {
-                    AppLifecycleMobileEntry()
+                    ProductSettingsEntry()
                 }
                 #endif
                 Section("今天") {

@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "app_id": "wrong-book-ios",
+  "spec_digest": "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+  "checks": {
+    "icloud.conflict_or_corrupt_recovery": true,
+    "icloud.disable_preserves_data": true,
+    "icloud.push_pull": true,
+    "icloud.unavailable_local_fallback": true,
+    "settings.close_action": true,
+    "settings.controls_in_bounds": true,
+    "settings.credentials_excluded": true,
+    "settings.error_preserves_data": true,
+    "settings.export_import": true,
+    "settings.interaction": true,
+    "settings.offscreen": true,
+    "shortcuts.action_path": true,
+    "shortcuts.conflict_or_reserved_keys": true,
+    "shortcuts.disable_restore": true,
+    "updates.check_result": true,
+    "updates.data_preservation": true,
+    "updates.failure_recovery": true,
+    "updates.options_or_store_entry": true,
+    "settings.controls_readback": true,
+    "settings.persisted_readback": true,
+    "shortcuts.persisted_readback": true,
+    "settings.fresh_process": true,
+    "settings.process_completed": true,
+    "settings.owner_configuration_unchanged": true,
+    "updates.installed_bundle_unchanged": true
+  },
+  "binding": {
+    "mac": {
+      "candidate": true,
+      "installed": false,
+      "receipt": "/Users/tianli/Apps/edu/ios/wrong-book/01-源程序/perf/product-basics-mac-build.json",
+      "receipt_sha256": "da8e404b6dbab65d51191d2e9e1eddb24754919704f3be8093182a1265fb334d",
+      "version": "1.0.1",
+      "build": "19",
+      "executable_sha256": "d0001252763d683bf4cee71cb316680f24cfad6f72d900fb4416451b1709505a"
+    }
+  },
+  "originals": {
+    "mac": {
+      "exercise": {
+        "app_id": "wrong-book-ios",
+        "build": "19",
+        "checks": {
+          "icloud.conflict_or_corrupt_recovery": true,
+          "icloud.disable_preserves_data": true,
+          "icloud.push_pull": true,
+          "icloud.unavailable_local_fallback": true,
+          "settings.close_action": true,
+          "settings.controls_in_bounds": true,
+          "settings.credentials_excluded": true,
+          "settings.error_preserves_data": true,
+          "settings.export_import": true,
+          "settings.interaction": true,
+          "settings.offscreen": true,
+          "shortcuts.action_path": true,
+          "shortcuts.conflict_or_reserved_keys": true,
+          "shortcuts.disable_restore": true,
+          "updates.check_result": true,
+          "updates.data_preservation": true,
+          "updates.failure_recovery": true,
+          "updates.options_or_store_entry": true
+        },
+        "facts": {
+          "configuration_status": "iCloud 配置同步已关闭",
+          "remind_hour": 7,
+          "screenshot": "settings-exercise.png",
+          "update_status": "发现新版本 99.0 (1)。"
+        },
+        "phase": "exercise",
+        "pid": 47008,
+        "schema_version": 1,
+        "scope": "真实产品内原生离屏控件及共享配置/更新/快捷键路径；独立偏好域与云目录；iOS 真实本地 HTTP 更新源；苹果跨设备传输未验。",
+        "spec_digest": "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+        "version": "1.0.1",
+        "process_exit": 0
+      },
+      "readback": {
+        "app_id": "wrong-book-ios",
+        "build": "19",
+        "checks": {
+          "settings.close_action": true,
+          "settings.controls_in_bounds": true,
+          "settings.controls_readback": true,
+          "settings.persisted_readback": true,
+          "shortcuts.persisted_readback": true
+        },
+        "facts": {
+          "configuration_status": "iCloud 配置同步已关闭",
+          "remind_hour": 7,
+          "screenshot": "settings-readback.png",
+          "update_status": "首次使用请选择 iCloud Drive 更新目录。"
+        },
+        "phase": "readback",
+        "pid": 47032,
+        "schema_version": 1,
+        "scope": "真实产品内原生离屏控件及共享配置/更新/快捷键路径；独立偏好域与云目录；iOS 真实本地 HTTP 更新源；苹果跨设备传输未验。",
+        "spec_digest": "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+        "version": "1.0.1",
+        "process_exit": 0
+      }
+    }
+  },
+  "original_sha256": {
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/settings-readback.png": "7dbd5eddb9e39a4f7a726e060730f7e90705c7e76e53f0d1a38c886362fa35e3",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/exercise.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/readback.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/readback.json": "1e64d1dc81d07a86c6817fb7c99a0efe64a0760afef3b91463927a62d55ea86f",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/settings-exercise.png": "b6b459c5b3b95a440e94a76049252d3d64277065b85360153af64cd0c0cedb45",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/exercise.json": "1a4e8ababd03a94810d47cbacd4d54043c9d164e51cb4feb8e44b4a505d7fdc7",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/fixture/错题本.app/Contents/Resources/Lessons/manifest.json": "31f35ee01d266fbee66b4cfa4626dc6796607b1bf9a9e8f5740dbee669f37ad8",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/cloud/wrong-book-mobile.json": "ca9797a30c8c35e3e6c5d3d5324bc253189634821a7623ed068448b8c894e386",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/support/wrong-book-mobile/state.json": "9d90befc43a8518cc3b7943577c20895bd2e052fdc0294c30e5c2d2ac97c793c",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/support/wrong-book-mobile/status.json": "d82007f822c1d567f9783d15dc8fd846357fea892b0249b47331088b86675085",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/support/wrong-book-mobile/Backups/62196920-5BC2-4080-A7DC-6F11451490E7/settings.json": "caea9b566fef9940d9a6fa4df567bff122bc2cfa70a26c6e8a333cfe3499fceb",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/support/wrong-book-mobile/Backups/EC3197D0-3512-4CB3-98E1-BC976F944507/settings.json": "892ed0cfaaf10c1923eb4f077be48a24d615af664b810cd9fcd8fea960d4507a",
+    "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/mac/cloud/TianliApps/Updates/wrongbook.basics.bundle.8cbf93b2cf2f467c8e3fc6dd92587641/private/release.json": "005ef33e1929445e285eabf89a1be527d36704ce3ff5dd5941f231a98d01481b"
+  },
+  "owner_before": {
+    "preferences": {
+      "/Users/tianli/Library/Preferences/cyou.tianli.wrongbook.plist": null,
+      "/Users/tianli/Library/Containers/cyou.tianli.wrongbook/Data/Library/Preferences/cyou.tianli.wrongbook.plist": null
+    },
+    "installed_artifacts": {
+      "Contents/CodeResources": "28ac5f6ab02975ce2b81e917fb76aceade00709e29ef0c621ca9f21232308f93",
+      "Contents/Info.plist": "05db5320da5d0def2dfece42f80054e369e44d58f731600f49da4679e6a8439b",
+      "Contents/MacOS/WrongBook": "b162d8f27c4b5488ec43b58d6be7543a1824f948695c2b0c397325664c33c911",
+      "Contents/PkgInfo": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+      "Contents/Resources/AppIcon.icns": "ec160f28400d73c31da1534101f6dbf9fe0533e75f8a29ab9ce4203a72ec5ff2",
+      "Contents/Resources/Assets.car": "c7a07d3a346c62bcd87bcc6590d1fc81445f28f834dfa8f76cfb475dcbd62cce",
+      "Contents/Resources/Lessons/README.md": "e8e7dac60df7e7066453259b791e212a5de69208f0172c339a94bd19408e4daf",
+      "Contents/Resources/Lessons/manifest.json": "31f35ee01d266fbee66b4cfa4626dc6796607b1bf9a9e8f5740dbee669f37ad8",
+      "Contents/Resources/bin/mistakes": "41278e9470a51cb44b43d9130fef849a010d1fa28bb5cfa3ed7ebdaa9a25ffaf",
+      "Contents/_CodeSignature/CodeResources": "f7f38f6023b691149865f7b51bdca4dfd81f91bb0ca7eb4a65affc6105c6174c",
+      "Contents/embedded.provisionprofile": "56498f28856d86d93f0c31f215d0ac42e57d6d19c14477e50f7abeacc2886097"
+    }
+  },
+  "owner_after": {
+    "preferences": {
+      "/Users/tianli/Library/Preferences/cyou.tianli.wrongbook.plist": null,
+      "/Users/tianli/Library/Containers/cyou.tianli.wrongbook/Data/Library/Preferences/cyou.tianli.wrongbook.plist": null
+    },
+    "installed_artifacts": {
+      "Contents/CodeResources": "28ac5f6ab02975ce2b81e917fb76aceade00709e29ef0c621ca9f21232308f93",
+      "Contents/Info.plist": "05db5320da5d0def2dfece42f80054e369e44d58f731600f49da4679e6a8439b",
+      "Contents/MacOS/WrongBook": "b162d8f27c4b5488ec43b58d6be7543a1824f948695c2b0c397325664c33c911",
+      "Contents/PkgInfo": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+      "Contents/Resources/AppIcon.icns": "ec160f28400d73c31da1534101f6dbf9fe0533e75f8a29ab9ce4203a72ec5ff2",
+      "Contents/Resources/Assets.car": "c7a07d3a346c62bcd87bcc6590d1fc81445f28f834dfa8f76cfb475dcbd62cce",
+      "Contents/Resources/Lessons/README.md": "e8e7dac60df7e7066453259b791e212a5de69208f0172c339a94bd19408e4daf",
+      "Contents/Resources/Lessons/manifest.json": "31f35ee01d266fbee66b4cfa4626dc6796607b1bf9a9e8f5740dbee669f37ad8",
+      "Contents/Resources/bin/mistakes": "41278e9470a51cb44b43d9130fef849a010d1fa28bb5cfa3ed7ebdaa9a25ffaf",
+      "Contents/_CodeSignature/CodeResources": "f7f38f6023b691149865f7b51bdca4dfd81f91bb0ca7eb4a65affc6105c6174c",
+      "Contents/embedded.provisionprofile": "56498f28856d86d93f0c31f215d0ac42e57d6d19c14477e50f7abeacc2886097"
+    }
+  },
+  "scope": "Mac 离屏原生设置、菜单动作；本次仅 Mac 界面自检；仅本机隔离云链路，未验苹果跨设备传输；候选与已装版逐平台标记，未执行 Mac 装机或发布。"
+}

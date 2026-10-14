@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "name": "native_ui",
+  "app_id": "wrong-book-ios",
+  "command": "~/Dev/.venv/bin/python scripts/accept/product_basics.py --ui-only",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-15T07:31:25.249926+08:00",
+  "finished_at": "2026-10-15T07:31:28.903465+08:00",
+  "input_sha256": "1f56511e877cf13dbfaf23ac20bddd37ae12e47efccdd94d534026162e704b3d",
+  "log": "perf/acceptance/run-ua6ux0n3/native_ui.log",
+  "log_sha256": "c30c70d14d10ac70c4e519291e7f70502c17e61efdfa342a07c24382c31c2431",
+  "summary": "通过：25 项真实产品断言；iCloud 为本机隔离链路，苹果跨设备未验；Mac 候选未装机",
+  "detail": {
+    "summary": "通过：25 项真实产品断言；iCloud 为本机隔离链路，苹果跨设备未验；Mac 候选未装机",
+    "checks": {
+      "icloud.conflict_or_corrupt_recovery": true,
+      "icloud.disable_preserves_data": true,
+      "icloud.push_pull": true,
+      "icloud.unavailable_local_fallback": true,
+      "settings.close_action": true,
+      "settings.controls_in_bounds": true,
+      "settings.credentials_excluded": true,
+      "settings.error_preserves_data": true,
+      "settings.export_import": true,
+      "settings.interaction": true,
+      "settings.offscreen": true,
+      "shortcuts.action_path": true,
+      "shortcuts.conflict_or_reserved_keys": true,
+      "shortcuts.disable_restore": true,
+      "updates.check_result": true,
+      "updates.data_preservation": true,
+      "updates.failure_recovery": true,
+      "updates.options_or_store_entry": true,
+      "settings.controls_readback": true,
+      "settings.persisted_readback": true,
+      "shortcuts.persisted_readback": true,
+      "settings.fresh_process": true,
+      "settings.process_completed": true,
+      "settings.owner_configuration_unchanged": true,
+      "updates.installed_bundle_unchanged": true
+    },
+    "original": "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/raw.json",
+    "sha256": "468464906f46a37417ab42e1bc55fd2ec34dc39ac232313170bf391af301e5bd"
+  },
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/native_ui/20261015T073125249099+0800-0nvclfq6",
+    "manifest_sha256": "e1ab3746e864e358c20dde59ee59671084391d5e78fb4d146ace45c22549c23d"
+  },
+  "run_id": "run-ua6ux0n3",
+  "evidence_file": "perf/acceptance/run-ua6ux0n3/native_ui.json"
+}

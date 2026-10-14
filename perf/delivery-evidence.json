@@ -120,7 +120,27 @@
       "evidence": "perf/acceptance/launch_vision.json",
       "evidence_sha256": "e8974bca4a9687b38963db61b1036db281abe2a629496bce78320bf5e3ffe761",
       "detail": "sop.accept：bash scripts/accept/launch.sh vision → Apple Vision Pro 模拟器 Apple Vision Pro 启动冒烟通过：os_log 35.066 s，截图 3840×2160"
+    },
+    "native_ui": {
+      "result": "passed",
+      "scope": "ui",
+      "method": "ui_automation",
+      "checked_at": "2026-10-15T07:31:28.903465+08:00",
+      "input_sha256": "1f56511e877cf13dbfaf23ac20bddd37ae12e47efccdd94d534026162e704b3d",
+      "evidence": "perf/acceptance/run-ua6ux0n3/native_ui.json",
+      "evidence_sha256": "0504272108cde7b99551100aa45ca1f608d2fe11b5145cd82af1d49f90a46a7e",
+      "detail": "sop.accept：~/Dev/.venv/bin/python scripts/accept/product_basics.py --ui-only → 通过：25 项真实产品断言；iCloud 为本机隔离链路，苹果跨设备未验；Mac 候选未装机"
+    },
+    "product_basics": {
+      "result": "passed",
+      "scope": "product_basics",
+      "method": "real_product",
+      "checked_at": "2026-10-15T07:33:42.316696+08:00",
+      "input_sha256": "a628ad48d3217ac154a387c898ca221a1bd700c1349da6c758f25dd77c71bcfe",
+      "evidence": "perf/acceptance/run-8pevb_ex/product_basics.json",
+      "evidence_sha256": "ad0ee62532e52ca2cdf62ec6844c4b0db773c5ecda4f847e023863aa4209acee",
+      "detail": "sop.accept：~/Dev/.venv/bin/python scripts/accept/product_basics.py → 通过：27 项真实产品断言；iCloud 为本机隔离链路，苹果跨设备未验；Mac 候选未装机"
     }
   },
-  "updated_at": "2026-10-04T17:15:49.464587+08:00"
+  "updated_at": "2026-10-15T07:33:42.336193+08:00"
 }

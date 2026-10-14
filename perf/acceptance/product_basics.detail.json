@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "app_id": "wrong-book-ios",
+  "spec_digest": "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+  "features": {
+    "settings": {
+      "result": "passed",
+      "method": "ui_automation",
+      "evidence": "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/raw.json",
+      "evidence_sha256": "bd4afb2da44fcc53c37bce06fe54f3a6dd21fdbe3bba00361f135b5f62e5320e",
+      "checks": [
+        "settings.close_action",
+        "settings.controls_in_bounds",
+        "settings.credentials_excluded",
+        "settings.error_preserves_data",
+        "settings.export_import",
+        "settings.interaction",
+        "settings.offscreen",
+        "settings.controls_readback",
+        "settings.persisted_readback",
+        "settings.fresh_process",
+        "settings.process_completed",
+        "settings.simulator_shutdown",
+        "settings.owner_configuration_unchanged"
+      ]
+    },
+    "shortcuts": {
+      "result": "passed",
+      "method": "real_product",
+      "evidence": "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/raw.json",
+      "evidence_sha256": "bd4afb2da44fcc53c37bce06fe54f3a6dd21fdbe3bba00361f135b5f62e5320e",
+      "checks": [
+        "shortcuts.action_path",
+        "shortcuts.conflict_or_reserved_keys",
+        "shortcuts.disable_restore",
+        "shortcuts.persisted_readback"
+      ]
+    },
+    "icloud": {
+      "result": "passed",
+      "method": "real_product",
+      "evidence": "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/raw.json",
+      "evidence_sha256": "bd4afb2da44fcc53c37bce06fe54f3a6dd21fdbe3bba00361f135b5f62e5320e",
+      "checks": [
+        "icloud.conflict_or_corrupt_recovery",
+        "icloud.disable_preserves_data",
+        "icloud.push_pull",
+        "icloud.unavailable_local_fallback"
+      ]
+    },
+    "updates": {
+      "result": "passed",
+      "method": "real_product",
+      "evidence": "perf/acceptance/product-basics-73caecd551504c528a7f769d9e50d958/raw.json",
+      "evidence_sha256": "bd4afb2da44fcc53c37bce06fe54f3a6dd21fdbe3bba00361f135b5f62e5320e",
+      "checks": [
+        "updates.check_result",
+        "updates.data_preservation",
+        "updates.failure_recovery",
+        "updates.options_or_store_entry",
+        "updates.real_http_fixture",
+        "updates.installed_bundle_unchanged"
+      ]
+    }
+  },
+  "summary": "通过：27 项真实产品断言；iCloud 为本机隔离链路，苹果跨设备未验；Mac 候选未装机",
+  "scope": "Mac 离屏原生设置、菜单动作；iOS 私有模拟器内真实产品控件与 HTTP；仅本机隔离云链路，未验苹果跨设备传输；候选与已装版逐平台标记，未执行 Mac 装机或发布。"
+}

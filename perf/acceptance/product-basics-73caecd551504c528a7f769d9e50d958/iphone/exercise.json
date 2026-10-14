@@ -1,0 +1,31 @@
+{
+  "app_id" : "wrong-book-ios",
+  "build" : "19",
+  "checks" : {
+    "icloud.conflict_or_corrupt_recovery" : true,
+    "icloud.disable_preserves_data" : true,
+    "icloud.push_pull" : true,
+    "icloud.unavailable_local_fallback" : true,
+    "settings.credentials_excluded" : true,
+    "settings.error_preserves_data" : true,
+    "settings.export_import" : true,
+    "settings.interaction" : true,
+    "settings.offscreen" : true,
+    "updates.check_result" : true,
+    "updates.data_preservation" : true,
+    "updates.failure_recovery" : true,
+    "updates.options_or_store_entry" : true
+  },
+  "facts" : {
+    "configuration_status" : "iCloud 配置同步已关闭",
+    "remind_hour" : 7,
+    "screenshot" : "settings-exercise.png",
+    "update_status" : "发现新版本 99.0 (0)。"
+  },
+  "phase" : "exercise",
+  "pid" : 51764,
+  "schema_version" : 1,
+  "scope" : "真实产品内原生离屏控件及共享配置\/更新\/快捷键路径；独立偏好域与云目录；iOS 真实本地 HTTP 更新源；苹果跨设备传输未验。",
+  "spec_digest" : "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+  "version" : "1.0.1"
+}

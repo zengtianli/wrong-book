@@ -24,9 +24,14 @@ struct RegularHomeView: View {
                 .toolbar {
                     ToolbarItemGroup(placement: .primaryAction) {
                         Button { Task { await sync.sync(force: true) } } label: { Label("同步错题", systemImage: "arrow.clockwise") }
-                            .disabled(sync.running).keyboardShortcut("r", modifiers: .command)
+                            .disabled(sync.running)
+                            #if !os(macOS)
+                            .keyboardShortcut("r", modifiers: .command)
+                            #endif
                         Button { settings = true } label: { Label("账号与设置", systemImage: "person.crop.circle") }
+                            #if !os(macOS)
                             .keyboardShortcut(",", modifiers: .command)
+                            #endif
                     }
                 }
         }

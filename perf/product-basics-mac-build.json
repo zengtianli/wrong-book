@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "platform": "mac",
+  "configuration": "Debug",
+  "scheme": "WrongBook",
+  "compilation_conditions": [],
+  "app_path": "/private/var/folders/6_/r0ygnj7s41g013d21kpwlph80000gp/T/sim-lane-build.0q2ee5ir/dd/Build/Products/Debug/WrongBook.app",
+  "bundle_id": "cyou.tianli.wrongbook",
+  "version": "1.0.1",
+  "build": "19",
+  "executable_sha256": "d0001252763d683bf4cee71cb316680f24cfad6f72d900fb4416451b1709505a",
+  "sdk": "macosx27.0",
+  "xcode": {
+    "name": "Xcode.app",
+    "version": "27.0",
+    "build": "27A266a",
+    "developer_dir": "/Applications/Xcode.app/Contents/Developer"
+  },
+  "destination": "platform=macOS,arch=arm64",
+  "signing": "ad-hoc, entitlements stripped, no sandbox, no hardened runtime (local lane build)",
+  "log": "/private/var/folders/6_/r0ygnj7s41g013d21kpwlph80000gp/T/sim-lane-build.0q2ee5ir/build-mac-Debug.log",
+  "work_dir": "/private/var/folders/6_/r0ygnj7s41g013d21kpwlph80000gp/T/sim-lane-build.0q2ee5ir",
+  "seconds": 12.3,
+  "generated_info_plists": [],
+  "product_artifacts": {
+    "Contents/Info.plist": "97fa9005dbc585ef2b36bd083e74c63108842588641381fc7a4430a257fb1018",
+    "Contents/MacOS/WrongBook": "d0001252763d683bf4cee71cb316680f24cfad6f72d900fb4416451b1709505a",
+    "Contents/MacOS/WrongBook.debug.dylib": "70acc62dd637b842a8e29b52ace4ee4670cb01898a22564bcc273b18655a1d2e",
+    "Contents/MacOS/__preview.dylib": "37f14b6cfe9c93ef1405c624d8010f8e83df352ae861bb111cde359f7e40a6d0",
+    "Contents/PkgInfo": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+    "Contents/Resources/AppIcon.icns": "ec160f28400d73c31da1534101f6dbf9fe0533e75f8a29ab9ce4203a72ec5ff2",
+    "Contents/Resources/Assets.car": "c7a07d3a346c62bcd87bcc6590d1fc81445f28f834dfa8f76cfb475dcbd62cce",
+    "Contents/Resources/Lessons/README.md": "e8e7dac60df7e7066453259b791e212a5de69208f0172c339a94bd19408e4daf",
+    "Contents/Resources/Lessons/manifest.json": "31f35ee01d266fbee66b4cfa4626dc6796607b1bf9a9e8f5740dbee669f37ad8",
+    "Contents/Resources/bin/mistakes": "41278e9470a51cb44b43d9130fef849a010d1fa28bb5cfa3ed7ebdaa9a25ffaf",
+    "Contents/_CodeSignature/CodeResources": "dc6d6541399bc51287cd318b94d5c961cff5dd32cc7269f5aa702ac17cbb4ff7"
+  }
+}

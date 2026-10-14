@@ -84,6 +84,14 @@ enum AppCommand {
             product.err = { err($0.replacingOccurrences(of: file.path, with: label)) }
         }
         defer { if let staged { try? FileManager.default.removeItem(at: staged) } }
+        if arguments.count >= 3, arguments[1] == "import", arguments.contains("--yes"), !arguments.contains("--dry-run"),
+           let data = try? Data(contentsOf: URL(fileURLWithPath: arguments[2])) {
+            do { try ProductSettings.validateImport(data) }
+            catch {
+                emit(["ok": false, "command": "config import", "error": ["code": "import_rejected", "message": error.localizedDescription]], text: error.localizedDescription, json: arguments.contains("--json"))
+                return 1
+            }
+        }
         return AppLifecycleCLI.run(arguments, product: product)
     }
 

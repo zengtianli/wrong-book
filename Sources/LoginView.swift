@@ -43,7 +43,7 @@ struct LoginView: View {
                     .multilineTextAlignment(.center)
                 #endif
                 #if os(iOS)
-                AppLifecycleMobileEntry().font(.footnote)
+                ProductSettingsEntry().font(.footnote)
                 #endif
             }
             .padding(.horizontal, 30).padding(.vertical, 24).frame(maxWidth: 450)

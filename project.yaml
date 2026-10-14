@@ -9,7 +9,17 @@ lifecycle: active
 bundle_id: cyou.tianli.wrongbook
 origin: own
 sop:
+  product_basics:
+    schema_version: 1
+    features:
+      settings: {entry: '配置与更新；Mac 菜单设置（⌘,）', readback: 'mistakes config status --json'}
+      shortcuts: {entry: 'Mac 设置：同步错题快捷键开关与 ⌘R/⇧⌘R；iPhone/iPad 为触屏，保留系统编辑键', readback: 'mistakes config export -o -'}
+      icloud: {entry: '配置与更新：使用 iCloud 记住配置，默认关闭', readback: 'mistakes config status --json'}
+      updates: {entry: '配置与更新：检查更新；iOS App Store；Mac 既有 iCloud 私有发行包', readback: 'mistakes update check --json'}
+    inputs: [scripts/accept/product_basics.py, Sources/ProductBasicsSelfTest.swift, Sources/ProductSettings.swift, Sources/MobileProductLifecycle.swift, Shared/AppShortcuts.swift, 'perf/product-basics-*-build.json']
   accept:
+    product_basics: ~/Dev/.venv/bin/python scripts/accept/product_basics.py
+    native_ui: ~/Dev/.venv/bin/python scripts/accept/product_basics.py --ui-only
     functionality: bash scripts/accept/functionality.sh
     recovery: bash scripts/accept/recovery.sh
     privacy: bash scripts/accept/privacy.sh

@@ -1,0 +1,20 @@
+{
+  "app_id" : "wrong-book-ios",
+  "build" : "19",
+  "checks" : {
+    "settings.controls_readback" : true,
+    "settings.persisted_readback" : true
+  },
+  "facts" : {
+    "configuration_status" : "iCloud 配置同步已关闭",
+    "remind_hour" : 7,
+    "screenshot" : "settings-readback.png",
+    "update_status" : "尚未检查"
+  },
+  "phase" : "readback",
+  "pid" : 51860,
+  "schema_version" : 1,
+  "scope" : "真实产品内原生离屏控件及共享配置\/更新\/快捷键路径；独立偏好域与云目录；iOS 真实本地 HTTP 更新源；苹果跨设备传输未验。",
+  "spec_digest" : "d3feec712dd9f7d733555110b4a0410bdd6ea64183e8cdf3899c602a90d919f4",
+  "version" : "1.0.1"
+}

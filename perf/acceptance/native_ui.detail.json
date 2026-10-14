@@ -1,0 +1,32 @@
+{
+  "summary": "通过：25 项真实产品断言；iCloud 为本机隔离链路，苹果跨设备未验；Mac 候选未装机",
+  "checks": {
+    "icloud.conflict_or_corrupt_recovery": true,
+    "icloud.disable_preserves_data": true,
+    "icloud.push_pull": true,
+    "icloud.unavailable_local_fallback": true,
+    "settings.close_action": true,
+    "settings.controls_in_bounds": true,
+    "settings.credentials_excluded": true,
+    "settings.error_preserves_data": true,
+    "settings.export_import": true,
+    "settings.interaction": true,
+    "settings.offscreen": true,
+    "shortcuts.action_path": true,
+    "shortcuts.conflict_or_reserved_keys": true,
+    "shortcuts.disable_restore": true,
+    "updates.check_result": true,
+    "updates.data_preservation": true,
+    "updates.failure_recovery": true,
+    "updates.options_or_store_entry": true,
+    "settings.controls_readback": true,
+    "settings.persisted_readback": true,
+    "shortcuts.persisted_readback": true,
+    "settings.fresh_process": true,
+    "settings.process_completed": true,
+    "settings.owner_configuration_unchanged": true,
+    "updates.installed_bundle_unchanged": true
+  },
+  "original": "perf/acceptance/product-basics-b1dac6a911cb4a8a9453394be108c815/raw.json",
+  "sha256": "468464906f46a37417ab42e1bc55fd2ec34dc39ac232313170bf391af301e5bd"
+}

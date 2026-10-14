@@ -63,6 +63,7 @@ targets:
       # iPhone / iPad / Vision 编出来是空的。AppLifecycleUI 只为它带的安装器类型而编，不调 install，不加菜单。
       - path: Shared/AppLifecycleUI.swift
       - path: Shared/AppLifecycleCLI.swift
+      - path: Shared/AppShortcuts.swift
       - path: Sources
       # ⚠ 图标资产必须在这儿列出来。漏了的表现是**编译通过、装机通过、桌面白板**——
       #   ASSETCATALOG_COMPILER_APPICON_NAME 指向一个不在工程里的 catalog,

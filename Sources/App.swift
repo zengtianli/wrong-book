@@ -8,6 +8,19 @@ import UIKit
 @main
 enum WrongBookMain {
     @MainActor static func main() {
+        #if DEBUG && (os(macOS) || os(iOS))
+        if ProductBasicsSelfTest.requested {
+            #if os(macOS)
+            _ = NSApplication.shared
+            NSApp.setActivationPolicy(.prohibited)
+            Task { await ProductBasicsSelfTest.run() }
+            RunLoop.main.run()
+            #elseif os(iOS)
+            ProductBasicsApp.main()
+            #endif
+            return
+        }
+        #endif
         #if os(macOS)
         if let code = AppCommand.run(Array(CommandLine.arguments.dropFirst())) { exit(code) }
         #endif
@@ -29,7 +42,8 @@ struct WrongBookApp: App {
                 // Keep the system TabView clear; configuration lives in account settings and login.
                 .appLifecycleMobile(productID: "wrong-book", channel: MobileProductLifecycle.channel, configuration: MobileProductLifecycle.configuration, placement: .settings)
                 #else
-                .appLifecycleMobile(productID: "wrong-book", channel: MobileProductLifecycle.channel, configuration: MobileProductLifecycle.configuration)
+                .appLifecycleMobile(productID: "wrong-book", channel: MobileProductLifecycle.channel, configuration: MobileProductLifecycle.configuration, placement: .settings)
+                .safeAreaInset(edge: .bottom, spacing: 0) { ProductSettingsEntry().font(.footnote).padding(.vertical, 7) }
                 #endif
                 #if os(macOS)
                 // 侧栏 + 错题列表 + 题目三栏并排，再窄就挤了
@@ -38,6 +52,13 @@ struct WrongBookApp: App {
         }
         #if os(macOS) || os(visionOS)
         .defaultSize(width: 1240, height: 820)
+        #endif
+        #if os(macOS)
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button("设置…") { ProductSettings.show() }.keyboardShortcut(",", modifiers: .command)
+            }
+        }
         #endif
     }
 }
@@ -88,6 +109,9 @@ struct RootView: View {
         .environment(\.wideLayout, wide)
         .animation(.easeInOut(duration: 0.3), value: session.phase)
         .task {
+            #if os(macOS)
+            ProductSettings.installShortcuts()
+            #endif
             // 平台验收车道：iPad 横屏、Mac 截图窗口尺寸（不传 -lane_* 时什么都不做）
             LaneSignal.applyOrientation()
             LaneSignal.applyWindowFrame()

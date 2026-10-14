@@ -1,0 +1,10 @@
+{
+  "build" : "1",
+  "bundle_id" : "wrongbook.basics.bundle.7f900a516d3f4984a586fa0611ba8af8",
+  "channel" : "private",
+  "filename" : "fixture.zip",
+  "installation" : "manual-bundle",
+  "sha256" : "758674803b880af1c8babfd1160e48ebff4e6ae079730d50ea8baa64c1fdf5d3",
+  "size_bytes" : 189,
+  "version" : "99.0"
+}
