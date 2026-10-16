@@ -80,7 +80,7 @@ def main():
     readback = attributes.get("notes", "")
     if readback != notes:
         raise RuntimeError("official Review Notes readback differs")
-    after = asc.get(f"/appStoreVersions/{target['id']}")["data"]
+    after = asc.get(f"/appStoreVersions/{target['id']}", {"include": "build"})["data"]
     result = {"app_id": app_id, "bundle_id": bundle, "version": args.version,
               "version_id": target["id"], "review_detail_id": actual["id"],
               "state": after["attributes"]["appStoreState"], "notes_readback_matches": True,
