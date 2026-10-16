@@ -4,8 +4,8 @@
 --build creates a source-bound candidate using sim_lane's build slots.
 --produce runs fresh product processes in an owned, hidden simulator.
 --live-mail adds seven real SMTP/IMAP native cases with an owner-recipient and
-send-budget guard. Phone/SMS cases remain missing. Fixture provisioning is never
-registration evidence.
+send-budget guard. --phone-fixture exercises native phone paths with an isolated
+SMS fixture, never real delivery. Fixture provisioning is never registration evidence.
 """
 from __future__ import annotations
 import argparse
@@ -58,13 +58,19 @@ MAIL_CASE_CHECKS = {
     'email_change': ('email_change.identity_and_archive',),
     'email_delivery': ('email_delivery.native_verification',),
 }
+PHONE_CASE_CHECKS = {
+    'phone_verification': ('phone_verification.wrong_code_refused', 'phone_verification.native_grant'),
+    'phone_binding': ('phone_binding.original_user', 'phone_binding.verified_identity'),
+    'phone_change': ('phone_change.old_ownership_required', 'phone_change.identity_and_archive'),
+    'phone_login': ('phone_login.native_session', 'phone_login.consumed_grant_refused'),
+}
 
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 def producer_digest():
     return hashlib.sha256(json.dumps({name: sha(Path(__file__).with_name(name))
-        for name in ('account_native.py', 'account_mail.py')}, sort_keys=True).encode()).hexdigest()
+        for name in ('account_native.py', 'account_mail.py', 'account_phone_fixture.py')}, sort_keys=True).encode()).hexdigest()
 
 def artifacts(app):
     return {str(path.relative_to(app)): sha(path) for path in sorted(app.rglob("*"))
@@ -88,7 +94,7 @@ def write(path, value):
 
 def cases_from_raw(raw):
     """Never credit missing/false checks or same-process 'restarts'."""
-    if not isinstance(raw, dict) or not set(PHASES) <= set(raw) or not set(raw) <= set(PHASES) | {'live-mail'}:
+    if not isinstance(raw, dict) or not set(PHASES) <= set(raw) or not set(raw) <= set(PHASES) | {'live-mail', 'phone-fixture'}:
         return []
     if any(not isinstance(row, dict) for row in raw.values()): return []
     pids = [row.get('pid') for row in raw.values()]
@@ -103,6 +109,9 @@ def cases_from_raw(raw):
     if 'live-mail' in raw:
         cases.extend(case for case, checks in MAIL_CASE_CHECKS.items()
             if all(raw['live-mail'].get('checks', {}).get(check) is True for check in checks))
+    if 'phone-fixture' in raw:
+        cases.extend(case for case, checks in PHONE_CASE_CHECKS.items()
+            if all(raw['phone-fixture'].get('checks', {}).get(check) is True for check in checks))
     return cases
 
 @contextlib.contextmanager
@@ -165,7 +174,7 @@ def service(mail=None):
             if worker: worker.join(timeout=3)
             os.environ.clear(); os.environ.update(saved)
 
-def produce(receipt, run, binding, lock_wait=0, load_wait=0, live_mail=False):
+def produce(receipt, run, binding, lock_wait=0, load_wait=0, live_mail=False, phone_fixture=False):
     build = sim_lane.reuse_build(receipt, "wrong-book-ios", ROOT, "iphone", "WrongBook", "Debug")
     candidate = Path(build["app_path"])
     if not build.get("product_artifacts") or artifacts(candidate) != build["product_artifacts"]:
@@ -190,14 +199,19 @@ def produce(receipt, run, binding, lock_wait=0, load_wait=0, live_mail=False):
             raise RuntimeError("Installed simulator package differs from candidate/receipt")
         container = Path(sim_lane.simctl("get_app_container", device["udid"], info["bundle_id"], "data").stdout.strip())
         private = container / "tmp" / ("account-" + secrets.token_hex(8)); private.mkdir(mode=0o700)
-        mail = None
+        mail = phone = None
         try:
             if live_mail:
                 from account_mail import RealMail
                 mail = RealMail(run, write)
             with service(mail) as (plan, product, events, owner_file, owner_before):
+                if phone_fixture:
+                    from account_phone_fixture import PhoneFixture
+                    phone = PhoneFixture()
+                    plan.update(phone.install())
                 if mail is not None: plan.update(mail.install())
-                phases = (*PHASES[:-1], 'live-mail', PHASES[-1]) if live_mail else PHASES
+                phases = (*PHASES[:-1], *(('phone-fixture',) if phone_fixture else ()),
+                          *(('live-mail',) if live_mail else ()), PHASES[-1])
                 for phase in phases:
                     report["stage"] = phase
                     write(run / "attempt.json", report)
@@ -209,7 +223,7 @@ def produce(receipt, run, binding, lock_wait=0, load_wait=0, live_mail=False):
                     result = sim_lane.run(["xcrun", "simctl", "launch", "--terminate-running-process", device["udid"],
                         info["bundle_id"], "--account-self-test", "-api_base", plan["url"]], timeout=30, check=False, env=child, sdk="iphonesimulator")
                     if result.returncode: raise RuntimeError("Native launch failed (no credentials in arguments)")
-                    deadline = time.monotonic() + (420 if phase == 'live-mail' else 75)
+                    deadline = time.monotonic() + (600 if phase == 'phone-fixture' else 420 if phase == 'live-mail' else 75)
                     while not output.is_file() and time.monotonic() < deadline: time.sleep(.1)
                     if not output.is_file(): raise RuntimeError("Native " + phase + " produced no original output within its bounded phase budget")
                     raw = json.loads(output.read_text())
@@ -239,21 +253,33 @@ def produce(receipt, run, binding, lock_wait=0, load_wait=0, live_mail=False):
                     report['messages_sent']['email'] = mail.accepted
                     report['mail_original'] = {'path': str((run / 'mail-transport.json').relative_to(ROOT)), 'sha256': sha(run / 'mail-transport.json')}
         finally:
-            if mail is not None: mail.close()
+            if phone is not None:
+                report['phone_transport'] = 'fixture'
+                report['phone_fixture'] = {'sends': phone.sends, 'verified': phone.verifications,
+                                           'real_messages_sent': 0}
+                phone.close()
+            if mail is not None:
+                # Even an interrupted native phase can already have sent mail.
+                # Preserve actual counts without upgrading transport to PASS.
+                report['messages_sent']['email'] = mail.accepted
+                report['mail_send_attempts'] = mail.attempts
+                mail.close()
+            write(run / 'attempt.json', report)
             lane.terminate(info["bundle_id"])
             shutil.rmtree(private)
     report["device"] = device
     report["simulator_shutdown"] = device["udid"] not in sim_lane.booted_udids()
     write(run / "raw.json", report)
     cases = cases_from_raw(report["steps"]) if report["simulator_shutdown"] else []
-    required = set(CASE_CHECKS) | (set(MAIL_CASE_CHECKS) if live_mail else set())
+    required = set(CASE_CHECKS) | (set(MAIL_CASE_CHECKS) if live_mail else set()) | (set(PHONE_CASE_CHECKS) if phone_fixture else set())
     if set(cases) != required: raise RuntimeError("Native requested case report incomplete")
     proof = run / "raw.json"
     index = {"account_input_sha256": binding, "client_environment": "Actual Debug iOS product in hidden iPhone 17 Pro simulator; source-bound candidate, not phone installation",
         "service_environment": "Unmodified education production HTTP handler/auth/storage; temporary data home; synthetic pre-provisioned password user",
         "mail_transport": report['mail_transport'], "sms_transport": "not_exercised", "account_cases": {
             case: {"status": "passed", "evidence": str(proof.relative_to(ROOT)), "evidence_sha256": sha(proof)} for case in cases},
-        "scope": "Actual native cases listed individually; real SMTP/IMAP only with live-mail phase; all phone/SMS cases remain missing"}
+        "phone_transport": "fixture" if phone_fixture else "not_exercised",
+        "scope": "Actual native cases listed individually; real SMTP/IMAP only with live-mail phase; phone fixture never certifies sms_delivery or real SMS"}
     target = ROOT / "perf/account/account-lifecycle.json"
     if target.exists(): shutil.copy2(target, run / "previous-index.json")
     write(target, index)
@@ -265,6 +291,7 @@ def main():
     parser.add_argument("--build", action="store_true")
     parser.add_argument("--produce", action="store_true")
     parser.add_argument('--live-mail', action='store_true', default=os.environ.get('SOP_ACCOUNT_LIVE_MAIL') == '1')
+    parser.add_argument('--phone-fixture', action='store_true', default=os.environ.get('SOP_ACCOUNT_PHONE_FIXTURE') == '1')
     parser.add_argument("--receipt", type=Path, default=ROOT / "perf/account/native-build.json")
     parser.add_argument("--lock-wait", type=float, default=os.environ.get("SOP_ACCOUNT_LOCK_WAIT", "0"))
     parser.add_argument("--load-wait", type=float, default=os.environ.get("SOP_ACCOUNT_LOAD_WAIT", "0"))
@@ -292,7 +319,7 @@ def main():
         index = json.loads(previous.read_text())
         if index.get("account_input_sha256") == binding:
             cases = index.get("account_cases", {})
-            wanted = set(CASE_CHECKS) | (set(MAIL_CASE_CHECKS) if args.live_mail else set())
+            wanted = set(CASE_CHECKS) | (set(MAIL_CASE_CHECKS) if args.live_mail else set()) | (set(PHONE_CASE_CHECKS) if args.phone_fixture else set())
             verified = all(case in cases and cases[case].get("status") == "passed"
                 and (ROOT / cases[case]["evidence"]).resolve().is_relative_to(ROOT / "perf/account")
                 and sha(ROOT / cases[case]["evidence"]) == cases[case].get("evidence_sha256") for case in wanted)
@@ -311,7 +338,7 @@ def main():
     run = ROOT / "perf/account" / ("native-" + dt.datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + secrets.token_hex(3))
     run.mkdir(parents=True)
     try:
-        index = produce(receipt, run, binding, args.lock_wait, args.load_wait, args.live_mail)
+        index = produce(receipt, run, binding, args.lock_wait, args.load_wait, args.live_mail, args.phone_fixture)
         # The original fixed consumer still requires every case and both live channels.
         print("Actual native cases: " + ", ".join(index["account_cases"]))
         return 0

@@ -52,6 +52,31 @@ def test_mail_cases_require_actual_native_assertions():
     assert native.cases_from_raw(raw) == []
 
 
+def test_phone_fixture_cannot_credit_carrier_delivery():
+    raw = completed()
+    raw['phone-fixture'] = {'pid': 250, 'failure_class': None, 'checks': {'native.login_view_offscreen': True}}
+    for checks in native.PHONE_CASE_CHECKS.values():
+        raw['phone-fixture']['checks'].update({name: True for name in checks})
+    cases = native.cases_from_raw(raw)
+    assert set(native.PHONE_CASE_CHECKS) <= set(cases)
+    assert 'sms_delivery' not in cases
+    del raw['phone-fixture']['checks']['phone_change.old_ownership_required']
+    assert 'phone_change' not in native.cases_from_raw(raw)
+
+
+def test_phone_fixture_refuses_nonfixture_phone_and_wrong_scope():
+    sys.path.insert(0, str(ROOT / 'scripts/accept'))
+    from account_phone_fixture import PhoneFixture
+    import pytest
+    fixture = PhoneFixture()
+    with pytest.raises(RuntimeError): fixture.send('13600000000', 'register', 'challenge')
+    fixture.send('+8613800000000', 'register', 'challenge')
+    code = fixture.requests['challenge'][2]
+    assert fixture.check('+8613800000000', 'register', 'challenge', code)
+    assert not fixture.check('+8613900000000', 'register', 'challenge', code)
+    assert not fixture.check('+8613800000000', 'login', 'challenge', code)
+
+
 def test_mail_receiver_does_not_accept_another_recipient_or_an_old_status():
     sys.path.insert(0, str(ROOT / 'scripts/accept'))
     from account_mail import received_code, RealMail

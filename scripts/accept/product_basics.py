@@ -141,9 +141,9 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--build", action="store_true"); p.add_argument("--platform", choices=("mac", "iphone"), default="mac")
     p.add_argument("--app", type=Path, default=os.environ.get("WRONGBOOK_BASICS_APP"))
-    p.add_argument("--receipt", type=Path)
+    p.add_argument("--receipt", type=Path, default=os.environ.get("WRONGBOOK_BASICS_RECEIPT"))
     p.add_argument("--ios-app", type=Path, default=os.environ.get("WRONGBOOK_BASICS_IOS_APP"))
-    p.add_argument("--ios-receipt", type=Path, default=ROOT / "perf/product-basics-iphone-build.json")
+    p.add_argument("--ios-receipt", type=Path, default=os.environ.get("WRONGBOOK_BASICS_IOS_RECEIPT") or ROOT / "perf/product-basics-iphone-build.json")
     p.add_argument("--ui-only", action="store_true")
     args = p.parse_args()
     receipt = args.receipt or ROOT / f"perf/product-basics-{args.platform}-build.json"

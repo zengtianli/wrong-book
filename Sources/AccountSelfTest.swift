@@ -39,6 +39,10 @@ enum AccountSelfTest {
             window.frame = CGRect(x: -30000, y: -30000, width: 390, height: 844)
             window.isHidden = true; window.rootViewController = view
             view.loadViewIfNeeded(); view.view.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
+            // A hidden UIWindow does not automatically attach its controller's
+            // view. Attach explicitly while keeping the window hidden/non-key;
+            // rendering an unattached view cannot prove the window contract.
+            window.addSubview(view.view)
             view.beginAppearanceTransition(true, animated: false); view.endAppearanceTransition()
             try await Task.sleep(for: .milliseconds(400))
             view.view.layoutIfNeeded()
@@ -49,6 +53,8 @@ enum AccountSelfTest {
             try require("native.login_view_offscreen", window.isHidden && !window.isKeyWindow && window.frame.maxX < 0 && view.view.window === window && view.presentedViewController == nil)
             window.rootViewController = nil
             switch phase {
+            case "phone-fixture":
+                checks.merge(try await AccountPhoneSelfTest.run(plan, session: session)) { _, new in new }
             case "live-mail":
                 checks.merge(try await AccountMailSelfTest.run(plan, session: session)) { _, new in new }
             case "exercise":
@@ -98,7 +104,9 @@ enum AccountSelfTest {
         let raw: [String: Any] = ["schema_version": 1, "app_id": "wrong-book-ios", "phase": phase,
             "pid": ProcessInfo.processInfo.processIdentifier, "account_input_sha256": binding,
             "checks": checks, "failure_class": failure as Any? ?? NSNull(),
-            "scope": phase == "live-mail"
+            "scope": phase == "phone-fixture"
+                ? "Actual iOS Session/Api phone flows; isolated production backend with SMS fixture; no carrier messages or delivery evidence."
+                : phase == "live-mail"
                 ? "Actual iOS App process; offscreen LoginView; production Session/Api; real SMTP and read-only IMAP receiver; isolated account data; SMS not exercised."
                 : "Actual iOS App process; offscreen LoginView; production Session/Api account actions; isolated loopback service; no email/SMS exercised in this phase."]
         do {
