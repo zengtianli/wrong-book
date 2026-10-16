@@ -117,12 +117,7 @@ struct RootView: View {
             LaneSignal.applyWindowFrame()
             WatchLink.shared.activate()
         }
-        .task {
-            StartupDiagnostics.mark("root.restore.begin")
-            await session.restore()
-            StartupDiagnostics.mark("root.restore.returned")
-            await session.refreshDeletion()
-        }
+        .task { await session.restore(); await session.refreshDeletion() }
         #if os(macOS)
         // 窗口开着时跟上 `mistakes` 命令做的事（AppCommand）：导入或同步改了配置、停用副本、退出登录、重新同步。
         // 验证车道与演示启动不跟（它们不碰正式配置）。
