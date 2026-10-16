@@ -5,6 +5,9 @@ import urllib.error
 import urllib.request
 import json
 import sys
+from types import SimpleNamespace
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("account_native", ROOT / "scripts/accept/account_native.py")
@@ -138,3 +141,127 @@ def test_production_service_is_isolated_no_messages_and_actual_auth_storage():
         assert native.sha(owner) == owner_before
         assert events[-1] == {"path": "/api/account_del", "status": 200}
         assert not any("send" in event["path"] for event in events)
+
+
+@pytest.fixture
+def candidate_queue(tmp_path, monkeypatch):
+    """Exercise the fixed entry point without building or touching a device."""
+    monkeypatch.setattr(native, "ROOT", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["account_native.py", "--produce"])
+    monkeypatch.setattr(native.app_sop, "load_apps", lambda *_: [{}])
+    monkeypatch.setattr(native.app_sop, "monitor_inputs", lambda *_: {"bindings": {"account": "qa-binding"}})
+    app = tmp_path / "candidate/WrongBook.app"
+    app.mkdir(parents=True)
+    (app / "WrongBook").write_bytes(b"qa executable")
+    (app / "WrongBook.debug.dylib").write_bytes(b"qa native implementation")
+    built = {"ok": True, "app_path": str(app), "xcode": {"build": "qa-current"}}
+    receipt = tmp_path / "perf/account/native-build.json"
+    native.write(receipt, {**built, "xcode": {"build": "qa-cache"}, "product_artifacts": native.artifacts(app)})
+    queue = SimpleNamespace(receipt=receipt, app=app, reuse_errors=[], builds=[], flows=[],
+        result=SimpleNamespace(returncode=0, stdout=json.dumps(built)))
+
+    def reuse(path, *args):
+        assert args == ("wrong-book-ios", tmp_path, "iphone", "WrongBook", "Debug")
+        if queue.reuse_errors:
+            raise queue.reuse_errors.pop(0)
+        try:
+            return json.loads(path.read_text())
+        except FileNotFoundError as exc:
+            raise native.sim_lane.LaneError("缓存构建无法核验：missing receipt") from exc
+
+    def build(command, **kwargs):
+        queue.builds.append(command)
+        return queue.result
+
+    def produce(*args):
+        # The actual producer also rechecks immediately before device admission.
+        native.verified_candidate(args[0])
+        queue.flows.append(args)
+        return {"account_cases": dict.fromkeys(native.CASE_CHECKS)}
+
+    monkeypatch.setattr(native.sim_lane, "reuse_build", reuse)
+    monkeypatch.setattr(native.subprocess, "run", build)
+    monkeypatch.setattr(native, "produce", produce)
+    return queue
+
+
+@pytest.mark.parametrize("cache", ["missing", "缓存构建的 Xcode 与当前工具链不同", "缓存构建源码与当前平台输入不同"])
+def test_fixed_producer_refreshes_invalid_cache_before_old_failure_guard(candidate_queue, cache):
+    queue = candidate_queue
+    old_digest = native.sha(queue.receipt)
+    if cache == "missing":
+        queue.receipt.unlink()
+    else:
+        queue.reuse_errors.append(native.sim_lane.LaneError(cache))
+    prior = queue.receipt.parent / "native-old/failed.json"
+    native.write(prior, {"account_input_sha256": "qa-binding", "producer_sha256": native.producer_digest(),
+                         "candidate_receipt_sha256": old_digest})
+    assert native.main() == 0
+    assert len(queue.builds) == len(queue.flows) == 1
+    assert queue.builds[0][:5] == [sys.executable, str(Path(native.sim_admission.__file__)), "build",
+                                  str(Path(native.sim_lane.__file__)), "build"]
+    assert json.loads(queue.receipt.read_text())["product_artifacts"] == native.artifacts(queue.app)
+    assert native.sha(queue.receipt) != old_digest
+    assert prior.is_file()
+    assert not list(queue.receipt.parent.glob("native-*/deferred.json"))
+
+
+def test_current_candidate_reused_but_identical_failed_candidate_not_retried(candidate_queue):
+    queue = candidate_queue
+    assert native.main() == 0
+    native.write(queue.receipt.parent / "native-old/failed.json", {
+        "account_input_sha256": "qa-binding", "producer_sha256": native.producer_digest(),
+        "candidate_receipt_sha256": native.sha(queue.receipt)})
+    assert native.main() == 1
+    assert len(queue.flows) == 1
+    assert queue.builds == []
+
+
+@pytest.mark.parametrize("mode", ["--produce", "--build"])
+def test_shared_build_busy_preserves_75_and_original_queue_reason(candidate_queue, monkeypatch, mode):
+    queue = candidate_queue
+    monkeypatch.setattr(sys, "argv", ["account_native.py", mode])
+    queue.reuse_errors.append(native.sim_lane.LaneError("stale Xcode"))
+    old_digest = native.sha(queue.receipt)
+    queue.result = SimpleNamespace(returncode=75, stdout=json.dumps({"error": "BuildSlot memory pressure"}))
+    assert native.main() == 75
+    assert queue.flows == []
+    assert native.sha(queue.receipt) == old_digest
+    assert not list(queue.receipt.parent.glob("native-*/failed.json"))
+    if mode == "--produce":
+        deferred, = queue.receipt.parent.glob("native-*/deferred.json")
+        detail = json.loads(deferred.read_text())
+        assert detail["exit_code"] == 75
+        assert detail["reason"] == "BuildSlot memory pressure"
+        assert native.dt.datetime.fromisoformat(detail["next_attempt_at"]) > native.dt.datetime.now().astimezone()
+
+
+def test_real_build_error_stays_failed_without_native_flow(candidate_queue):
+    queue = candidate_queue
+    queue.reuse_errors.append(native.sim_lane.LaneError("stale Xcode"))
+    queue.result = SimpleNamespace(returncode=1, stdout=json.dumps({"ok": False, "error": "compiler error"}))
+    assert native.main() == 1
+    assert queue.flows == []
+    failed, = queue.receipt.parent.glob("native-*/failed.json")
+    assert "Original shared build failed (exit 1)" in json.loads(failed.read_text())["reason"]
+    assert not list(queue.receipt.parent.glob("native-*/deferred.json"))
+
+
+def test_rebuilt_candidate_must_pass_shared_verifier_without_rebuild_loop(candidate_queue):
+    queue = candidate_queue
+    queue.reuse_errors.extend([native.sim_lane.LaneError("stale Xcode"),
+                               native.sim_lane.LaneError("production source changed during build")])
+    assert native.main() == 1
+    assert len(queue.builds) == 1
+    assert queue.flows == []
+    failed, = queue.receipt.parent.glob("native-*/failed.json")
+    assert json.loads(failed.read_text())["reason"] == "production source changed during build"
+
+
+def test_debug_dylib_tampering_cannot_be_rebuilt_away_or_credited(candidate_queue):
+    queue = candidate_queue
+    (queue.app / "WrongBook.debug.dylib").write_bytes(b"changed implementation")
+    assert native.main() == 1
+    assert queue.builds == queue.flows == []
+    failed, = queue.receipt.parent.glob("native-*/failed.json")
+    assert "including Debug dylib" in json.loads(failed.read_text())["reason"]

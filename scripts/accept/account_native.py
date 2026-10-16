@@ -2,7 +2,8 @@
 """Actual iOS account producer, isolated production backend, no synthetic input.
 
 --build creates a source-bound candidate using sim_lane's build slots.
---produce runs fresh product processes in an owned, hidden simulator.
+--produce refreshes missing/stale candidates, then runs fresh product processes
+in an owned, hidden simulator.
 --live-mail adds seven real SMTP/IMAP native cases with an owner-recipient and
 send-budget guard. --phone-fixture exercises native phone paths with an isolated
 SMS fixture, never real delivery. Fixture provisioning is never registration evidence.
@@ -75,6 +76,39 @@ def producer_digest():
 def artifacts(app):
     return {str(path.relative_to(app)): sha(path) for path in sorted(app.rglob("*"))
             if path.is_file() and not path.is_symlink()}
+
+def verified_candidate(receipt):
+    built = sim_lane.reuse_build(receipt, "wrong-book-ios", ROOT, "iphone", "WrongBook", "Debug")
+    if not built.get("product_artifacts") or artifacts(Path(built["app_path"])) != built["product_artifacts"]:
+        raise RuntimeError("Whole candidate package, including Debug dylib, must match its receipt")
+    return built
+
+def build_candidate(receipt):
+    # This adapter only bounds BuildSlot waiting; no outer simulator/quiet lock.
+    result = subprocess.run([sys.executable, str(Path(sim_admission.__file__)), "build", str(Path(sim_lane.__file__)),
+        "build", "--project-dir", str(ROOT), "--scheme", "WrongBook", "--platform", "iphone",
+        "--configuration", "Debug", "--json"], capture_output=True, text=True, timeout=660)
+    if result.returncode == 75:
+        try:
+            reason = json.loads(result.stdout).get("error")
+        except (ValueError, AttributeError):
+            reason = None
+        raise sim_lane.Busy(reason or "Shared native build slot unavailable; original queue must resume")
+    if result.returncode:
+        raise RuntimeError(f"Original shared build failed (exit {result.returncode}); no account evidence was produced")
+    built = json.loads(result.stdout)
+    built["product_artifacts"] = artifacts(Path(built["app_path"]))
+    write(receipt, built)
+    return verified_candidate(receipt)
+
+def prepare_candidate(receipt):
+    try:
+        return verified_candidate(receipt)
+    except sim_lane.LaneError as exc:
+        # A pruned copy, changed production input or changed Xcode invalidates
+        # the cache, not the account flow. Rebuild once, then verify strictly.
+        print("Native candidate cache unavailable; refreshing through shared build: " + str(exc), flush=True)
+        return build_candidate(receipt)
 
 def view_evidence(path):
     from PIL import Image
@@ -175,10 +209,8 @@ def service(mail=None):
             os.environ.clear(); os.environ.update(saved)
 
 def produce(receipt, run, binding, lock_wait=0, load_wait=0, live_mail=False, phone_fixture=False):
-    build = sim_lane.reuse_build(receipt, "wrong-book-ios", ROOT, "iphone", "WrongBook", "Debug")
+    build = verified_candidate(receipt)
     candidate = Path(build["app_path"])
-    if not build.get("product_artifacts") or artifacts(candidate) != build["product_artifacts"]:
-        raise RuntimeError("Whole candidate package, including Debug dylib, must match its receipt")
     report = {"account_input_sha256": binding, "candidate": True, "phone_installed": False,
               "producer_sha256": producer_digest(),
               "receipt": str(receipt.relative_to(ROOT)), "receipt_sha256": sha(receipt), "steps": {}, "view_checks": {},
@@ -300,16 +332,12 @@ def main():
         parser.error("wait budgets must be finite and nonnegative")
     receipt = args.receipt.resolve(); receipt.relative_to(ROOT / "perf/account")
     if args.build:
-        result = subprocess.run([sys.executable, str(Path(sim_admission.__file__)), "build", str(Path(sim_lane.__file__)),
-            "build", "--project-dir", str(ROOT), "--scheme", "WrongBook", "--platform", "iphone",
-            "--configuration", "Debug", "--json"], capture_output=True, text=True, timeout=660)
-        if result.returncode == 75:
-            print(result.stdout.strip()); return 75
-        if result.returncode:
-            print("Original shared build failed; no account evidence was produced"); return result.returncode
-        built = json.loads(result.stdout)
-        built["product_artifacts"] = artifacts(Path(built["app_path"]))
-        write(receipt, built)
+        try:
+            built = build_candidate(receipt)
+        except sim_lane.Busy as exc:
+            print("Deferred by original build queue: " + str(exc)); return 75
+        except (RuntimeError, sim_lane.LaneError) as exc:
+            print(str(exc)); return 1
         print(json.dumps({"receipt": str(receipt), "app_path": built["app_path"]})); return 0
     if not args.produce: parser.error("choose --build or --produce")
     app = app_sop.load_apps("wrong-book-ios")[0]
@@ -329,15 +357,18 @@ def main():
                         and all(proof.get("view_checks", {}).get(phase, {}).get("drawn") is True for phase in proof.get('steps', {}))):
                     print("Reused current requested native originals; unexercised phone cases remain pending")
                     return 0
-    if not receipt.is_file(): print("Missing current iOS candidate; run scripts/accept/account_native.py --build"); return 75
-    for failure in (ROOT / "perf/account").glob("native-*/failed.json"):
-        prior = json.loads(failure.read_text())
-        if prior.get("account_input_sha256") == binding and prior.get("producer_sha256") == producer_digest():
-            print("Same native failure already recorded; repair the original before retry: " + str(failure.relative_to(ROOT)))
-            return 1
     run = ROOT / "perf/account" / ("native-" + dt.datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + secrets.token_hex(3))
     run.mkdir(parents=True)
+    candidate_receipt_sha256 = None
     try:
+        prepare_candidate(receipt)
+        candidate_receipt_sha256 = sha(receipt)
+        for failure in (ROOT / "perf/account").glob("native-*/failed.json"):
+            prior = json.loads(failure.read_text())
+            if (prior.get("account_input_sha256") == binding and prior.get("producer_sha256") == producer_digest()
+                    and prior.get("candidate_receipt_sha256") == candidate_receipt_sha256):
+                print("Same native failure already recorded; repair the original before retry: " + str(failure.relative_to(ROOT)))
+                return 1
         index = produce(receipt, run, binding, args.lock_wait, args.load_wait, args.live_mail, args.phone_fixture)
         # The original fixed consumer still requires every case and both live channels.
         print("Actual native cases: " + ", ".join(index["account_cases"]))
@@ -349,6 +380,7 @@ def main():
     except Exception as exc:
         write(run / "failed.json", {"exit_code": 1, "error_class": type(exc).__name__, "account_input_sha256": binding,
             "producer_sha256": producer_digest(),
+            "candidate_receipt_sha256": candidate_receipt_sha256,
             "reason": str(exc) if isinstance(exc, (RuntimeError, sim_lane.LaneError)) else "See native originals and attempt stage"})
         print("Native account failed: " + type(exc).__name__); return 1
 
