@@ -207,12 +207,14 @@ def main(argv=None) -> int:
 
 def record(report: dict, summary: Path) -> None:
     import yaml
+    sop = (yaml.safe_load((REPO / "project.yaml").read_text(encoding="utf-8")) or {}).get("sop") or {}
+    meta = (REPO / sop["media_meta"]).resolve()
+    if not meta.is_relative_to(REPO.resolve()):
+        raise ValueError("media_meta 必须是本仓派生复核索引；原始审核登记保持只读")
+    doc = json.loads(meta.read_text(encoding="utf-8"))
     kept = REPO / "perf/media/compact-unchanged.json"
     kept.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(summary, kept)
-    sop = (yaml.safe_load((REPO / "project.yaml").read_text(encoding="utf-8")) or {}).get("sop") or {}
-    meta = (REPO / sop["media_meta"]).resolve()
-    doc = json.loads(meta.read_text(encoding="utf-8"))
     doc.setdefault("ui_reviews", []).append({
         "checked_at": report["checked_at"], "base_commit": report["base_commit"],
         "ui_source_sha256": report["ui_source"]["sha256"], "ui_source_globs": report["ui_source"]["globs"],

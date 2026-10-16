@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 python3 Tests/demo_fixture_test.py
+python3 Tests/media_record_test.py
 scratch="$(mktemp -d /tmp/wrongbook-sop.XXXXXX)"
 trap 'rm -rf "$scratch"' EXIT
 xcrun --sdk macosx swiftc Sources/ImportSubjectOptions.swift Tests/ImportSubjectRegression.swift -o "$scratch/subject"

@@ -71,7 +71,7 @@ sop:
   media:
   - shots
   - ../02-审核/当前版本/02-视频/成片/public-preview
-  media_meta: ../02-审核/当前版本/02-视频/成片/public-preview/provenance.json
+  media_meta: perf/media/provenance.json
   release: perf/asc-release.json
   # 一个 App 五条平台线（用户 2026-10-02：同名、同图标、同数据；「我都有，但你用模拟器好了」）。
   # 模拟器验收、证据标 environment=simulator；Mac 线是本机原生（同一 target，就在本仓，不委托别的组件）。

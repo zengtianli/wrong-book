@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "app": "wrong-book-ios",
+  "exported_at": "2026-09-26T12:45:26.767088+00:00",
+  "capture_kind": "physical_device_existing_recording",
+  "recorded_version": "1.0 (18)",
+  "device": "iPhone 17 / iOS 27.0",
+  "source": {
+    "path": "/Users/tianli/Apps/edu/ios/wrong-book/02-审核/当前版本/02-视频/原片/build18-practice-result-20260914.mov",
+    "sha256": "5960ecb6846bd9ebbd1c9549cce36823666f92ebdd1d1abd55f8ab61a4d001d5",
+    "start_s": 0,
+    "duration_s": 12
+  },
+  "assets": {
+    "tour.mp4": "d290d560c97daf10b8fe2fbfc85c912e97b0ec328d54f4085e08e7546a177e09",
+    "poster.jpg": "eb62b2c8b2732b748ef4450dafdd63222ac31d0127a8e45232983fe77a2d3129",
+    "tour.vtt": "87f50437b32bba8a33029cfe7700dc0eed83b2722c33f9faaed5338bc860ce25",
+    "guide.md": "09217f1b134eceac879a959d793e1d8cd9a242d3db594799256defda815d7477"
+  },
+  "privacy_review": "选定连续片段关键动作前后抽帧复核，无登录凭据/私人建议/私人聊天；仅审核演示账号或演示题目。原片含其它内容，未整体公开。",
+  "reused_for": {
+    "1.0 (18)": "正式build18原始真机证据源7cf2e8492ddb99781d71dcb42d4580c8f77bf35c；git diff到当前Sources/Shared仅目录注释替换，逻辑和UI未变化。"
+  },
+  "limitations": [
+    "不是当前真机重新录制",
+    "不证明设备当前已装最终商店包或资源占用",
+    "Options为分段成片；其余保留选定原片连续段"
+  ],
+  "ui_reviews": [
+    {
+      "checked_at": "2026-10-02T22:58:07+08:00",
+      "base_commit": "89c699ac846210760b8029973937045170a5f343",
+      "ui_source_sha256": "18451dc40fe2f71cf8b410c4d8f87d5aab08932087ff3e286a464b7c0a650fd4",
+      "ui_source_globs": [
+        "Sources/**",
+        "Shared/**",
+        "Watch/**"
+      ],
+      "unchanged": true,
+      "device": "iPhone 17 Pro (iPhone-17-Pro) / iOS-27-0 simulator",
+      "rule": "identical, or no pixel differs by more than 2/255 in any channel (system glass dither / scroll indicator / clock; layout changes are far above it)",
+      "screens": {
+        "login": "identical",
+        "library": "4 px differ, max 1/255 (y 58.8%–81.2%, x 94.9%–94.9%)",
+        "import": "1337 px differ, max 2/255 (y 90.4%–97.7%, x 15.8%–84.2%)",
+        "review": "identical",
+        "question": "identical"
+      },
+      "current_sha256": {
+        "login": "276da5f1a7a56ce688276e8cd330454e40af83c1fcad68637e88742a42daedf3",
+        "library": "e8fc34ae9c267ae2c17a082c087ee4442328b1dcd9ea7766ee47ae793a7cffe2",
+        "import": "bdd1da69fb1c0aefb1571690aa43cab84eb583a45496cf67e40446ab3a2e605b",
+        "review": "210e6316bc56296575b8eb764d513d0e9287c92bf637d496ccdf2ded7d8a9bd6",
+        "question": "1a497b58a13e7f05f4e676f34aaba283a23cde52e9b7036a83e08489731cc744"
+      },
+      "report": "01-源程序/perf/media/compact-unchanged.json",
+      "report_sha256": "adb794f7c0c80bbab4b9b90b97fe692b347744085196eba55453070c14527eed",
+      "tool": "01-源程序/scripts/media/compact_unchanged.py",
+      "note": "iPhone 窄屏（预览视频与 iPhone 商店截图所示布局）在当前工作树与五平台改动前的 base 之间逐屏比对：宽屏布局、Watch、Vision、Mac 等改动没有碰到 iPhone 画面。录像仍是 1.0 (18) 真机原片，不因此变成新录制；界面源码再改就重跑本工具。"
+    },
+    {
+      "checked_at": "2026-10-05T19:42:52+08:00",
+      "base_commit": "89c699ac846210760b8029973937045170a5f343",
+      "ui_source_sha256": "8f6528311747982445f7156d0227d555dfe14b2c552057ccf978e2228f1c4094",
+      "ui_source_globs": [
+        "Sources/**",
+        "Shared/**",
+        "Watch/**"
+      ],
+      "unchanged": false,
+      "device": "iPhone 17 Pro (iPhone-17-Pro) / iOS-27-0 simulator",
+      "rule": "identical, or no pixel differs by more than 2/255 in any channel (system glass dither / scroll indicator / clock; layout changes are far above it)",
+      "screens": {
+        "login": "pixels differ by up to 211 of 255",
+        "library": "identical",
+        "import": "pixels differ by up to 255 of 255",
+        "review": "identical",
+        "question": "identical"
+      },
+      "current_sha256": {
+        "login": "5f0ead56ac096c236b8196ae9214c7afb4872799e35b70c75ae0aa55547891bf",
+        "library": "02e7fdb6f2d9a171dc9b9273b8190e706d2a65a72a72e64f66357c1cabf87c1e",
+        "import": "fc268872a1040ff8614e9afcc9730bce7bf7cb65fc0ac67cc0ab4225a54be2a3",
+        "review": "150d3b00a8cb2e40c46ce214a04ab33a39807550b05631e634358ae7c6ecfe5c",
+        "question": "231bc0466ba513baeb4113cf2a5fa2553a9a84db3079f83d00d705c72e1cafff"
+      },
+      "report": "01-源程序/perf/media/compact-unchanged.json",
+      "report_sha256": "5114df1f354781a68b7326f45c1f8120c93b9c2f1e8e9344b6ebfcaeaa6798eb",
+      "tool": "01-源程序/scripts/media/compact_unchanged.py",
+      "note": "iPhone 窄屏（预览视频与 iPhone 商店截图所示布局）在当前工作树与五平台改动前的 base 之间逐屏比对：宽屏布局、Watch、Vision、Mac 等改动没有碰到 iPhone 画面。录像仍是 1.0 (18) 真机原片，不因此变成新录制；界面源码再改就重跑本工具。"
+    },
+    {
+      "checked_at": "2026-10-05T22:53:42+08:00",
+      "base_commit": "86f3afa17e541f929d193272992c5f4d72f7220e",
+      "ui_source_sha256": "8f6528311747982445f7156d0227d555dfe14b2c552057ccf978e2228f1c4094",
+      "ui_source_globs": [
+        "Sources/**",
+        "Shared/**",
+        "Watch/**"
+      ],
+      "unchanged": true,
+      "device": "iPhone 17 Pro (iPhone-17-Pro) / iOS-27-0 simulator",
+      "rule": "identical, or no pixel differs by more than 2/255 in any channel (system glass dither / scroll indicator / clock; layout changes are far above it)",
+      "verdict_screens": [
+        "login",
+        "library",
+        "review",
+        "question"
+      ],
+      "screens": {
+        "login": "identical",
+        "library": "1355 px differ, max 2/255 (y 90.5%–98.8%, x 15.3%–84.7%)",
+        "import": "report only: pixels differ by up to 255 of 255; 101106 px (y 46.0%–97.7%, x 4.0%–96.0%)",
+        "review": "identical",
+        "question": "identical"
+      },
+      "current_sha256": {
+        "login": "5f0ead56ac096c236b8196ae9214c7afb4872799e35b70c75ae0aa55547891bf",
+        "library": "fc755cf26b27d99275c5d848d1a35f924abf71e30696804349ad70e3e4e151f7",
+        "import": "fc268872a1040ff8614e9afcc9730bce7bf7cb65fc0ac67cc0ab4225a54be2a3",
+        "review": "7cbd05dcdd7c64d40ae396228823f8ee0e6f805fd8e60abb5e3bfb2c2ab3852f",
+        "question": "231bc0466ba513baeb4113cf2a5fa2553a9a84db3079f83d00d705c72e1cafff"
+      },
+      "report": "01-源程序/perf/media/compact-unchanged.json",
+      "report_sha256": "fe5d149693caea66a0f8991f19afbe680a2614ae29587f798c6aec3750bb3e0d",
+      "tool": "01-源程序/scripts/media/compact_unchanged.py",
+      "note": "iPhone 窄屏在当前工作树与 base 之间逐屏比对：预览视频与 iPhone 商店截图所示的画面（verdict_screens）与 base 相同，base 之后的改动没有碰到它们。录像仍是 1.0 (18) 真机原片，不因此变成新录制；界面源码再改就重跑本工具。"
+    },
+    {
+      "checked_at": "2026-10-07T22:22:21+08:00",
+      "base_commit": "86f3afa17e541f929d193272992c5f4d72f7220e",
+      "ui_source_sha256": "0ddbac658f316c7a2342a262211ab460ae2a61e1e86e5ead5de73486dd7f1316",
+      "ui_source_globs": [
+        "Sources/**",
+        "Shared/**",
+        "Watch/**"
+      ],
+      "unchanged": false,
+      "device": "iPhone 17 Pro (iPhone-17-Pro) / iOS-27-0 simulator",
+      "rule": "identical, or no pixel differs by more than 2/255 in any channel (system glass dither / scroll indicator / clock; layout changes are far above it)",
+      "verdict_screens": [
+        "login",
+        "library",
+        "review",
+        "question"
+      ],
+      "screens": {
+        "login": "pixels differ by up to 255 of 255; 793384 px (y 14.1%–96.0%, x 7.3%–92.7%)",
+        "library": "1360 px differ, max 2/255 (y 52.0%–98.8%, x 15.3%–94.9%)",
+        "import": "report only: 1337 px differ, max 2/255 (y 90.4%–97.7%, x 15.8%–84.2%)",
+        "review": "identical",
+        "question": "identical"
+      },
+      "current_sha256": {
+        "login": "9826136b6c8cf1f29a0f81ab2619dc35df149fae8f958864ccd265ae0628acfe",
+        "library": "091b13a88c76a58ad4919e9c2bc8c99b2b7cb394651a0fa6eb3bbc3a7bf3d83b",
+        "import": "ee255e7b78c55696d71fc8a0280e837f6a59e4bbfc90771d9c7de730807ac05b",
+        "review": "150d3b00a8cb2e40c46ce214a04ab33a39807550b05631e634358ae7c6ecfe5c",
+        "question": "231bc0466ba513baeb4113cf2a5fa2553a9a84db3079f83d00d705c72e1cafff"
+      },
+      "report": "01-源程序/perf/media/compact-unchanged.json",
+      "report_sha256": "5d8d74efdc47b3fd84833b11d3817e2fade053c8efeafdc5bb1e47338c532d18",
+      "tool": "01-源程序/scripts/media/compact_unchanged.py",
+      "note": "iPhone 窄屏在当前工作树与 base 之间逐屏比对，有画面与 base 不同（见 screens）：现有 iPhone 素材不能凭本条沿用，需按变化的画面重录或重截。"
+    }
+  ],
+  "original_record": {
+    "path": "/Users/tianli/Apps/edu/ios/wrong-book/02-审核/当前版本/02-视频/成片/public-preview/provenance.json",
+    "sha256": "ea6e7c5ab6d95e50bcd0f676a6baa1e70e93a674c988d572ce88b75c580449b6",
+    "access": "read_only"
+  }
+}
