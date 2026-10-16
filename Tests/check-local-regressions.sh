@@ -12,7 +12,7 @@ xcrun --sdk macosx swiftc Shared/RemoteUI.swift Sources/Api.swift Sources/Accoun
 "$scratch/paper"
 xcrun --sdk macosx swiftc -target "$(uname -m)-apple-macos15.0" \
   Shared/RemoteUI.swift Sources/Api.swift Sources/AccountDeletion.swift Sources/PaperRequestSession.swift \
-  Sources/Session.swift Tests/SessionIdentityRegression.swift -o "$scratch/identity"
+  Sources/Session.swift Sources/StartupDiagnostics.swift Tests/SessionIdentityRegression.swift -o "$scratch/identity"
 "$scratch/identity"
 xcrun --sdk macosx swiftc Shared/RemoteUI.swift Sources/Api.swift Sources/AccountDeletion.swift \
   Sources/PaperRequestSession.swift Tests/AccountRegression.swift -o "$scratch/account"

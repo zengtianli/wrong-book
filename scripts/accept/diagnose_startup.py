@@ -10,14 +10,18 @@ import datetime
 import hashlib
 import importlib.util
 import json
+import math
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path.home() / "Dev/tools/dev/lib/tools/macapp/ios"))
+sys.path.insert(0, str(Path.home() / "Apps/chapter/engine"))
 import sim_lane
+import sim_admission
 
 
 def main():
@@ -28,8 +32,8 @@ def main():
     parser.add_argument("--lock-wait", type=float, default=0)
     parser.add_argument("--load-wait", type=float, default=0)
     args = parser.parse_args()
-    if args.lock_wait < 0 or args.load_wait < 0:
-        parser.error("queue wait budgets must be nonnegative")
+    if any(not math.isfinite(v) or v < 0 for v in (args.lock_wait, args.load_wait)):
+        parser.error("queue wait budgets must be finite and nonnegative")
     out = args.out.resolve()
     out.relative_to(ROOT / "handoffs")  # diagnostic material never enters public evidence
     if out.exists():
@@ -60,14 +64,20 @@ def main():
               "code_sha256": hashlib.sha256(code.read_bytes()).hexdigest(),
               "canonical_attempt": str(source), "canonical_attempt_sha256": hashlib.sha256(prior_bytes).hexdigest(),
               "admission": {"lock_wait_seconds": args.lock_wait, "load_wait_seconds": args.load_wait}}
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
     try:
+        # Reuse the queue's authority: only its ended, identity-matched boots may
+        # be retired. Owner/manual/unknown devices are always left running.
+        report["device_admission"] = sim_admission.admit(sim_lane, reuse=False, label="wrong-book startup diagnostics")
         device = sim_lane.ensure_device(args.platform, prior["device"]["device_type"], "WrongBook Startup QA")
-        with sim_lane.Session(args.platform, device["udid"], label="wrong-book startup diagnostics",
+        with sim_admission.hooked(sim_lane, run_record=str(out / "simulator-run.json"), label="wrong-book startup diagnostics"), \
+                sim_lane.Session(args.platform, device["udid"], label="wrong-book startup diagnostics",
                               lock_wait=args.lock_wait, load_wait=args.load_wait) as lane:
             connection = fixture.start(out / "private-fixture")
             lane.install(app)
             launch = sim_lane.simctl("launch", "--terminate-running-process", device["udid"], info["bundle_id"],
-                                     "-api_base", connection["url"], "-dev_user", connection["user"], "-dev_pw", connection["pw"])
+                                     "-api_base", connection["url"], "-dev_user", connection["user"], "-dev_pw", connection["pw"],
+                                     "-startup_diagnostics", "1")
             pid = int(launch.stdout.strip().rsplit(":", 1)[1])
             report.update(device=device, pid=pid)
             try:
@@ -81,6 +91,9 @@ def main():
                 lane.shot(out / "screen.png")
                 time.sleep(3)
                 report["requests"] = (out / "private-fixture/fixture.log").read_text().splitlines()
+                logs = sim_lane.simctl("spawn", device["udid"], "log", "show", "--last", "2m", "--style", "compact",
+                                      "--predicate", 'subsystem == "cyou.tianli.wrongbook" AND category == "startup"', check=False)
+                (out / "startup.log").write_text(logs.stdout + logs.stderr)
             finally:
                 lane.terminate(info["bundle_id"])
     except sim_lane.Busy as error:

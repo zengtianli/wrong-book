@@ -9,7 +9,7 @@ accept_swift privacy-import Sources/Api.swift Sources/AccountDeletion.swift \
   Sources/PaperRequestSession.swift Tests/PrivacyAcceptance.swift \
   Tests/PaperSessionRegression.swift
 accept_swift privacy-identity Sources/Api.swift Sources/AccountDeletion.swift \
-  Sources/PaperRequestSession.swift Sources/Session.swift \
+  Sources/PaperRequestSession.swift Sources/Session.swift Sources/StartupDiagnostics.swift \
   Tests/PrivacyAcceptance.swift Tests/SessionIdentityRegression.swift
 
 accept_scope 'Privacy: bound import cookies; old scope/login/endpoint rejected before transport; stale account/deletion responses rejected; guest refresh sends no request; auth operations serialize. Preferences are in-memory; library storage is a test stand-in. Physical-device permissions, live deletion, server retention and AI consent UI are outside this check.'

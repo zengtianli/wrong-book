@@ -108,6 +108,7 @@ final class Session: ObservableObject {
     /// 注意：**没登录照样能做题**。页面是自包含的，登录只决定分记不记得上、
     /// 存档同不同步。所以登录页上有一条「先不登录，直接做题」。
     func restore() async {
+        StartupDiagnostics.mark("session.restore.enter")
         guard !busy else { return }
         // 验证通道：只有显式传了 launch 参数才生效，生产路径上这两个 key 永远是 nil
         let d = UserDefaults.standard
@@ -136,6 +137,7 @@ final class Session: ObservableObject {
     }
 
     func login(user: String, password: String) async {
+        StartupDiagnostics.mark("session.login.enter")
         guard !busy else { return }
         identityGeneration = UUID()
         let generation = identityGeneration
@@ -144,14 +146,19 @@ final class Session: ObservableObject {
         LessonSync.shared.setUser(nil)
         status = nil
         do {
+            StartupDiagnostics.mark("session.login.request")
             try await Api.login(user: user, password: password)
+            StartupDiagnostics.mark("session.login.response")
             guard generation == identityGeneration else { return }
             let signedIn = try await Api.status()
+            StartupDiagnostics.mark("session.state.response")
             guard generation == identityGeneration else { return }
             status = signedIn
             LessonSync.shared.setUser(signedIn.user)
             phase = .loggedIn
+            StartupDiagnostics.mark("session.loggedIn")
         } catch {
+            StartupDiagnostics.mark("session.login.failed")
             guard generation == identityGeneration else { return }
             self.error = error.localizedDescription
             // ⚠ 必须落回 loggedOut：从 restore() 的 dev 分支进来时 phase 还是 .checking，
