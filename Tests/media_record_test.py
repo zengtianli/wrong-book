@@ -39,6 +39,10 @@ class RecordBoundary(unittest.TestCase):
                 meta.write_text(json.dumps({"original_record": pointer, "ui_reviews": []}))
                 (repo / "project.yaml").write_text('sop:\n  media_meta: meta.json\n')
                 compact.REPO = repo
+                kept = repo / "perf/media/compact-unchanged.json"
+                kept.parent.mkdir(parents=True)
+                kept.write_text('{"previous_raw": true}')
+                previous_sha = compact.sha(kept)
                 report = {"checked_at": "test", "base_commit": "test", "ui_source": {"sha256": "test", "globs": []},
                           "unchanged": False, "device": "test fixture", "rule": "test", "verdict_screens": [], "screens": {}}
                 summary = root / "summary.json"; summary.write_text(json.dumps(report))
@@ -48,6 +52,7 @@ class RecordBoundary(unittest.TestCase):
                 self.assertEqual(result["original_record"], pointer)
                 self.assertEqual(compact.sha(original), pointer["sha256"])
                 self.assertEqual(compact.sha(repo / "perf/media/compact-unchanged.json"), compact.sha(summary))
+                self.assertEqual(compact.sha(repo / "perf/media/previous-reviews" / (previous_sha + ".json")), previous_sha)
         finally:
             compact.REPO = previous
 

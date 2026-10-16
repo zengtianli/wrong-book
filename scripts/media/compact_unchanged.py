@@ -34,6 +34,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import math
 import shutil
 import subprocess
 import sys
@@ -46,6 +47,8 @@ APP_ID = "wrong-book-ios"
 BUNDLE = "cyou.tianli.wrongbook"
 sys.path.insert(0, str(Path.home() / "Dev/tools/dev/lib/tools/macapp/ios"))
 import sim_lane  # noqa: E402
+sys.path.insert(0, str(Path.home() / "Apps/chapter/engine"))
+import sim_admission  # noqa: E402
 
 # (screen, launch args, extra seconds before the stability check). The opened question is a WKWebView page that
 # paints after the native frame is already still: without the extra wait one side can be shot blank (2026-10-02).
@@ -63,6 +66,18 @@ def sha(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def build_candidate(source: Path, work: Path) -> dict:
+    # Original shared adapter retains sim_lane.build and its parallel SDK slot.
+    result = subprocess.run([sys.executable, str(Path(sim_admission.__file__)), "build", str(Path(sim_lane.__file__)),
+        "build", "--project-dir", str(source), "--scheme", "WrongBook", "--platform", "iphone",
+        "--configuration", "Debug", "--work-dir", str(work), "--json"], capture_output=True, text=True, timeout=660)
+    if result.returncode == 75:
+        raise sim_lane.Busy(result.stdout.strip())
+    if result.returncode:
+        raise sim_lane.LaneError("shared compact build failed: " + result.stderr[-500:])
+    return json.loads(result.stdout)
+
+
 def ui_snapshot() -> dict:
     sys.path.insert(0, str(Path.home() / "Apps/chapter/engine"))
     import app_sop  # noqa: E402  (the snapshot Chapter's media check reads sop.ui through)
@@ -71,7 +86,7 @@ def ui_snapshot() -> dict:
     return {"globs": app["sop"]["ui"], "sha256": snap["sha256"], "file_count": snap["file_count"]}
 
 
-def shots(udid: str, s, app: Path, args: list[str], out: Path, login_url: str) -> dict:
+def shots(udid: str, s, app: Path, args: list[str], out: Path, login_url: str, *, require_ready=False) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     sim_lane.simctl("uninstall", udid, BUNDLE, check=False)
     s.install(app)
@@ -80,7 +95,15 @@ def shots(udid: str, s, app: Path, args: list[str], out: Path, login_url: str) -
         # A different port alone cannot isolate localhost cookies. Login uses a
         # separate fixture that rejects every cookie, including this run's.
         launch = ["-api_base", login_url] if extra is None else [*args, *extra]
-        sim_lane.simctl("launch", "--terminate-running-process", udid, BUNDLE, *launch, timeout=120)
+        # The current data-bearing home must really finish loading. An identical
+        # spinner in two builds is not proof that published screens are unchanged.
+        if require_ready and name == "library":
+            result = s.launch(BUNDLE, launch, "log", 120, None,
+                              sim_lane.bundle_info(app)["executable"], functional_thin=True)
+            if result.get("errors") or result.get("ready_signal") != "os_log":
+                raise sim_lane.LaneError("current library never reached real lane-ready: " + str(result.get("errors")))
+        else:
+            sim_lane.simctl("launch", "--terminate-running-process", udid, BUNDLE, *launch, timeout=120)
         time.sleep(10 + more)    # the base build predates the lane-ready log; the same fixed wait for both sides
         a, b = out / f".{name}.a.png", out / f"{name}.png"
         s.shot(a)
@@ -123,7 +146,12 @@ def main(argv=None) -> int:
     ap.add_argument("--base", default="HEAD", help="git revision the existing media were last reviewed against")
     ap.add_argument("--out", type=Path, help="keep screenshots and report here (outside the repo); default a temp dir")
     ap.add_argument("--record", action="store_true", help="keep the report as perf/media/compact-unchanged.json")
+    ap.add_argument("--current-receipt", type=Path, help="reuse a source-verified current iPhone Debug candidate")
+    ap.add_argument("--lock-wait", type=float, default=0, help="bounded original simulator queue wait")
+    ap.add_argument("--load-wait", type=float, default=0, help="bounded original quiet-window wait")
     a = ap.parse_args(argv)
+    if any(not math.isfinite(v) or v < 0 for v in (a.lock_wait, a.load_wait)):
+        ap.error("wait budgets must be finite and nonnegative")
     base = subprocess.run(["git", "-C", str(REPO), "rev-parse", a.base], capture_output=True, text=True,
                           check=True).stdout.strip()
     work = Path(tempfile.mkdtemp(prefix="wrongbook-compact."))
@@ -139,8 +167,9 @@ def main(argv=None) -> int:
         src_base.mkdir()
         tar = subprocess.run(["git", "-C", str(REPO), "archive", base], capture_output=True, check=True).stdout
         subprocess.run(["tar", "-x", "-C", str(src_base)], input=tar, check=True)
-        built = {"base": sim_lane.build(src_base, "WrongBook", "iphone", "Debug", work / "base"),
-                 "current": sim_lane.build(REPO, "WrongBook", "iphone", "Debug", work / "current")}
+        built = {"base": build_candidate(src_base, work / "base"),
+                 "current": (sim_lane.reuse_build(a.current_receipt, APP_ID, REPO, "iphone", "WrongBook", "Debug")
+                             if a.current_receipt else build_candidate(REPO, work / "current"))}
         for b in built.values():
             app = Path(b["app_path"])
             dylib = app / "WrongBook.debug.dylib"      # Debug: the code lives here, the executable is a launcher stub
@@ -159,14 +188,18 @@ def main(argv=None) -> int:
             if anonymous.returncode:
                 raise SystemExit("匿名登录界面夹具没起来")
             login_url = json.loads(anonymous.stdout)["url"]
-            dev = sim_lane.ensure_device("iphone", "iPhone-17-Pro")
-            with sim_lane.Session("iphone", dev["udid"], label="wrong-book compact_unchanged") as s:
+            sim_admission.admit(sim_lane, reuse=False, label="wrong-book compact_unchanged")
+            dev = sim_lane.ensure_device("iphone", "iPhone-17-Pro", name="WrongBook Media QA")
+            with sim_admission.hooked(sim_lane, run_record=str(out / "simulator-run.json"), label="wrong-book compact_unchanged"), \
+                    sim_lane.Session("iphone", dev["udid"], label="wrong-book compact_unchanged",
+                                     lock_wait=a.lock_wait, load_wait=a.load_wait) as s:
                 sim_lane.simctl("status_bar", dev["udid"], "override", "--time", "9:41", "--dataNetwork", "wifi",
                                 "--wifiMode", "active", "--wifiBars", "3", "--cellularMode", "active",
                                 "--cellularBars", "4", "--batteryState", "charged", "--batteryLevel", "100",
                                 check=False)
                 for side in ("base", "current"):
-                    hashes[side] = shots(dev["udid"], s, Path(built[side]["app_path"]), args, out / side, login_url)
+                    hashes[side] = shots(dev["udid"], s, Path(built[side]["app_path"]), args, out / side, login_url,
+                                         require_ready=side == "current")
         finally:
             subprocess.run([*fixture, "stop", "--dir", str(work / "fixture")], capture_output=True)
             subprocess.run([*fixture, "stop", "--dir", str(work / "anonymous")], capture_output=True)
@@ -214,6 +247,10 @@ def record(report: dict, summary: Path) -> None:
     doc = json.loads(meta.read_text(encoding="utf-8"))
     kept = REPO / "perf/media/compact-unchanged.json"
     kept.parent.mkdir(parents=True, exist_ok=True)
+    if kept.exists():
+        archive = kept.parent / "previous-reviews" / (sha(kept) + ".json")
+        archive.parent.mkdir(exist_ok=True)
+        if not archive.exists(): shutil.copyfile(kept, archive)
     shutil.copyfile(summary, kept)
     doc.setdefault("ui_reviews", []).append({
         "checked_at": report["checked_at"], "base_commit": report["base_commit"],

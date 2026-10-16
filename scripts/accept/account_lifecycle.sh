@@ -2,6 +2,17 @@
 # Consume completed native-flow evidence; never send SMS, mutate accounts or turn mocks into a pass.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
+# A separate real-product producer may add five no-message cases. It cannot
+# certify email/SMS, registration or recovery; the strict consumer below keeps
+# every remaining live-channel case pending. Missing candidate/queue busy is 75.
+if [ "${SOP_ACCOUNT_PRODUCE:-1}" = 1 ]; then
+    producer_code=0
+    "$HOME/Dev/.venv/bin/python" scripts/accept/account_native.py --produce || producer_code=$?
+    if [ "$producer_code" != 0 ] && [ "$producer_code" != 75 ]; then
+        echo "原生账号生产者失败；先查 perf/account/native-*/failed.json" >&2
+        exit "$producer_code"
+    fi
+fi
 exec "$HOME/Dev/.venv/bin/python" - <<'PY'
 import json
 import os

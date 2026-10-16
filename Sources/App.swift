@@ -8,6 +8,12 @@ import UIKit
 @main
 enum WrongBookMain {
     @MainActor static func main() {
+        #if DEBUG && os(iOS)
+        if AccountSelfTest.requested {
+            AccountSelfTestApp.main()
+            return
+        }
+        #endif
         #if DEBUG && (os(macOS) || os(iOS))
         if ProductBasicsSelfTest.requested {
             #if os(macOS)
