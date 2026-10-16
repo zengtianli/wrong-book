@@ -71,13 +71,15 @@ def ui_snapshot() -> dict:
     return {"globs": app["sop"]["ui"], "sha256": snap["sha256"], "file_count": snap["file_count"]}
 
 
-def shots(udid: str, s, app: Path, args: list[str], out: Path) -> dict:
+def shots(udid: str, s, app: Path, args: list[str], out: Path, login_url: str) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     sim_lane.simctl("uninstall", udid, BUNDLE, check=False)
     s.install(app)
     hashes = {}
     for name, extra, more in SCREENS:
-        launch = args[:2] if extra is None else [*args, *extra]   # login: library address only, no dev login
+        # A different port alone cannot isolate localhost cookies. Login uses a
+        # separate fixture that rejects every cookie, including this run's.
+        launch = ["-api_base", login_url] if extra is None else [*args, *extra]
         sim_lane.simctl("launch", "--terminate-running-process", udid, BUNDLE, *launch, timeout=120)
         time.sleep(10 + more)    # the base build predates the lane-ready log; the same fixed wait for both sides
         a, b = out / f".{name}.a.png", out / f"{name}.png"
@@ -150,18 +152,24 @@ def main(argv=None) -> int:
             raise SystemExit(f"演示服务没起来：{(r.stderr or r.stdout)[-300:]}")
         lib = json.loads(r.stdout)
         args = ["-api_base", lib["url"], "-dev_user", lib["user"], "-dev_pw", lib["pw"]]
-        dev = sim_lane.ensure_device("iphone", "iPhone-17-Pro")
         hashes = {}
         try:
+            anonymous = subprocess.run([*fixture, "start", "--dir", str(work / "anonymous"), "--anonymous", "--json"],
+                                       capture_output=True, text=True, timeout=120)
+            if anonymous.returncode:
+                raise SystemExit("匿名登录界面夹具没起来")
+            login_url = json.loads(anonymous.stdout)["url"]
+            dev = sim_lane.ensure_device("iphone", "iPhone-17-Pro")
             with sim_lane.Session("iphone", dev["udid"], label="wrong-book compact_unchanged") as s:
                 sim_lane.simctl("status_bar", dev["udid"], "override", "--time", "9:41", "--dataNetwork", "wifi",
                                 "--wifiMode", "active", "--wifiBars", "3", "--cellularMode", "active",
                                 "--cellularBars", "4", "--batteryState", "charged", "--batteryLevel", "100",
                                 check=False)
                 for side in ("base", "current"):
-                    hashes[side] = shots(dev["udid"], s, Path(built[side]["app_path"]), args, out / side)
+                    hashes[side] = shots(dev["udid"], s, Path(built[side]["app_path"]), args, out / side, login_url)
         finally:
             subprocess.run([*fixture, "stop", "--dir", str(work / "fixture")], capture_output=True)
+            subprocess.run([*fixture, "stop", "--dir", str(work / "anonymous")], capture_output=True)
     except sim_lane.Busy as exc:
         print(f"推迟：{exc}", file=sys.stderr)
         return 75
@@ -180,7 +188,7 @@ def main(argv=None) -> int:
               "builds": {k: {x: v.get(x) for x in ("configuration", "version", "build", "executable_sha256", "code_sha256",
                                                    "embeds_watch_app", "sdk")}
                          for k, v in built.items()},
-              "data": "fictional demo library (scripts/demo/fixture.py), same fixture for both builds, status bar 9:41",
+              "data": "fictional demo library (scripts/demo/fixture.py), same fixture for both builds, status bar 9:41; login uses anonymous fixture rejecting every cookie and account write",
               "rule": f"identical, or no pixel differs by more than {MAX_DIFF}/255 in any channel "
                       "(system glass dither / scroll indicator / clock; layout changes are far above it)",
               "verdict_screens": [name for name, *_ in SCREENS if name not in REPORT_ONLY],

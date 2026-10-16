@@ -31,6 +31,7 @@ import sys
 import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.cookies import SimpleCookie
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
@@ -41,7 +42,8 @@ PW_ENV = "WRONGBOOK_DEMO_PW"
 PW = os.environ.get(PW_ENV) or "demo-" + secrets.token_hex(6)
 SCOPE = "demo-library-v1"
 COOKIE = "edu_sess"
-TOKEN = "demo-session-token"
+TOKEN = secrets.token_urlsafe(32)  # localhost cookies ignore ports: never accept a previous fixture's session
+CHILDREN: dict[int, subprocess.Popen] = {}
 
 # (slug, title, subject, subject name, unit, date, private, [(uid, gid, question)])
 LESSONS = [
@@ -150,6 +152,7 @@ MANIFEST, FILES = build_library()
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "wrongbook-demo/1"
+    anonymous = False
 
     def log_message(self, fmt, *args):          # one line per request on stderr (captured into the log file)
         sys.stderr.write("%s %s\n" % (self.command, self.path.split("?")[0]))
@@ -166,7 +169,15 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def _authed(self) -> bool:
-        return f"{COOKIE}={TOKEN}" in (self.headers.get("Cookie") or "")
+        if self.anonymous:
+            return False
+        cookies = SimpleCookie()
+        try:
+            cookies.load(self.headers.get("Cookie") or "")
+        except Exception:
+            return False
+        value = cookies.get(COOKIE)
+        return value is not None and secrets.compare_digest(value.value, TOKEN)
 
     def _body(self) -> dict:
         n = int(self.headers.get("Content-Length") or 0)
@@ -209,6 +220,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):  # noqa: N802
         p = urlsplit(self.path).path
         b = self._body()
+        if self.anonymous:
+            return self._json(503, {"ok": False, "err": "匿名界面夹具不登录、不发送验证码"})
         if p == "/api/login":
             if b.get("u") == USER and b.get("p") == PW:
                 return self._json(200, {"ok": True}, cookie=f"{COOKIE}={TOKEN}; Path=/; HttpOnly; Max-Age=86400")
@@ -228,20 +241,26 @@ def free_port() -> int:
         return s.getsockname()[1]
 
 
-def serve(port: int) -> None:
+def serve(port: int, anonymous: bool = False) -> None:
+    Handler.anonymous = anonymous
     httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     signal.signal(signal.SIGTERM, lambda *_: (httpd.server_close(), sys.exit(0)))
     httpd.serve_forever()
 
 
-def start(work: Path) -> dict:
+def start(work: Path, anonymous: bool = False) -> dict:
     work.mkdir(parents=True, exist_ok=True)
     stop(work)
     port = free_port()
     log = open(work / "fixture.log", "w")
     pw = "demo-" + secrets.token_hex(6)
-    proc = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "serve", "--port", str(port)],
+    command = [sys.executable, str(Path(__file__).resolve()), "serve", "--port", str(port)]
+    if anonymous:
+        command.append("--anonymous")
+    proc = subprocess.Popen(command,
                             stdout=log, stderr=log, start_new_session=True, env={**os.environ, PW_ENV: pw})
+    log.close()
+    CHILDREN[proc.pid] = proc
     url = f"http://127.0.0.1:{port}"
     for _ in range(50):
         try:
@@ -252,6 +271,8 @@ def start(work: Path) -> dict:
             time.sleep(0.1)
     else:
         proc.kill()
+        proc.wait()
+        CHILDREN.pop(proc.pid, None)
         raise SystemExit(f"演示服务没起来；日志 {work / 'fixture.log'}")
     info = {"url": url, "port": port, "pid": proc.pid, "user": USER, "pw": pw, "dir": str(work)}
     (work / "fixture.json").write_text(json.dumps(info), encoding="utf-8")
@@ -263,7 +284,11 @@ def stop(work: Path) -> bool:
     if not f.is_file():
         return False
     try:
-        os.kill(json.loads(f.read_text())["pid"], signal.SIGTERM)
+        pid = json.loads(f.read_text())["pid"]
+        os.kill(pid, signal.SIGTERM)
+        child = CHILDREN.pop(pid, None)
+        if child is not None:
+            child.wait(timeout=5)
     except (OSError, ValueError, KeyError):
         pass
     f.unlink(missing_ok=True)
@@ -276,18 +301,19 @@ def main(argv=None) -> int:
     ap.add_argument("--dir", type=Path, help="scratch directory for state and log (outside the repo)")
     ap.add_argument("--port", type=int, default=18881)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--anonymous", action="store_true", help="reject every cookie and all account writes; login screenshots only")
     a = ap.parse_args(argv)
     if a.cmd == "serve":
         if not os.environ.get(PW_ENV):
             print(f"演示账号 {USER} / {PW}", file=sys.stderr)
-        serve(a.port)
+        serve(a.port, a.anonymous)
         return 0
     if not a.dir:
         ap.error("--dir is required for start/stop")
     if a.cmd == "stop":
         stop(a.dir.expanduser().resolve())
         return 0
-    info = start(a.dir.expanduser().resolve())
+    info = start(a.dir.expanduser().resolve(), a.anonymous)
     print(json.dumps(info) if a.json else "\n".join(f"{k}: {v}" for k, v in info.items()))
     return 0
 
