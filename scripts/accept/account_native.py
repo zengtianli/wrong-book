@@ -14,6 +14,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import math
 import os
 from pathlib import Path
 import secrets
@@ -54,6 +55,15 @@ def sha(path):
 def artifacts(app):
     return {str(path.relative_to(app)): sha(path) for path in sorted(app.rglob("*"))
             if path.is_file() and not path.is_symlink()}
+
+def view_evidence(path):
+    from PIL import Image
+    with Image.open(path) as source:
+        image = source.convert("RGB")
+        contrast = max(high - low for low, high in image.getextrema())
+        colors = image.getcolors(maxcolors=32)
+        drawn = image.width >= 300 and image.height >= 800 and contrast > 40 and colors is None
+        return {"drawn": drawn, "sha256": sha(path), "size": list(image.size), "contrast": contrast}
 
 def write(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -133,21 +143,24 @@ def service():
             if worker: worker.join(timeout=3)
             os.environ.clear(); os.environ.update(saved)
 
-def produce(receipt, run, binding):
+def produce(receipt, run, binding, lock_wait=0, load_wait=0):
     build = sim_lane.reuse_build(receipt, "wrong-book-ios", ROOT, "iphone", "WrongBook", "Debug")
     candidate = Path(build["app_path"])
     if not build.get("product_artifacts") or artifacts(candidate) != build["product_artifacts"]:
         raise RuntimeError("Whole candidate package, including Debug dylib, must match its receipt")
     report = {"account_input_sha256": binding, "candidate": True, "phone_installed": False,
               "producer_sha256": sha(Path(__file__)),
-              "receipt": str(receipt.relative_to(ROOT)), "receipt_sha256": sha(receipt), "steps": {},
+              "receipt": str(receipt.relative_to(ROOT)), "receipt_sha256": sha(receipt), "steps": {}, "view_checks": {},
+              "wait_budgets": {"lock_seconds": lock_wait, "quiet_seconds": load_wait},
               "messages_sent": {"email": 0, "sms": 0}, "mail_transport": "not_exercised", "sms_transport": "not_exercised"}
     write(run / "attempt.json", report)
     report["admission"] = sim_admission.admit(sim_lane, reuse=False, label="wrong-book native account")
     write(run / "attempt.json", report)
     device = sim_lane.ensure_device("iphone", device_type="iPhone-17-Pro", name="WrongBook Account QA")
     with sim_admission.hooked(sim_lane, run_record=str(run / "simulator-run.json"), label="wrong-book native account"), \
-            sim_lane.Session("iphone", device["udid"], label="wrong-book native account", lock_wait=0, load_wait=0) as lane:
+            sim_lane.Session("iphone", device["udid"], label="wrong-book native account", lock_wait=lock_wait, load_wait=load_wait) as lane:
+        report.update(stage="install", device=device)
+        write(run / "attempt.json", report)
         lane.install(candidate)
         info = sim_lane.bundle_info(candidate)
         installed = Path(sim_lane.simctl("get_app_container", device["udid"], info["bundle_id"], "app").stdout.strip())
@@ -158,6 +171,8 @@ def produce(receipt, run, binding):
         try:
             with service() as (plan, product, events, owner_file, owner_before):
                 for phase in PHASES:
+                    report["stage"] = phase
+                    write(run / "attempt.json", report)
                     plan["phase"] = phase
                     write(private / "plan.json", plan)
                     output = private / (phase + ".json")
@@ -175,6 +190,10 @@ def produce(receipt, run, binding):
                     report["steps"][phase] = raw
                     shutil.copy2(output, run / output.name)
                     shutil.copy2(private / ("login-" + phase + ".png"), run / ("login-" + phase + ".png"))
+                    report["view_checks"][phase] = view_evidence(run / ("login-" + phase + ".png"))
+                    if not report["view_checks"][phase]["drawn"]:
+                        write(run / "attempt.json", report)
+                        raise RuntimeError("Native " + phase + " login screenshot is blank or lacks actual rendered content")
                     lane.terminate(info["bundle_id"])
                     if raw.get("failure_class") is not None or any(v is not True for v in raw.get("checks", {}).values()):
                         raise RuntimeError("Native assertions failed in " + phase)
@@ -211,7 +230,11 @@ def main():
     parser.add_argument("--build", action="store_true")
     parser.add_argument("--produce", action="store_true")
     parser.add_argument("--receipt", type=Path, default=ROOT / "perf/account/native-build.json")
+    parser.add_argument("--lock-wait", type=float, default=os.environ.get("SOP_ACCOUNT_LOCK_WAIT", "0"))
+    parser.add_argument("--load-wait", type=float, default=os.environ.get("SOP_ACCOUNT_LOAD_WAIT", "0"))
     args = parser.parse_args()
+    if any(not math.isfinite(v) or v < 0 for v in (args.lock_wait, args.load_wait)):
+        parser.error("wait budgets must be finite and nonnegative")
     receipt = args.receipt.resolve(); receipt.relative_to(ROOT / "perf/account")
     if args.build:
         result = subprocess.run([sys.executable, str(Path(sim_admission.__file__)), "build", str(Path(sim_lane.__file__)),
@@ -238,7 +261,8 @@ def main():
                 and sha(ROOT / cases[case]["evidence"]) == cases[case].get("evidence_sha256") for case in CASE_CHECKS)
             if verified:
                 proof = json.loads((ROOT / cases["login"]["evidence"]).read_text())
-                if proof.get("producer_sha256") == sha(Path(__file__)) and set(cases_from_raw(proof.get("steps", {}))) == set(CASE_CHECKS):
+                if (proof.get("producer_sha256") == sha(Path(__file__)) and set(cases_from_raw(proof.get("steps", {}))) == set(CASE_CHECKS)
+                        and all(proof.get("view_checks", {}).get(phase, {}).get("drawn") is True for phase in PHASES)):
                     print("Reused current five-case native originals; missing live-channel cases remain pending")
                     return 0
     if not receipt.is_file(): print("Missing current iOS candidate; run scripts/accept/account_native.py --build"); return 75
@@ -250,7 +274,7 @@ def main():
     run = ROOT / "perf/account" / ("native-" + dt.datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + secrets.token_hex(3))
     run.mkdir(parents=True)
     try:
-        index = produce(receipt, run, binding)
+        index = produce(receipt, run, binding, args.lock_wait, args.load_wait)
         # The strict fixed consumer still reports all twelve missing live cases.
         print("Actual native cases: " + ", ".join(index["account_cases"]))
         return 0
@@ -260,7 +284,8 @@ def main():
         print("Deferred by original simulator queue: " + str(exc)); return 75
     except Exception as exc:
         write(run / "failed.json", {"exit_code": 1, "error_class": type(exc).__name__, "account_input_sha256": binding,
-            "producer_sha256": sha(Path(__file__))})
+            "producer_sha256": sha(Path(__file__)),
+            "reason": str(exc) if isinstance(exc, (RuntimeError, sim_lane.LaneError)) else "See native originals and attempt stage"})
         print("Native account failed: " + type(exc).__name__); return 1
 
 if __name__ == "__main__":

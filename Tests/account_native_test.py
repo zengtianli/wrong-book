@@ -1,5 +1,4 @@
 """Reject incomplete/native-identity substitutions; exercise real isolated service."""
-import copy
 import importlib.util
 from pathlib import Path
 import urllib.error
@@ -44,6 +43,19 @@ def test_unattached_view_and_native_failure_are_required():
     raw = completed()
     raw["delete"]["checks"]["native.login_view_offscreen"] = False
     assert native.cases_from_raw(raw) == []
+
+
+def test_blank_native_render_is_rejected(tmp_path):
+    from PIL import Image, ImageDraw
+    path = tmp_path / "native.png"
+    Image.new("RGB", (390, 844), "white").save(path)
+    assert native.view_evidence(path)["drawn"] is False
+    image = Image.new("RGB", (390, 844), "white")
+    draw = ImageDraw.Draw(image)
+    for index in range(100):
+        draw.line((20, 100 + index, 300, 100 + index), fill=(index, index, index))
+    image.save(path)
+    assert native.view_evidence(path)["drawn"] is True
     raw = completed(); raw["exercise"]["failure_class"] = "TransportError"
     assert native.cases_from_raw(raw) == []
 

@@ -34,11 +34,18 @@ enum AccountSelfTest {
         do {
             // Render the real login view without attaching it to a window.
             let view = UIHostingController(rootView: LoginView().environmentObject(session))
+            guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { throw Stop() }
+            let window = UIWindow(windowScene: scene)
+            window.frame = CGRect(x: -30000, y: -30000, width: 390, height: 844)
+            window.isHidden = true; window.rootViewController = view
             view.loadViewIfNeeded(); view.view.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
+            view.beginAppearanceTransition(true, animated: false); view.endAppearanceTransition()
+            try await Task.sleep(for: .milliseconds(400))
             view.view.layoutIfNeeded()
             let image = UIGraphicsImageRenderer(size: view.view.bounds.size).image { view.view.layer.render(in: $0.cgContext) }
             try image.pngData()!.write(to: URL(fileURLWithPath: output).deletingLastPathComponent().appendingPathComponent("login-\(phase).png"))
-            try require("native.login_view_offscreen", view.view.window == nil && view.presentedViewController == nil)
+            try require("native.login_view_offscreen", window.isHidden && !window.isKeyWindow && window.frame.maxX < 0 && view.view.window === window && view.presentedViewController == nil)
+            window.rootViewController = nil
             switch phase {
             case "exercise":
                 await session.login(user: user, password: "deliberately-wrong-" + old)
