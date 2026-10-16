@@ -32,7 +32,7 @@ enum AccountSelfTest {
             if !condition { throw Stop() }
         }
         do {
-            // Render the real login view without attaching it to a window.
+            // Render the real login view in a hidden window outside the screen.
             let view = UIHostingController(rootView: LoginView().environmentObject(session))
             guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { throw Stop() }
             let window = UIWindow(windowScene: scene)
@@ -42,11 +42,15 @@ enum AccountSelfTest {
             view.beginAppearanceTransition(true, animated: false); view.endAppearanceTransition()
             try await Task.sleep(for: .milliseconds(400))
             view.view.layoutIfNeeded()
-            let image = UIGraphicsImageRenderer(size: view.view.bounds.size).image { view.view.layer.render(in: $0.cgContext) }
+            let image = UIGraphicsImageRenderer(size: view.view.bounds.size).image { _ in
+                view.view.drawHierarchy(in: view.view.bounds, afterScreenUpdates: true)
+            }
             try image.pngData()!.write(to: URL(fileURLWithPath: output).deletingLastPathComponent().appendingPathComponent("login-\(phase).png"))
             try require("native.login_view_offscreen", window.isHidden && !window.isKeyWindow && window.frame.maxX < 0 && view.view.window === window && view.presentedViewController == nil)
             window.rootViewController = nil
             switch phase {
+            case "live-mail":
+                checks.merge(try await AccountMailSelfTest.run(plan, session: session)) { _, new in new }
             case "exercise":
                 await session.login(user: user, password: "deliberately-wrong-" + old)
                 try require("login.wrong_password_refused", session.phase == .loggedOut && session.status == nil && session.error != nil)
@@ -94,7 +98,9 @@ enum AccountSelfTest {
         let raw: [String: Any] = ["schema_version": 1, "app_id": "wrong-book-ios", "phase": phase,
             "pid": ProcessInfo.processInfo.processIdentifier, "account_input_sha256": binding,
             "checks": checks, "failure_class": failure as Any? ?? NSNull(),
-            "scope": "Actual iOS App process; offscreen LoginView; production Session/Api account actions; isolated loopback service. No email/SMS delivery exercised."]
+            "scope": phase == "live-mail"
+                ? "Actual iOS App process; offscreen LoginView; production Session/Api; real SMTP and read-only IMAP receiver; isolated account data; SMS not exercised."
+                : "Actual iOS App process; offscreen LoginView; production Session/Api account actions; isolated loopback service; no email/SMS exercised in this phase."]
         do {
             let data = try JSONSerialization.data(withJSONObject: raw, options: [.prettyPrinted, .sortedKeys])
             try data.write(to: URL(fileURLWithPath: output), options: .atomic)

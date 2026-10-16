@@ -4,6 +4,7 @@ from pathlib import Path
 import urllib.error
 import urllib.request
 import json
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("account_native", ROOT / "scripts/accept/account_native.py")
@@ -37,6 +38,36 @@ def test_same_process_is_not_a_relaunch_and_empty_ok_is_not_evidence():
 
 def test_no_channel_or_registration_credit_from_password_seed():
     assert set(native.cases_from_raw(completed())) == {"login", "password_change", "logout", "account_deletion", "data_preservation"}
+
+
+def test_mail_cases_require_actual_native_assertions():
+    raw = completed()
+    raw['live-mail'] = {'pid': 200, 'failure_class': None, 'checks': {'native.login_view_offscreen': True}}
+    for checks in native.MAIL_CASE_CHECKS.values():
+        raw['live-mail']['checks'].update({name: True for name in checks})
+    assert set(native.cases_from_raw(raw)) == set(native.CASE_CHECKS) | set(native.MAIL_CASE_CHECKS)
+    del raw['live-mail']['checks']['registration.real_mail_native_session']
+    assert 'registration' not in native.cases_from_raw(raw)
+    raw['live-mail']['pid'] = raw['exercise']['pid']
+    assert native.cases_from_raw(raw) == []
+
+
+def test_mail_receiver_does_not_accept_another_recipient_or_an_old_status():
+    sys.path.insert(0, str(ROOT / 'scripts/accept'))
+    from account_mail import received_code, RealMail
+    from email.message import EmailMessage
+    message = EmailMessage()
+    message['To'] = 'owned+test@example.test'; message['Message-ID'] = '<isolated-test@example.test>'
+    message.set_content('本次验证码：246810\n仅供隔离测试')
+    assert received_code(message.as_bytes(), 'another@example.test') is None
+    assert received_code(message.as_bytes(), 'owned+test@example.test')[0] == '246810'
+    message.replace_header('To', 'prefixowned+test@example.test')
+    assert received_code(message.as_bytes(), 'owned+test@example.test') is None
+    proof = RealMail.__new__(RealMail)
+    proof.accepted = 6; proof.events = [{'kind': 'smtp_accepted'}] * 6
+    assert not proof.complete()
+    proof.events = [{'kind': 'imap_received', 'recipient_sha256': str(index % 4)} for index in range(6)]
+    assert proof.complete()
 
 
 def test_unattached_view_and_native_failure_are_required():
