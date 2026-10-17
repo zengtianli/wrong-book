@@ -23,7 +23,7 @@ import os
 from pathlib import Path
 import sys
 
-repo = Path.cwd()
+repo = Path(os.environ.get("SOP_SOURCE_REPO") or Path.cwd()).resolve()
 sys.path.insert(0, str(Path.home() / "Apps/chapter/engine"))
 import app_sop
 import yaml

@@ -147,6 +147,7 @@ def test_production_service_is_isolated_no_messages_and_actual_auth_storage():
 def candidate_queue(tmp_path, monkeypatch):
     """Exercise the fixed entry point without building or touching a device."""
     monkeypatch.setattr(native, "ROOT", tmp_path)
+    monkeypatch.setattr(native, "SCRIPT_ROOT", tmp_path)
     monkeypatch.setattr(sys, "argv", ["account_native.py", "--produce"])
     monkeypatch.setattr(native.app_sop, "load_apps", lambda *_: [{}])
     monkeypatch.setattr(native.app_sop, "monitor_inputs", lambda *_: {"bindings": {"account": "qa-binding"}})
@@ -169,7 +170,11 @@ def candidate_queue(tmp_path, monkeypatch):
         except FileNotFoundError as exc:
             raise native.sim_lane.LaneError("缓存构建无法核验：missing receipt") from exc
 
+    real_run = native.subprocess.run
+
     def build(command, **kwargs):
+        if command[:3] != [sys.executable, str(Path(native.sim_admission.__file__)), "build"]:
+            return real_run(command, **kwargs)
         queue.builds.append(command)
         return queue.result
 
@@ -347,3 +352,125 @@ def test_business_or_http_error_stays_failed(candidate_queue, monkeypatch, error
     failed, = candidate_queue.receipt.parent.glob("native-*/failed.json")
     assert json.loads(failed.read_text())["error_class"] == type(error).__name__
     assert not list(candidate_queue.receipt.parent.glob("native-*/deferred.json"))
+
+
+@pytest.fixture
+def isolated_queue(candidate_queue, monkeypatch):
+    queue = candidate_queue
+    frozen = native.ROOT / "chapter-worktree"
+    config = {"source": ["Sources/**", "project.yml"]}
+    app = {"id": "wrong-book-ios", "form": "ios", "repo": native.ROOT, "sop": config}
+    for root in (native.ROOT, frozen):
+        (root / "Sources").mkdir(parents=True)
+        (root / "Sources/App.swift").write_text("// identical production input\n")
+        (root / "project.yml").write_text("name: WrongBook\n")
+    monkeypatch.setattr(native, "SCRIPT_ROOT", frozen)
+    monkeypatch.setattr(native.app_sop, "load_apps", lambda *_: [app])
+    monkeypatch.setenv("SOP_SOURCE_REPO", str(native.ROOT))
+    monkeypatch.setenv("SOP_REPO", str(frozen))
+    monkeypatch.setenv("SOP_APP_ID", "wrong-book-ios")
+    monkeypatch.setenv("SOP_CONFIG", json.dumps(config))
+    _, business = native.app_sop.business_code_files(app, {})
+    monkeypatch.setenv("SOP_CODE_BINDING_SHA256", native.app_sop.digest_value([business]))
+    queue.frozen, queue.registered = frozen, app
+    return queue
+
+
+def test_isolated_producer_uses_registered_candidate_and_persistent_originals(isolated_queue, monkeypatch):
+    queue = isolated_queue
+
+    def fail_after_verification(receipt, run, *args):
+        native.verified_candidate(receipt)
+        assert run.is_relative_to(native.ROOT / "perf/account")
+        assert not run.is_relative_to(queue.frozen)
+        raise RuntimeError("Native assertions failed in exercise")
+
+    monkeypatch.setattr(native, "produce", fail_after_verification)
+    assert native.main() == 1
+    assert queue.builds == []
+    failed, = queue.receipt.parent.glob("native-*/failed.json")
+    assert json.loads(failed.read_text())["reason"] == "Native assertions failed in exercise"
+    assert not (queue.frozen / "perf").exists()
+
+
+def test_isolated_rebuild_targets_registered_source_and_still_verifies_whole_package(isolated_queue):
+    queue = isolated_queue
+    queue.receipt.unlink()
+    assert native.main() == 0
+    assert len(queue.builds) == len(queue.flows) == 1
+    command, = queue.builds
+    assert command[command.index("--project-dir") + 1] == str(native.ROOT)
+    (queue.app / "WrongBook.debug.dylib").write_bytes(b"tampered implementation")
+    assert native.main() == 1
+    assert len(queue.builds) == len(queue.flows) == 1
+
+
+@pytest.mark.parametrize("change", ["live-source", "frozen-source", "code-binding", "missing-binding"])
+def test_isolated_input_drift_defers_without_build_or_business_credit(isolated_queue, monkeypatch, change):
+    queue = isolated_queue
+    if change.endswith("source"):
+        root = native.ROOT if change == "live-source" else queue.frozen
+        (root / "Sources/App.swift").write_text("// changed production input\n")
+    elif change == "code-binding":
+        monkeypatch.setenv("SOP_CODE_BINDING_SHA256", "stale-binding")
+    else:
+        monkeypatch.delenv("SOP_CODE_BINDING_SHA256")
+    assert native.main() == 75
+    assert queue.builds == queue.flows == []
+    assert not (queue.receipt.parent / "account-lifecycle.json").exists()
+    assert not list(queue.receipt.parent.glob("native-*/failed.json"))
+
+
+def test_isolated_test_and_evidence_churn_does_not_invalidate_production(isolated_queue):
+    queue = isolated_queue
+    (queue.frozen / "Tests").mkdir()
+    (queue.frozen / "Tests/local_test.py").write_text("# a different test entry\n")
+    native.write(queue.frozen / "perf/old.json", {"not": "production input"})
+    assert native.main() == 0
+    assert queue.builds == []
+    assert len(queue.flows) == 1
+
+
+@pytest.mark.parametrize("field", ["SOP_REPO", "SOP_APP_ID", "registered-repo"])
+def test_isolated_source_identity_cannot_redirect_candidate(isolated_queue, monkeypatch, field):
+    if field == "registered-repo":
+        isolated_queue.registered["repo"] = native.ROOT / "different-product"
+    else:
+        monkeypatch.setenv(field, "different-product")
+    with pytest.raises(RuntimeError):
+        native.verify_execution_source()
+    assert isolated_queue.builds == isolated_queue.flows == []
+
+
+def test_fixed_consumer_reads_persistent_index_from_isolated_worktree(tmp_path):
+    import os
+    import subprocess
+    source, frozen, home = (tmp_path / name for name in ("registered", "worktree", "home"))
+    script = frozen / "scripts/accept/account_lifecycle.sh"
+    script.parent.mkdir(parents=True)
+    script.write_bytes((ROOT / "scripts/accept/account_lifecycle.sh").read_bytes())
+    source.mkdir()
+    (source / "project.yaml").write_text(json.dumps({"sop": {}, "form": "ios", "bundle_id": "qa.wrongbook"}))
+    native.write(source / "perf/account/account-lifecycle.json", {
+        "account_input_sha256": "qa-binding", "persistent_original": "registered-source-index"})
+    # Test the actual shell consumer in a temporary home. The stub refuses a
+    # product pass: this test proves index routing, never account coverage.
+    engine = home / "Apps/chapter/engine"
+    engine.mkdir(parents=True)
+    (engine / "app_sop.py").write_text('''
+def monitor_inputs(app, state):
+    return {"bindings": {"account": "qa-binding"}}
+def account_evidence_issues(app, detail):
+    return ["Fixture has no real mail or SMS evidence"]
+''')
+    (home / "Dev").mkdir()
+    (home / "Dev/.venv").symlink_to(Path(sys.prefix), target_is_directory=True)
+    out = source / "perf/acceptance"
+    result = subprocess.run(["/bin/bash", str(script)], cwd=tmp_path, capture_output=True, text=True, timeout=30,
+        env={**os.environ, "HOME": str(home), "SOP_SOURCE_REPO": str(source), "SOP_OUT_DIR": str(out),
+             "SOP_ACCOUNT_PRODUCE": "0", "SOP_CONFIG": "{}"})
+    assert result.returncode == 75, result.stdout + result.stderr
+    detail = json.loads((out / "account_lifecycle.detail.json").read_text())
+    assert detail["persistent_original"] == "registered-source-index"
+    assert detail["issues"] == ["Fixture has no real mail or SMS evidence"]
+    assert not (frozen / "perf").exists()

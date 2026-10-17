@@ -30,7 +30,10 @@ import time
 import urllib.request
 from http.cookiejar import CookieJar
 
-ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_ROOT = Path(__file__).resolve().parents[2]
+# Chapter executes this script in a frozen worktree. Candidates and originals
+# belong to the registered component, not to that disposable script directory.
+ROOT = Path(os.environ.get("SOP_SOURCE_REPO") or SCRIPT_ROOT).expanduser().resolve()
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path.home() / "Dev/tools/dev/lib/tools/macapp/ios"))
 sys.path.insert(0, str(Path.home() / "Apps/chapter/engine"))
@@ -85,13 +88,36 @@ def artifacts(app):
     return {str(path.relative_to(app)): sha(path) for path in sorted(app.rglob("*"))
             if path.is_file() and not path.is_symlink()}
 
+def verify_execution_source():
+    """Use Chapter's registered build only for identical frozen production input."""
+    if ROOT == SCRIPT_ROOT:
+        return
+    if (os.environ.get("SOP_APP_ID") != "wrong-book-ios"
+            or Path(os.environ.get("SOP_REPO") or "/").resolve() != SCRIPT_ROOT):
+        raise RuntimeError("Isolated account producer requires Chapter's source/worktree identity")
+    app = app_sop.load_apps("wrong-book-ios")[0]
+    if Path(app["repo"]).resolve() != ROOT:
+        raise RuntimeError("Account source root differs from the registered component")
+    frozen = {**app, "repo": SCRIPT_ROOT,
+              "sop": json.loads(os.environ["SOP_CONFIG"]) if os.environ.get("SOP_CONFIG") else app["sop"]}
+    current = app_sop.lane_inputs(app, "iphone")
+    copied = app_sop.lane_inputs(frozen, "iphone")
+    if not current["file_count"] or current["files"] != copied["files"]:
+        raise sim_lane.Busy("Frozen account production input changed; original queue must bind the new input")
+    expected = os.environ.get("SOP_CODE_BINDING_SHA256")
+    _, business = app_sop.business_code_files(app, {})
+    if not expected or app_sop.digest_value([business]) != expected:
+        raise sim_lane.Busy("Chapter account code binding changed or is missing; original queue must resume")
+
 def verified_candidate(receipt):
+    verify_execution_source()
     built = sim_lane.reuse_build(receipt, "wrong-book-ios", ROOT, "iphone", "WrongBook", "Debug")
     if not built.get("product_artifacts") or artifacts(Path(built["app_path"])) != built["product_artifacts"]:
         raise RuntimeError("Whole candidate package, including Debug dylib, must match its receipt")
     return built
 
 def build_candidate(receipt):
+    verify_execution_source()
     # This adapter only bounds BuildSlot waiting; no outer simulator/quiet lock.
     result = subprocess.run([sys.executable, str(Path(sim_admission.__file__)), "build", str(Path(sim_lane.__file__)),
         "build", "--project-dir", str(ROOT), "--scheme", "WrongBook", "--platform", "iphone",
@@ -350,6 +376,7 @@ def run_main():
         print(json.dumps({"receipt": str(receipt), "app_path": built["app_path"]})); return 0
     if not args.produce: parser.error("choose --build or --produce")
     app = app_sop.load_apps("wrong-book-ios")[0]
+    verify_execution_source()
     binding = app_sop.monitor_inputs(app, {})["bindings"]["account"]
     previous = ROOT / "perf/account/account-lifecycle.json"
     if previous.is_file():
@@ -398,7 +425,7 @@ def main():
     try:
         try:
             return run_main()
-        except QueueInterrupted as exc:
+        except (sim_lane.Busy, QueueInterrupted) as exc:
             # Interruption can precede input binding/run creation. The parent
             # still receives 75; no unverifiable account result is written.
             print("Deferred by original account queue: " + str(exc)); return 75
