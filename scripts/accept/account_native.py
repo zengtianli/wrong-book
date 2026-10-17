@@ -66,6 +66,14 @@ PHONE_CASE_CHECKS = {
     'phone_login': ('phone_login.native_session', 'phone_login.consumed_grant_refused'),
 }
 
+class QueueInterrupted(BaseException):
+    """Unwind cleanup without a shared CLI converting SystemExit into failure."""
+
+def interrupt_once(*_):
+    # A repeated queue TERM must not interrupt Session/service cleanup.
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    raise QueueInterrupted("Native account producer interrupted by SIGTERM; original queue must resume")
+
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -88,6 +96,8 @@ def build_candidate(receipt):
     result = subprocess.run([sys.executable, str(Path(sim_admission.__file__)), "build", str(Path(sim_lane.__file__)),
         "build", "--project-dir", str(ROOT), "--scheme", "WrongBook", "--platform", "iphone",
         "--configuration", "Debug", "--json"], capture_output=True, text=True, timeout=660)
+    if result.returncode in (-signal.SIGTERM, 128 + signal.SIGTERM):
+        raise QueueInterrupted("Shared native build interrupted by SIGTERM; original queue must resume")
     if result.returncode == 75:
         try:
             reason = json.loads(result.stdout).get("error")
@@ -317,8 +327,7 @@ def produce(receipt, run, binding, lock_wait=0, load_wait=0, live_mail=False, ph
     write(target, index)
     return index
 
-def main():
-    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
+def run_main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", action="store_true")
     parser.add_argument("--produce", action="store_true")
@@ -334,7 +343,7 @@ def main():
     if args.build:
         try:
             built = build_candidate(receipt)
-        except sim_lane.Busy as exc:
+        except (sim_lane.Busy, QueueInterrupted) as exc:
             print("Deferred by original build queue: " + str(exc)); return 75
         except (RuntimeError, sim_lane.LaneError) as exc:
             print(str(exc)); return 1
@@ -373,7 +382,7 @@ def main():
         # The original fixed consumer still requires every case and both live channels.
         print("Actual native cases: " + ", ".join(index["account_cases"]))
         return 0
-    except sim_lane.Busy as exc:
+    except (sim_lane.Busy, QueueInterrupted) as exc:
         write(run / "deferred.json", {"exit_code": 75, "reason": str(exc), "account_input_sha256": binding,
             "next_attempt_at": (dt.datetime.now().astimezone() + dt.timedelta(minutes=10)).isoformat()})
         print("Deferred by original simulator queue: " + str(exc)); return 75
@@ -383,6 +392,18 @@ def main():
             "candidate_receipt_sha256": candidate_receipt_sha256,
             "reason": str(exc) if isinstance(exc, (RuntimeError, sim_lane.LaneError)) else "See native originals and attempt stage"})
         print("Native account failed: " + type(exc).__name__); return 1
+
+def main():
+    previous = signal.signal(signal.SIGTERM, interrupt_once)
+    try:
+        try:
+            return run_main()
+        except QueueInterrupted as exc:
+            # Interruption can precede input binding/run creation. The parent
+            # still receives 75; no unverifiable account result is written.
+            print("Deferred by original account queue: " + str(exc)); return 75
+    finally:
+        signal.signal(signal.SIGTERM, previous)
 
 if __name__ == "__main__":
     raise SystemExit(main())

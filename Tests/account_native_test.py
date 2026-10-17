@@ -265,3 +265,85 @@ def test_debug_dylib_tampering_cannot_be_rebuilt_away_or_credited(candidate_queu
     assert queue.builds == queue.flows == []
     failed, = queue.receipt.parent.glob("native-*/failed.json")
     assert "including Debug dylib" in json.loads(failed.read_text())["reason"]
+
+
+@pytest.mark.parametrize("stage", ["prepare", "native"])
+def test_term_unwinds_cleanup_and_defers_without_shared_cli_wrapping_143(candidate_queue, monkeypatch, stage):
+    queue = candidate_queue
+    previous = native.signal.getsignal(native.signal.SIGTERM)
+    cleaned = []
+
+    def interrupted(*args):
+        try:
+            try:
+                native.signal.raise_signal(native.signal.SIGTERM)
+            except SystemExit as exc:
+                # Chapter's registry CLI catches SystemExit and turns it into
+                # ValueError, which reuse_build wraps as this original error.
+                raise native.sim_lane.LaneError("缓存构建无法核验：" + str(exc.code)) from None
+        finally:
+            # A repeated TERM during teardown must not abort cleanup.
+            native.signal.raise_signal(native.signal.SIGTERM)
+            cleaned.append(stage)
+
+    monkeypatch.setattr(native, "prepare_candidate" if stage == "prepare" else "produce", interrupted)
+    try:
+        assert native.main() == 75
+        assert native.signal.getsignal(native.signal.SIGTERM) == previous
+    finally:
+        native.signal.signal(native.signal.SIGTERM, previous)
+    assert cleaned == [stage]
+    assert not list(queue.receipt.parent.glob("native-*/failed.json"))
+    assert not (queue.receipt.parent / "account-lifecycle.json").exists()
+    deferred, = queue.receipt.parent.glob("native-*/deferred.json")
+    detail = json.loads(deferred.read_text())
+    assert detail["exit_code"] == 75
+    assert "SIGTERM" in detail["reason"]
+    assert native.dt.datetime.fromisoformat(detail["next_attempt_at"]) > native.dt.datetime.now().astimezone()
+
+
+@pytest.mark.parametrize("code", [-15, 143])
+def test_shared_build_termination_is_deferred_without_failure_evidence(candidate_queue, code):
+    queue = candidate_queue
+    queue.reuse_errors.append(native.sim_lane.LaneError("stale candidate"))
+    queue.result = SimpleNamespace(returncode=code, stdout="")
+    assert native.main() == 75
+    assert queue.flows == []
+    assert not list(queue.receipt.parent.glob("native-*/failed.json"))
+    deferred, = queue.receipt.parent.glob("native-*/deferred.json")
+    assert "SIGTERM" in json.loads(deferred.read_text())["reason"]
+
+
+def test_term_in_actual_shared_registry_before_run_creation_returns_75(tmp_path):
+    # Use a child so a regression in signal handling cannot stop pytest's worker.
+    # Only the inventory input is replaced; load_apps' actual SystemExit handler runs.
+    import subprocess
+    program = '''
+import importlib.util, signal, sys
+from pathlib import Path
+spec = importlib.util.spec_from_file_location("native_term_test", Path(sys.argv[1]))
+native = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(native)
+native.ROOT = Path(sys.argv[2])
+import fleet_audit
+fleet_audit.registry_inventory = lambda: signal.raise_signal(signal.SIGTERM)
+sys.argv = ["account_native.py", "--produce"]
+raise SystemExit(native.main())
+'''
+    result = subprocess.run([sys.executable, "-B", "-c", program, str(ROOT / "scripts/accept/account_native.py"), str(tmp_path)],
+                            capture_output=True, text=True, timeout=30)
+    assert result.returncode == 75, result.stdout + result.stderr
+    assert "SIGTERM" in result.stdout
+    assert not list(tmp_path.rglob("failed.json"))
+
+
+@pytest.mark.parametrize("error", [RuntimeError("Native assertions failed in exercise"),
+                                  urllib.error.HTTPError("http://127.0.0.1/api/login", 500, "Server error", {}, None)])
+def test_business_or_http_error_stays_failed(candidate_queue, monkeypatch, error):
+    def fail(*args):
+        raise error
+    monkeypatch.setattr(native, "produce", fail)
+    assert native.main() == 1
+    failed, = candidate_queue.receipt.parent.glob("native-*/failed.json")
+    assert json.loads(failed.read_text())["error_class"] == type(error).__name__
+    assert not list(candidate_queue.receipt.parent.glob("native-*/deferred.json"))
