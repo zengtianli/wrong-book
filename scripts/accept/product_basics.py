@@ -22,13 +22,42 @@ import time
 import uuid
 import zipfile
 
-ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_ROOT = Path(__file__).resolve().parents[2]
+# Chapter keeps evidence and build receipts in the registered repository while
+# executing the frozen script from a disposable worktree.
+ROOT = Path(os.environ.get("SOP_SOURCE_REPO") or SCRIPT_ROOT).expanduser().resolve()
 sys.path.insert(0, str(Path.home() / "Dev/tools/dev/lib/tools/macapp/ios"))
 sys.path.insert(0, str(Path.home() / "Apps/chapter/engine"))
 import sim_lane
 import app_sop
 import product_basics
 APP_ID = "wrong-book-ios"
+
+def production_files(app):
+    _, files = app_sop.business_code_files(app, {})
+    base = app_sop.source_base(app)
+    return {str(Path(path).relative_to(base)) if Path(path).is_relative_to(base) else path: digest
+            for path, digest in files.items()}
+
+def verify_source():
+    if ROOT == SCRIPT_ROOT:
+        return
+    registered = app_sop.load_apps(APP_ID)[0]
+    if (Path(registered["repo"]).resolve() != ROOT
+            or Path(os.environ.get("SOP_REPO") or "/").resolve() != SCRIPT_ROOT
+            or os.environ.get("SOP_APP_ID") != APP_ID):
+        raise sim_lane.LaneError("Chapter 工作树/产品源目录身份不匹配")
+    frozen = {**registered, "repo": SCRIPT_ROOT,
+              "sop": json.loads(os.environ.get("SOP_CONFIG") or json.dumps(registered["sop"]))}
+    current, copied = production_files(registered), production_files(frozen)
+    if not current or current != copied:
+        raise sim_lane.Busy("冻结的生产输入已变化，交原队列重新绑定")
+
+def output_directory():
+    out = Path(os.environ.get("SOP_OUT_DIR", ROOT / "perf/acceptance")).resolve()
+    if not out.is_relative_to(ROOT / "perf/acceptance"):
+        raise sim_lane.LaneError("验收输出必须位于产品源目录 perf/acceptance 下")
+    return out
 
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -167,6 +196,7 @@ def main():
     p.add_argument("--ios-receipt", type=Path, default=os.environ.get("WRONGBOOK_BASICS_IOS_RECEIPT") or ROOT / "perf/product-basics-iphone-build.json")
     p.add_argument("--ui-only", action="store_true")
     args = p.parse_args()
+    verify_source()
     receipt = args.receipt or ROOT / f"perf/product-basics-{args.platform}-build.json"
     if args.build:
         built = sim_lane.build(ROOT, "WrongBook", args.platform, "Debug", timeout=600)
@@ -174,8 +204,7 @@ def main():
         print(json.dumps(built, ensure_ascii=False)); return 0
     spec = json.loads(os.environ["SOP_PRODUCT_BASICS_SPEC"]) if "SOP_PRODUCT_BASICS_SPEC" in os.environ else product_basics.spec(app_sop.load_apps(APP_ID)[0])
     assert spec["app_id"] == APP_ID
-    out = Path(os.environ.get("SOP_OUT_DIR", ROOT / "perf/acceptance")).resolve()
-    assert out.is_relative_to(ROOT / "perf/acceptance")
+    out = output_directory()
     run = out / ("product-basics-" + uuid.uuid4().hex); run.mkdir(parents=True)
     owner_before = owner_snapshot()
     checks, originals, bindings = {}, {}, {}

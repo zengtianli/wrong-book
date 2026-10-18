@@ -20,6 +20,7 @@ sop:
   accept:
     product_basics: ~/Dev/.venv/bin/python scripts/accept/product_basics.py
     native_ui: ~/Dev/.venv/bin/python scripts/accept/product_basics.py --ui-only
+    localization: ~/Dev/.venv/bin/python scripts/accept/localization.py
     functionality: bash scripts/accept/functionality.sh
     recovery: bash scripts/accept/recovery.sh
     privacy: bash scripts/accept/privacy.sh

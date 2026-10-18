@@ -75,3 +75,28 @@ def test_explicit_candidate_still_requires_lane_source_verification(monkeypatch)
     monkeypatch.setattr(native.sim_lane, "reuse_build", reject)
     with pytest.raises(native.sim_lane.LaneError, match="当前平台输入不同"):
         native.verified(Path("candidate.json"), "mac", Path("candidate.app"))
+
+
+def test_worktree_keeps_evidence_in_registered_source(monkeypatch, tmp_path):
+    source, frozen = tmp_path / "source", tmp_path / "frozen"
+    monkeypatch.setattr(native, "ROOT", source)
+    monkeypatch.setattr(native, "SCRIPT_ROOT", frozen)
+    monkeypatch.setenv("SOP_APP_ID", native.APP_ID)
+    monkeypatch.setenv("SOP_REPO", str(frozen))
+    monkeypatch.setenv("SOP_OUT_DIR", str(source / "perf/acceptance/run-123"))
+    monkeypatch.setenv("SOP_CONFIG", "{}")
+    monkeypatch.setattr(native.app_sop, "load_apps", lambda _: [{"repo": source, "sop": {}}])
+    monkeypatch.setattr(native.app_sop, "business_code_files", lambda app, _: ({}, {
+        str(app["repo"] / "Sources/App.swift"): "current"}))
+    native.verify_source()
+    assert native.output_directory() == source / "perf/acceptance/run-123"
+    monkeypatch.setattr(native.app_sop, "business_code_files", lambda app, _: ({}, {
+        str(app["repo"] / "Sources/App.swift"): "changed" if app["repo"] == frozen else "current"}))
+    with pytest.raises(native.sim_lane.Busy):
+        native.verify_source()
+
+
+def test_output_cannot_escape_acceptance_directory(monkeypatch, tmp_path):
+    monkeypatch.setenv("SOP_OUT_DIR", str(tmp_path))
+    with pytest.raises(native.sim_lane.LaneError, match="验收输出"):
+        native.output_directory()
