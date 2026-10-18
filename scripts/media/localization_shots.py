@@ -37,6 +37,7 @@ sys.path.insert(0, str(Path.home() / "Dev/tools/dev/lib/tools/macapp/ios"))
 import sim_lane  # noqa: E402
 sys.path.insert(0, str(Path.home() / "Apps/chapter/engine"))
 import sim_admission  # noqa: E402
+import app_sop  # noqa: E402
 
 LANGUAGES = {"en": ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"],
              "zh-Hans": ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]}
@@ -51,6 +52,32 @@ def timestamp() -> str:
 
 def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def code_binding() -> str:
+    """Read Chapter's production input binding, independently of capture scripts."""
+    app = next(app for app in app_sop.load_apps(APP_ID)
+               if Path(app["repo"]).resolve() == REPO)
+    _, business = app_sop.business_code_files(app, {})
+    if not business:
+        raise sim_lane.LaneError("missing production inputs for localization capture")
+    return app_sop.digest_value([business])
+
+
+def bind_screenshots(report: dict, out: Path, before: str, after: str) -> None:
+    """Publish the shared acceptor contract only after unchanged-source capture."""
+    if before != after:
+        raise sim_lane.LaneError("production inputs changed during localization capture")
+    screenshots = {}
+    for language in LANGUAGES:
+        screenshots[language] = []
+        for name, _ in SCREENS:
+            shot = report["screens"][language][name]
+            path = Path(shot["path"]).resolve()
+            if not path.is_relative_to(out.resolve()) or sha(path) != shot["sha256"]:
+                raise sim_lane.LaneError("localization screenshot is outside output or changed: " + name)
+            screenshots[language].append(str(path.relative_to(out.resolve())))
+    report.update(input_sha256=before, screenshots=screenshots)
 
 
 def write_json(path: Path, value: dict) -> None:
@@ -187,6 +214,7 @@ def main(argv=None) -> int:
     work = Path(tempfile.mkdtemp(prefix="wrongbook-l10n."))
     code = 1
     try:
+        before = code_binding()
         built = sim_lane.reuse_build(receipt, APP_ID, REPO, "iphone", "WrongBook", "Debug")
         app = Path(built["app_path"])
         info = sim_lane.bundle_info(app)
@@ -226,6 +254,7 @@ def main(argv=None) -> int:
             verified["reuse"]["input_sha256"] == report["build"]["source_sha256"])
         if not report["source_unchanged_during_capture"]:
             raise sim_lane.LaneError("source changed while the screenshots were being captured")
+        bind_screenshots(report, out, before, code_binding())
         report.update(status="captured", ok=True)
         write_gallery(out, report)
         report["gallery"] = str(out / "index.html")
