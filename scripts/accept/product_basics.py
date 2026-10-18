@@ -70,6 +70,27 @@ class StoreFixture(BaseHTTPRequestHandler):
     def log_message(self, *_): pass
 
 def verified(receipt, platform, selected):
+    if platform == "mac" and selected is None:
+        # Installed delivery is bound by Chapter's production-input/installed-artifact
+        # verifier, not an old sim_lane temporary source copy (which may be pruned).
+        app = Path("/Applications/错题本.app")
+        registered = app_sop.load_apps(APP_ID)[0]
+        binding = {key: os.environ.get(key) for key in ("SOP_CODE_BINDING_SHA256", "SOP_BUILD_CURRENT")}
+        if not any(value is not None for value in binding.values()):
+            binding = app_sop.acceptance_code_environment(registered, bundle=app)
+        _, business = app_sop.business_code_files(registered, {})
+        if (not business or binding["SOP_BUILD_CURRENT"] != "1"
+                or binding["SOP_CODE_BINDING_SHA256"] != app_sop.digest_value([business])):
+            raise sim_lane.LaneError("装机生产输入绑定未通过（SOP_BUILD_CURRENT / SOP_CODE_BINDING_SHA256）")
+        info = sim_lane.bundle_info(app)
+        if not info["mac"] or info["bundle_id"] != "cyou.tianli.wrongbook":
+            raise sim_lane.LaneError("装机平台或 bundle id 不匹配")
+        signed = subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(app)],
+                                capture_output=True, text=True, timeout=30)
+        if signed.returncode:
+            raise sim_lane.LaneError("装机签名核验失败：" + (signed.stderr or signed.stdout)[-300:])
+        return {**info, "executable_sha256": sha(info["executable"]),
+                "product_artifacts": artifacts(app), "code_binding": binding}, app
     built = sim_lane.reuse_build(receipt, APP_ID, ROOT, platform, "WrongBook", "Debug")
     app = selected.resolve() if selected else (Path("/Applications/错题本.app") if platform == "mac" else None)
     expected = built.get("product_artifacts")
@@ -161,13 +182,19 @@ def main():
     env = {k: v for k, v in os.environ.items() if not k.startswith(("APP_LIFECYCLE_", "SIMCTL_CHILD_", "WRONGBOOK_BASICS_"))}
     mac, app = verified(receipt, "mac", args.app)
     clone = run / "fixture/错题本.app"; clone.parent.mkdir(); shutil.copytree(app, clone, symlinks=True)
+    if artifacts(clone) != mac["product_artifacts"]:
+        raise sim_lane.LaneError("离屏副本与已核验的完整包 SHA 不同")
     info_path = clone / "Contents/Info.plist"; info = plistlib.loads(info_path.read_bytes())
     info.update(CFBundleIdentifier="wrongbook.basics.bundle." + uuid.uuid4().hex, LSUIElement=True)
     info_path.write_bytes(plistlib.dumps(info)); subprocess.run(["codesign", "--force", "--deep", "--sign", "-", str(clone)], check=True, capture_output=True, timeout=60)
     mac_run = run / "mac"; mac_run.mkdir()
     mac_checks, mac_raw = exercise("mac", clone / "Contents/MacOS/WrongBook", mac_run, spec["digest"], env)
     checks.update(mac_checks)
-    bindings["mac"] = {"candidate": bool(args.app), "installed": not bool(args.app), "receipt": str(receipt), "receipt_sha256": sha(receipt), "version": mac["version"], "build": mac["build"], "executable_sha256": mac["executable_sha256"]}
+    bindings["mac"] = {"candidate": bool(args.app), "installed": not bool(args.app), "version": mac["version"], "build": mac["build"], "executable_sha256": mac["executable_sha256"], "product_artifacts": mac["product_artifacts"]}
+    if args.app:
+        bindings["mac"].update(receipt=str(receipt), receipt_sha256=sha(receipt))
+    else:
+        bindings["mac"]["code_binding"] = mac["code_binding"]
     originals["mac"] = mac_raw
     if not args.ui_only:
         ios, candidate = verified(args.ios_receipt, "iphone", args.ios_app)
