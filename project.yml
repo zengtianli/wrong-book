@@ -1,6 +1,8 @@
 name: WrongBook
 options:
   bundleIdPrefix: cyou.tianli
+  developmentLanguage: en
+  knownRegions: [en, zh-Hans]
   # visionOS 26：与成长小金库同一口径（WidgetKit 在 visionOS 26 之前不可用；本 App 主 target 没有小组件，
   # 取同一个版本省得两个 edu App 各有一套）。watchOS 11：手表 App 与表盘复杂功能是独立 target（见文件末尾；
   # xcodegen 不许把 watchOS 写进 supportedDestinations）。
@@ -9,7 +11,10 @@ options:
 settings:
   base:
     # 名字与版本放全局：手表 App 与复杂功能必须与 iPhone App 同名、同版本（App Store 拒收不一致的包）。
-    APP_DISPLAY_NAME: 错题本
+    APP_DISPLAY_NAME: Mistake Notebook
+    DEVELOPMENT_LANGUAGE: en
+    INFOPLIST_KEY_CFBundleDevelopmentRegion: en
+    SWIFT_EMIT_LOC_STRINGS: YES
     MARKETING_VERSION: "1.0.1"
     CURRENT_PROJECT_VERSION: "19"
     CODE_SIGN_STYLE: Automatic
@@ -22,6 +27,11 @@ targets:
     # iPhone / iPad / Mac / Vision Pro 是同一个 target（同名、同图标、同 bundle id、同一套数据）；
     # Apple Watch 是下面单独的 WrongBookWatch，iOS 构建时嵌进 WrongBook.app/Watch/。
     supportedDestinations: [iOS, macOS, visionOS]
+    info:
+      path: .build-inputs/Info.plist
+      properties:
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, zh-Hans]
     dependencies:
       # 手表 App 只随 iOS 包走（WrongBook.app/Watch/）；Mac 与 visionOS 包里不带
       - target: WrongBookWatch
@@ -69,6 +79,8 @@ targets:
       #   ASSETCATALOG_COMPILER_APPICON_NAME 指向一个不在工程里的 catalog,
       #   actool 根本没被调起,全程零报错。
       - path: Resources/Assets.xcassets
+      - path: Resources/Localization
+        buildPhase: resources
       # 练习页 —— folder 引用(不是 group),进包后保持 primary-*/ 子目录结构
       - path: Resources/Lessons
         type: folder
@@ -89,8 +101,8 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: "$(APP_DISPLAY_NAME)"
         # 缺这一行的表现是**点「扫描卷子」当场闪退**，而崩溃日志只说 access violation，
         # 一个字都不提「你没声明用途」。VisionKit 的文档扫描器走的就是相机权限。
-        INFOPLIST_KEY_NSCameraUsageDescription: 拍摄错题照片，确认后上传到你自己的学习库用于识别和复习。
-        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: 从相册里挑已经拍好的卷子照片上传。
+        INFOPLIST_KEY_NSCameraUsageDescription: Take photos of mistakes and, after you confirm, upload them to your personal learning library for recognition and review.
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Choose worksheet photos from your library to upload.
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         # 出口合规:声明不使用非豁免加密 → TestFlight 每次传新包不再弹问卷,
         # 直接进 Ready to Test(缺这行则每个 build 都要人去网页点一次)。
@@ -125,12 +137,16 @@ targets:
       - path: Watch/Common
       # ⚠ 同主 App：资产目录不列进来，手表包零报错地没有图标。AppIcon 里那张 platform: watchos 的 1024 只有手表 actool 认。
       - path: Resources/Assets.xcassets
+      - path: Resources/Localization
+        buildPhase: resources
     dependencies:
       - target: WrongBookWatchWidget
     info:
       path: Watch/Info.plist
       properties:
         CFBundleDisplayName: "$(APP_DISPLAY_NAME)"
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, zh-Hans]
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         WKApplication: true
@@ -152,6 +168,8 @@ targets:
       path: Watch/Widget-Info.plist
       properties:
         CFBundleDisplayName: "$(APP_DISPLAY_NAME)"
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, zh-Hans]
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         NSExtension:
@@ -162,6 +180,8 @@ targets:
       - path: Sources/Theme.swift
       - path: Watch/Common
       - path: Watch/Complications
+      - path: Resources/Localization
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cyou.tianli.wrongbook.watchkitapp.widget

@@ -110,7 +110,7 @@ struct WrongBook {
                             src: h["src"] as? String ?? "")
         }
         return WrongEntry(gid: gid,
-                          gname: j["gname"] as? String ?? "错题",
+                          gname: j["gname"] as? String ?? String(localized: "错题"),
                           q: j["q"] as? String ?? "",
                           at: j["at"] as? String ?? "",
                           wrong: j["wrong"] as? Int ?? 0,

@@ -44,8 +44,8 @@ enum PaperScan {
     /// 卷种。**这是这一屏独有的词表** —— ~/Apps/edu/web 侧没有它的 SSOT（archive 目录名里才第一次出现），
     /// 所以在这儿定义，不是从别处抄来的第二份。加一种就在这儿加一行。
     static let kinds: [(key: String, name: String)] = [
-        ("final", "期末卷"), ("mid", "期中卷"),
-        ("unit", "单元卷"), ("quiz", "随堂/小测"),
+        ("final", String(localized: "期末卷")), ("mid", String(localized: "期中卷")),
+        ("unit", String(localized: "单元卷")), ("quiz", String(localized: "随堂/小测")),
     ]
 
     // MARK: - 压图

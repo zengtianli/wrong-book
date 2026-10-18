@@ -61,10 +61,10 @@ struct WatchSignedOutView: View {
             Image(systemName: "iphone")
                 .font(.system(size: 30, weight: .medium))
                 .foregroundStyle(WatchInk.accent)
-            Text("在 iPhone 上登录\n错题本")
+            Text(String(localized: "在 iPhone 上登录\n\(String(localized: "app.name"))"))
                 .font(.headline)
                 .multilineTextAlignment(.center)
-            Text("登录后手表会自动同步")
+            Text(String(localized: "登录后手表会自动同步"))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -82,7 +82,7 @@ struct WatchFailedView: View {
                 .font(.system(size: 26, weight: .medium))
                 .foregroundStyle(WatchInk.red)
             Text(message).font(.footnote).multilineTextAlignment(.center)
-            Button("重试") { Task { await store.restore() } }
+            Button(String(localized: "重试")) { Task { await store.restore() } }
                 .tint(WatchInk.accent)
         }
         .padding(.horizontal, 6)

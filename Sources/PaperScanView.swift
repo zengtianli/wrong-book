@@ -38,12 +38,12 @@ struct PaperScanView: View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
-                Text("图片导入").font(.system(size: 24, weight: .semibold)).foregroundStyle(Ink.text)
+                Text(String(localized: "图片导入")).font(.system(size: 24, weight: .semibold)).foregroundStyle(Ink.text)
                 #if os(iOS)
-                Text("拍下错题或从相册选择，识别后核对原图，再开始复习。")
+                Text(String(localized: "拍下错题或从相册选择，识别后核对原图，再开始复习。"))
                     .font(.caption).foregroundStyle(Ink.dim)
                 #else
-                Text("选择错题图片，识别后核对原图，再开始复习。")
+                Text(String(localized: "选择错题图片，识别后核对原图，再开始复习。"))
                     .font(.caption).foregroundStyle(Ink.dim)
                 #endif
                 HStack(spacing: 12) {
@@ -51,47 +51,47 @@ struct PaperScanView: View {
                     Button {
                         Task {
                             if await PaperScan.requestCameraAccess() { showCamera = true }
-                            else { banner = "无法使用相机。请在系统设置中允许错题本访问相机，或从相册选择。" }
+                            else { banner = String(localized: "无法使用相机。请在系统设置中允许错题本访问相机，或从相册选择。") }
                         }
-                    } label: { Label("拍照", systemImage: "camera") }
+                    } label: { Label(String(localized: "拍照"), systemImage: "camera") }
                         .buttonStyle(.borderedProminent)
                         .disabled(!PaperScan.cameraAvailable)
-                    PhotosPicker(selection: $picked, matching: .images) { Label("相册", systemImage: "photo.on.rectangle") }
+                    PhotosPicker(selection: $picked, matching: .images) { Label(String(localized: "相册"), systemImage: "photo.on.rectangle") }
                         .buttonStyle(.bordered)
                     #else
-                    Button { showFiles = true } label: { Label("选择图片", systemImage: "photo.badge.plus") }
+                    Button { showFiles = true } label: { Label(String(localized: "选择图片"), systemImage: "photo.badge.plus") }
                         .buttonStyle(.borderedProminent).keyboardShortcut("o", modifiers: .command)
                     #endif
                 }.disabled(busy)
-                Picker("科目", selection: $slug.subject) {
+                Picker(String(localized: "科目"), selection: $slug.subject) {
                     ForEach(subjects, id: \.key) { Text($0.name).tag($0.key) }
                 }
                 .disabled(busy || pages.contains { $0.state.isUploaded })
-                Text("上传前请确认科目，识别后的题目将按此归类。")
+                Text(String(localized: "上传前请确认科目，识别后的题目将按此归类。"))
                     .font(.caption).foregroundStyle(Ink.dim)
-                TextField("备注（选填）", text: $note).disabled(busy)
+                TextField(String(localized: "备注（选填）"), text: $note).disabled(busy)
                 }
             }
             AIAccessSection(enabled: $aiEnabled, refreshID: accessRevision)
             Section {
-                DisclosureGroup("试卷信息与页码（选填）", isExpanded: $detailsExpanded) {
-                Picker("学年", selection: $slug.year) {
+                DisclosureGroup(String(localized: "试卷信息与页码（选填）"), isExpanded: $detailsExpanded) {
+                Picker(String(localized: "学年"), selection: $slug.year) {
                     ForEach(thisYear - 2...thisYear + 1, id: \.self) {
                         // verbatim：`Text("\(2026)")` 会走本地化数字格式，显示成 **2,026**。
                         // 年份不是数量，不该有千分位。
                         Text(verbatim: "\($0)–\($0 + 1)").tag($0)
                     }
                 }
-                Picker("学期", selection: $slug.term) {
-                    Text("上学期").tag(1); Text("下学期").tag(2)
+                Picker(String(localized: "学期"), selection: $slug.term) {
+                    Text(String(localized: "上学期")).tag(1); Text(String(localized: "下学期")).tag(2)
                 }
-                Picker("年级", selection: $slug.grade) {
-                    ForEach(1...6, id: \.self) { Text("\($0) 年级").tag($0) }
+                Picker(String(localized: "年级"), selection: $slug.grade) {
+                    ForEach(1...6, id: \.self) { Text(String(localized: "\($0) 年级")).tag($0) }
                 }
-                Picker("卷种", selection: $slug.kind) {
+                Picker(String(localized: "卷种"), selection: $slug.kind) {
                     ForEach(PaperScan.kinds, id: \.key) { Text($0.name).tag($0.key) }
                 }
-                Stepper("下一张算第 \(nextPage) 页", value: $nextPage, in: 1...40)
+                Stepper(String(localized: "下一张算第 \(nextPage) 页"), value: $nextPage, in: 1...40)
                 }
             }.disabled(busy || pages.contains { $0.state.isUploaded })
 
@@ -104,8 +104,8 @@ struct PaperScanView: View {
                                     Image(uiImage: p.image).resizable().scaledToFill()
                                         .frame(width: 44, height: 58).clipped()
                                         .overlay(Rectangle().stroke(Ink.line))
-                                }.buttonStyle(.plain).accessibilityLabel("查看第 \(p.page) 页原图")
-                                Stepper("第 \(p.page) 页", value: $p.page, in: 1...40)
+                                }.buttonStyle(.plain).accessibilityLabel(String(localized: "查看第 \(p.page) 页原图"))
+                                Stepper(String(localized: "第 \(p.page) 页"), value: $p.page, in: 1...40)
                                     .disabled(busy || p.state.isUploaded)
                                 statusIcon(p.state)
                             }
@@ -114,7 +114,7 @@ struct PaperScanView: View {
                                     .foregroundStyle(p.state.isBad ? Ink.red : Ink.dim)
                             }
                             if !p.log.isEmpty {
-                                DisclosureGroup("读图记录") {
+                                DisclosureGroup(String(localized: "读图记录")) {
                                     Text(p.log).font(.caption.monospaced())
                                         .textSelection(.enabled)
                                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -132,7 +132,7 @@ struct PaperScanView: View {
                 } label: {
                     HStack {
                         if busy { ProgressView().padding(.trailing, 4) }
-                        Text(busy ? busyLabel : "开始识别 · \(pending) 张")
+                        Text(busy ? busyLabel : String(localized: "开始识别 · \(pending) 张"))
                     }
                 }
                 .disabled(busy || pending == 0 || !aiEnabled)
@@ -140,12 +140,12 @@ struct PaperScanView: View {
                 if let banner {
                     Text(banner).foregroundStyle(hasBad ? Ink.red : Ink.green)
                 } else {
-                    Text("识别完成后在错题本中查看。读不清的题会在结果里说明，请对照原图核对。")
+                    Text(String(localized: "识别完成后在错题本中查看。读不清的题会在结果里说明，请对照原图核对。"))
                         .font(.footnote)
                 }
             }
         }
-        .navigationTitle("导入")
+        .navigationTitle(String(localized: "导入"))
         .listStyle(.plain)
         .font(.system(size: 14))
         .environment(\.defaultMinListRowHeight, 36)
@@ -155,7 +155,7 @@ struct PaperScanView: View {
         .tint(Ink.accent)
         .sheet(item: $preview) { page in
             VStack(spacing: 12) {
-                HStack { Text("第 \(page.page) 页原图").font(.headline); Spacer(); Button("完成") { preview = nil } }
+                HStack { Text(String(localized: "第 \(page.page) 页原图")).font(.headline); Spacer(); Button(String(localized: "完成")) { preview = nil } }
                 ScrollView([.horizontal, .vertical]) {
                     Image(uiImage: page.image).resizable().scaledToFit().frame(width: 900)
                 }
@@ -171,18 +171,18 @@ struct PaperScanView: View {
                     let accessed = url.startAccessingSecurityScopedResource()
                     defer { if accessed { url.stopAccessingSecurityScopedResource() } }
                     let data = try Data(contentsOf: url)
-                    guard let image = UIImage(data: data) else { throw Api.Failure(message: "图片无法读取：\(url.lastPathComponent)") }
+                    guard let image = UIImage(data: data) else { throw Api.Failure(message: String(localized: "图片无法读取：\(url.lastPathComponent)")) }
                     images.append(image)
                 }
                 add(images)
-            } catch { banner = error.localizedDescription }
+            } catch { banner = Api.displayError(error) }
         }
         #endif
-        .alert("上传并使用 AI 识别", isPresented: $showUploadConsent) {
-            Button("取消", role: .cancel) {}
-            Button("同意并上传") { Task { await upload() } }
+        .alert(String(localized: "上传并使用 AI 识别"), isPresented: $showUploadConsent) {
+            Button(String(localized: "取消"), role: .cancel) {}
+            Button(String(localized: "同意并上传")) { Task { await upload() } }
         } message: {
-            Text("选中的试卷图片及备注将上传到学习服务器，图片会交给 DeepSeek AI 服务识别。原图、识别结果与题库记录会保存用于复习。请先遮住姓名、学校等个人信息，并确认有权上传。可在「右上角账号与设置 → 账号与隐私 → 注销账号」申请删除相关资料，需核验的申请通常 30 天内完成。")
+            Text(String(localized: "选中的试卷图片及备注将上传到学习服务器，图片会交给 DeepSeek AI 服务识别。原图、识别结果与题库记录会保存用于复习。请先遮住姓名、学校等个人信息，并确认有权上传。可在「右上角账号与设置 → 账号与隐私 → 注销账号」申请删除相关资料，需核验的申请通常 30 天内完成。"))
         }
         .fullScreenCover(isPresented: $showCamera) {
             PaperScan.Camera { imgs in
@@ -199,7 +199,7 @@ struct PaperScanView: View {
                        let i = UIImage(data: d) { imgs.append(i) }
                 }
                 add(imgs)
-                if imgs.count != items.count { banner = "部分照片未能读取，请重新从相册选择。" }
+                if imgs.count != items.count { banner = String(localized: "部分照片未能读取，请重新从相册选择。") }
                 picked = []
             }
         }
@@ -210,13 +210,13 @@ struct PaperScanView: View {
     private var pending: Int { pages.filter { !$0.state.isUploaded }.count }
     private var hasBad: Bool { pages.contains { $0.state.isBad } }
     private var pagesTitle: String {
-        pending > 0 ? "待传 \(pending) 页" : "这 \(pages.count) 页"
+        pending > 0 ? String(localized: "待传 \(pending) 页") : String(localized: "这 \(pages.count) 页")
     }
     private var busyLabel: String {
         for p in pages {
-            if case .reading(let sec) = p.state { return "第 \(p.page) 页读图中… \(sec)s" }
+            if case .reading(let sec) = p.state { return String(localized: "第 \(p.page) 页读图中… \(sec)s") }
         }
-        return "正在传…"
+        return String(localized: "正在传…")
     }
 
     @ViewBuilder private func statusIcon(_ st: ScanPage.State) -> some View {
@@ -233,11 +233,11 @@ struct PaperScanView: View {
     private func statusLine(_ st: ScanPage.State) -> String? {
         switch st {
         case .idle, .uploading:        return nil
-        case .uploaded(let job):       return job == nil ? "已存档，没派上自动读图" : "已传上，排队读图…"
-        case .reading(let sec):        return "服务端读图中… \(sec)s"
+        case .uploaded(let job):       return job == nil ? String(localized: "已存档，没派上自动读图") : String(localized: "已传上，排队读图…")
+        case .reading(let sec):        return String(localized: "服务端读图中… \(sec)s")
         case .done(let s):             return s
-        case .failed(let m):           return "没传上去：\(m)"
-        case .readFailed(let m):       return "传上了，读图没成：\(m)"
+        case .failed(let m):           return String(localized: "没传上去：\(m)")
+        case .readFailed(let m):       return String(localized: "传上了，读图没成：\(m)")
         }
     }
 
@@ -259,7 +259,7 @@ struct PaperScanView: View {
         let account: PaperRequestSession
         do { account = try PaperRequestSession.capture() }
         catch {
-            banner = error.localizedDescription
+            banner = Api.displayError(error)
             return
         }
         busy = true
@@ -270,7 +270,7 @@ struct PaperScanView: View {
         // 传之前就拦住，比传完发现少一页强。
         let nums = pages.map(\.page)
         if Set(nums).count != nums.count {
-            banner = "有两张标了同一个页码 —— 先改掉再传"
+            banner = String(localized: "有两张标了同一个页码 —— 先改掉再传")
             return
         }
 
@@ -280,7 +280,7 @@ struct PaperScanView: View {
             pages[idx].state = .uploading
             guard let d = PaperScan.jpeg(pages[idx].image) else {
                 // 压不下去不是「传失败」，是这张图本身太满 —— 说清楚该怎么办。
-                pages[idx].state = .failed("压不到 3MB 以内")
+                pages[idx].state = .failed(String(localized: "压不到 3MB 以内"))
                 continue
             }
             do {
@@ -289,7 +289,7 @@ struct PaperScanView: View {
                 if let job = r.job {
                     pages[idx].state = .uploaded(job: job)
                 } else {
-                    let message = r.autoErr ?? "图片已存档，但未能创建识别任务，请联系支持。"
+                    let message = r.displayAutoErr ?? r.autoErr ?? String(localized: "图片已存档，但未能创建识别任务，请联系支持。")
                     pages[idx].state = .readFailed(message)
                     pages[idx].log = message
                 }
@@ -297,7 +297,7 @@ struct PaperScanView: View {
                 stopAfterAccountChange()
                 return
             } catch {
-                pages[idx].state = .failed(error.localizedDescription)
+                pages[idx].state = .failed(Api.displayError(error))
             }
             do { try account.requireCurrent() }
             catch { stopAfterAccountChange(); return }
@@ -318,13 +318,13 @@ struct PaperScanView: View {
         let skipped = pages.compactMap(\.skipped).reduce(0, +)
         let bad: [String] = pages.compactMap { p in
             switch p.state {
-            case .failed(let m):     return "p\(p.page) 没传上：\(m)"
-            case .readFailed(let m): return "p\(p.page) 读图没成：\(m)"
+            case .failed(let m):     return String(localized: "p\(p.page) 没传上：\(m)")
+            case .readFailed(let m): return String(localized: "p\(p.page) 读图没成：\(m)")
             default:                 return nil
             }
         }
-        var s = "录进题库 \(got) 道" + (skipped > 0 ? "，跳过 \(skipped) 道" : "")
-        if !bad.isEmpty { s += "；" + bad.joined(separator: "；") }
+        var s = String(localized: "录进题库 \(got) 道") + (skipped > 0 ? String(localized: "，跳过 \(skipped) 道") : "")
+        if !bad.isEmpty { s += String(localized: "；") + bad.joined(separator: String(localized: "；")) }
         banner = (bad.isEmpty ? "✅ " : "") + s
     }
 
@@ -332,14 +332,14 @@ struct PaperScanView: View {
         for idx in pages.indices {
             switch pages[idx].state {
             case .idle, .uploading:
-                pages[idx].state = .failed("账号已变化，本页未发送。请回到原账号后重新导入。")
+                pages[idx].state = .failed(String(localized: "账号已变化，本页未发送。请回到原账号后重新导入。"))
             case .uploaded, .reading:
-                pages[idx].state = .readFailed("图片已上传到原账号；已停止获取结果，请回到原账号核对。")
+                pages[idx].state = .readFailed(String(localized: "图片已上传到原账号；已停止获取结果，请回到原账号核对。"))
             default:
                 break
             }
         }
-        banner = "账号已变化，已停止本批次。剩余页面请回原账号重新选择；已上传的图片可在原账号核对。"
+        banner = String(localized: "账号已变化，已停止本批次。剩余页面请回原账号重新选择；已上传的图片可在原账号核对。")
     }
 
     /// 一页一页等读图结果。服务端读图是串行的（同时派只会互相等锁），所以这边也顺着来。
@@ -353,22 +353,23 @@ struct PaperScanView: View {
             poll: while true {
                 try account.requireCurrent()
                 guard !Task.isCancelled, Date() < deadline else {
-                    pages[idx].state = .readFailed("等待识别结果超时，图片已保存。请稍后同步课程或联系支持。")
+                    pages[idx].state = .readFailed(String(localized: "等待识别结果超时，图片已保存。请稍后同步课程或联系支持。"))
                     break
                 }
                 do {
-                    let result = try await Api.job(job, account: account)
+                    let result = try await Api.jobReport(job, account: account)
                     try account.requireCurrent()
-                    switch result {
+                    switch result.state {
                     case .running:
                         try? await Task.sleep(for: .seconds(3)); sec += 3
                         pages[idx].state = .reading(sec)
                     case .done(let ok, let log):
-                        pages[idx].log = log.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let displayLog = result.displayLog ?? log
+                        pages[idx].log = displayLog.trimmingCharacters(in: .whitespacesAndNewlines)
                         let (g, k) = Self.counts(in: log)
                         pages[idx].got = g; pages[idx].skipped = k
-                        pages[idx].state = ok ? .done(Self.summary(log, got: g, skipped: k))
-                                              : .readFailed(String(log.suffix(120)))
+                        pages[idx].state = ok ? .done(Self.displaySummary(log, got: g, skipped: k))
+                                              : .readFailed(String(displayLog.suffix(120)))
                         break poll
                     }
                 } catch is PaperRequestSession.Changed {
@@ -376,7 +377,7 @@ struct PaperScanView: View {
                 } catch {
                     if let failure = error as? Api.Failure,
                        [401, 403, 404, 410].contains(failure.statusCode) {
-                        pages[idx].state = .readFailed(failure.localizedDescription)
+                        pages[idx].state = .readFailed(Api.displayError(failure))
                         break poll
                     }
                     // 网络抖一下不算失败 —— 作业在服务端照跑，等会儿再问
@@ -404,6 +405,16 @@ struct PaperScanView: View {
         var s = "录进题库 \(got) 道"
         if let skipped, skipped > 0 { s += "，跳过 \(skipped) 道" }
         if let m = log.firstMatch(of: /其中\s*(\d+)\s*道归不到现有的课/) { s += "（\(m.1) 道进了待归类）" }
+        return s
+    }
+
+    /// UI copy is localized separately so the diagnostic channel keeps its original output.
+    static func displaySummary(_ log: String, got: Int?, skipped: Int?) -> String {
+        if log.contains("没读到做错的题") { return String(localized: "这页没读到错题（没有红叉/涂改的一律不收）") }
+        guard let got else { return String(localized: "跑完了，详情见读图记录") }
+        var s = String(localized: "录进题库 \(got) 道")
+        if let skipped, skipped > 0 { s += String(localized: "，跳过 \(skipped) 道") }
+        if let m = log.firstMatch(of: /其中\s*(\d+)\s*道归不到现有的课/) { s += String(localized: "（\(String(m.1)) 道进了待归类）") }
         return s
     }
 }

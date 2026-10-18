@@ -10,7 +10,7 @@ struct ReviewComplications: Widget {
             ReviewComplicationView(digest: entry.digest, date: entry.date)
                 .containerBackground(for: .widget) { Color.clear }
         }
-        .configurationDisplayName("错题本")
+        .configurationDisplayName(String(localized: "app.name"))
         .description("待巩固几类、今天做了几题、连续几天。")
         .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline, .accessoryCorner])
     }

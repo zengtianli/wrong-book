@@ -57,10 +57,10 @@ enum Reminder {
             if day == 0, let r = remaining, r == 0 { continue }
             let body: String
             if day == 0, let r = remaining {
-                body = "今天还差 \(r) 题就完成任务了，补完 +50 经验"
+                body = String(localized: "今天还差 \(r) 题就完成任务了，补完 +50 经验")
             } else {
                 // 往后几天的进度还没发生，说不出数字就别说数字
-                body = "今天的 \(goal) 题做了吗？来复习自己收集的错题吧"
+                body = String(localized: "今天的 \(goal) 题做了吗？来复习自己收集的错题吧")
             }
             out.append((day, fire, body))
         }
@@ -109,7 +109,7 @@ enum Reminder {
 
         for p in await currentPlan() {
             let content = UNMutableNotificationContent()
-            content.title = "错题本"
+            content.title = String(localized: "app.name")
             content.body = p.body
             content.sound = .default
             let comps = Calendar.current.dateComponents(
@@ -129,13 +129,13 @@ enum Reminder {
         case .authorized, .provisional, .ephemeral:
             let n = await UNUserNotificationCenter.current().pendingNotificationRequests()
                 .filter { $0.identifier.hasPrefix(idPrefix) }.count
-            return enabled ? "已开（排了 \(n) 天）" : "已允许，开关没开"
+            return enabled ? String(localized: "已开（排了 \(n) 天）") : String(localized: "已允许，开关没开")
         case .denied:
-            return "被拒了 —— 去 设置 → 错题本 → 通知 打开"
+            return String(localized: "被拒了 —— 去 设置 → 错题本 → 通知 打开")
         case .notDetermined:
-            return "还没问过"
+            return String(localized: "还没问过")
         @unknown default:
-            return "未知"
+            return String(localized: "未知")
         }
     }
 }

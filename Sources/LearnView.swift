@@ -21,7 +21,7 @@ struct LessonScreen: View {
                 Button { if let onClose { onClose() } else { dismiss() } } label: { Image(systemName: "xmark").font(.headline) }
                     .foregroundStyle(Ink.text)
                     .flatButton()
-                    .accessibilityLabel("关闭练习")
+                    .accessibilityLabel(String(localized: "关闭练习"))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(lesson.title).font(.headline).foregroundStyle(Ink.text).lineLimit(1)
                     if !subtitle.isEmpty {
@@ -30,7 +30,7 @@ struct LessonScreen: View {
                 }
                 Spacer()
                 if lesson.isUpdated {
-                    Text("已更新").font(.caption2).foregroundStyle(Ink.green)
+                    Text(String(localized: "已更新")).font(.caption2).foregroundStyle(Ink.green)
                 }
             }
             .padding(.horizontal, 16).padding(.vertical, 10)
@@ -73,7 +73,7 @@ struct LessonPreview: View {
         } else {
             // 找不到就说清有哪些 —— 静默白屏会让人以为是 WebView 挂了
             ScrollView {
-                Text("包里没有 \(slug)\n\n现有 \(pack.lessons.count) 课：\n"
+                Text(String(localized: "包里没有 \(slug)\n\n现有 \(pack.lessons.count) 课：\n")
                      + pack.lessons.map(\.slug).joined(separator: "\n"))
                     .font(.footnote.monospaced()).padding(20)
             }

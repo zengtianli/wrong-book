@@ -11,6 +11,9 @@ struct PaperRequestSession {
         var errorDescription: String? {
             "账号未确认或登录状态已改变，已停止本批次。请先登录并同步个人资料，再重新导入。"
         }
+        var localizedDisplayDescription: String {
+            String(localized: "账号未确认或登录状态已改变，已停止本批次。请先登录并同步个人资料，再重新导入。")
+        }
     }
 
     // points/server.py: COOKIE = "edu_sess", Path=/.

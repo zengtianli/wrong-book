@@ -33,12 +33,12 @@ struct LoginView: View {
                 Spacer()
                 #if os(visionOS)
                 // 这一行在纸外、直接落在玻璃上：用系统次级色，墨色在玻璃上读不清
-                Text("从自己的错题照片开始，登录后导入和同步")
+                Text(String(localized: "从自己的错题照片开始，登录后导入和同步"))
                     .font(.caption2).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.bottom, 24)
                 #else
-                Text("从自己的错题照片开始，登录后导入和同步")
+                Text(String(localized: "从自己的错题照片开始，登录后导入和同步"))
                     .font(.caption2).foregroundStyle(Ink.dim.opacity(0.8))
                     .multilineTextAlignment(.center)
                 #endif
@@ -59,32 +59,32 @@ struct LoginView: View {
     @ViewBuilder
     private var form: some View {
         VStack(spacing: 8) {
-            Text("wrongbook")
+            Text("Mistake Notebook")
                 .font(.system(size: 30, weight: .bold))
                 .foregroundStyle(Ink.text)
-            Text("导入自己的错题照片，整理复习")
+            Text(String(localized: "导入自己的错题照片，整理复习"))
                 .font(.footnote).foregroundStyle(Ink.dim)
         }
 
-        Picker("登录方式", selection: $phoneMode) {
-            Text("短信登录").tag(true); Text("密码登录").tag(false)
+        Picker(String(localized: "登录方式"), selection: $phoneMode) {
+            Text(String(localized: "短信登录")).tag(true); Text(String(localized: "密码登录")).tag(false)
         }.pickerStyle(.segmented).disabled(session.busy)
 
         if phoneMode {
             VStack(alignment: .leading, spacing: 12) {
-                TextField("+86 家长本人手机号", text: $phone).textContentType(.telephoneNumber)
+                TextField(String(localized: "+86 家长本人手机号"), text: $phone).textContentType(.telephoneNumber)
                     .keyboardType(.phonePad).privacySensitive().padding(14)
                     .background(Ink.card, in: RoundedRectangle(cornerRadius: 14))
                 AccountVerification(address: phone, purpose: "login", grant: $grant)
                 AccountRiskVerification(password: $riskPassword, email: $riskEmail, emailGrant: $emailGrant)
             }
-            Button(session.busy ? "登录中" : "登录") {
+            Button(session.busy ? String(localized: "登录中") : String(localized: "登录")) {
                 Task { await session.phoneAuthenticate(grant: grant, password: riskPassword, emailGrant: emailGrant) }
             }.buttonStyle(.borderedProminent).frame(minHeight: 44).disabled(session.busy || grant.isEmpty)
         } else {
         VStack(spacing: 10) {
-            field("手机号、用户名或邮箱", text: $user, secure: false)
-            field("密码", text: $password, secure: true)
+            field(String(localized: "手机号、用户名或邮箱"), text: $user, secure: false)
+            field(String(localized: "密码"), text: $password, secure: true)
         }
 
         Button {
@@ -92,7 +92,7 @@ struct LoginView: View {
         } label: {
             HStack {
                 if session.busy { ProgressView().tint(.white) }
-                Text(session.busy ? "登录中" : "登录").fontWeight(.semibold)
+                Text(session.busy ? String(localized: "登录中") : String(localized: "登录")).fontWeight(.semibold)
             }
             .frame(maxWidth: .infinity, minHeight: 40)
             .background(Ink.accent, in: RoundedRectangle(cornerRadius: 7))
@@ -103,20 +103,20 @@ struct LoginView: View {
         .opacity(user.isEmpty || password.isEmpty ? 0.45 : 1)
         }
 
-        if let e = session.error {
+        if let e = session.displayError ?? session.error {
             Text(e).font(.footnote).foregroundStyle(Ink.red)
                 .multilineTextAlignment(.center).transition(.opacity)
         }
 
         HStack(spacing: 18) {
-            Button("先看看") { session.skipLogin() }
-            Button("注册账号") { showRegister = true }
-            Button("忘记密码") { showRecovery = true }
+            Button(String(localized: "先看看")) { session.skipLogin() }
+            Button(String(localized: "注册账号")) { showRegister = true }
+            Button(String(localized: "忘记密码")) { showRecovery = true }
         }
         .flatButton()
         .font(.footnote).foregroundStyle(Ink.blue)
         .disabled(session.busy)
-        Text(T("account.login.note", "原账号和原密码可继续登录。短信暂不可用或其他地区可使用邮箱注册与密码登录。"))
+        Text(T("account.login.note", String(localized: "原账号和原密码可继续登录。短信暂不可用或其他地区可使用邮箱注册与密码登录。")))
             .font(.footnote).foregroundStyle(Ink.dim)
         AccountPolicyLinks().font(.footnote)
     }

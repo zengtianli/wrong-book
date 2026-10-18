@@ -66,7 +66,7 @@ final class EduArchive {
         let raw = try await wv.evaluateJavaScript(js)
         guard let s = raw as? String, let d = s.data(using: .utf8),
               let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: String] else {
-            throw Failure(message: "存档读回来的不是 JSON —— WebView 里的 localStorage 取不到")
+            throw Failure(message: String(localized: "存档读回来的不是 JSON —— WebView 里的 localStorage 取不到"))
         }
         return o
     }

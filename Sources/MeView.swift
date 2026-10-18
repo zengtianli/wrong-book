@@ -31,46 +31,46 @@ struct MeView: View {
     }
 
     private var accountName: String {
-        guard let s = session.status else { return "登录或注册，开始导入错题" }
-        return s.nick.isEmpty ? s.user : "\(s.nick)（\(s.user)）"
+        guard let s = session.status else { return String(localized: "登录或注册，开始导入错题") }
+        return s.nick.isEmpty ? s.user : String(localized: "\(s.nick)（\(s.user)）")
     }
 
     var body: some View {
         NavigationStack(path: $path) {
             List {
                 Section {
-                    entry("账号与隐私", detail: accountName, icon: "person.crop.circle",
+                    entry(String(localized: "账号与隐私"), detail: accountName, icon: "person.crop.circle",
                           destination: .account, key: "a")
-                    entry("AI 识别与订阅", detail: "前 10 张免费 · 月订阅或年订阅",
+                    entry(String(localized: "AI 识别与订阅"), detail: String(localized: "前 10 张免费 · 月订阅或年订阅"),
                           icon: "sparkles", destination: .subscription, key: "s")
-                    entry("每日提醒", detail: remindOn ? "每天 \(remindHour):00" : "未开启",
+                    entry(String(localized: "每日提醒"), detail: remindOn ? String(localized: "每天 \(remindHour):00") : String(localized: "未开启"),
                           icon: "bell", destination: .reminders, key: "r")
-                    entry("离线课程", detail: "\(pack.lessons.count) 课 · \(sync.note ?? "已下载内容可离线练习")",
+                    entry(String(localized: "离线课程"), detail: String(localized: "\(pack.lessons.count) 课") + " · " + (sync.localizedNote ?? String(localized: "已下载内容可离线练习")),
                           icon: "arrow.down.circle", destination: .downloads, key: "d")
                 }
                 #if os(iOS)
-                Section("应用") {
+                Section(String(localized: "应用")) {
                     ProductSettingsEntry()
                 }
                 #endif
-                Section("今天") {
+                Section(String(localized: "今天")) {
                     if let p = profile {
-                        row("已经做了", "\(p.doneToday) / \(p.goal) 题")
-                        row("还差", p.remaining == 0 ? "做完了 ✅" : "\(p.remaining) 题")
+                        row(String(localized: "已经做了"), String(localized: "\(p.doneToday) / \(p.goal) 题"))
+                        row(String(localized: "还差"), p.remaining == 0 ? String(localized: "做完了 ✅") : String(localized: "\(p.remaining) 题"))
                     } else {
-                        Text("从自己的错题照片开始，导入后再练习")
+                        Text(String(localized: "从自己的错题照片开始，导入后再练习"))
                             .font(.footnote).foregroundStyle(Ink.dim)
                     }
                 }
 
             }
-            .navigationTitle("设置")
+            .navigationTitle(String(localized: "设置"))
             .scrollContentBackground(.hidden)
             .background(Ink.paper)
             .navigationDestination(for: Destination.self) { destination in
                 switch destination {
                 case .account: accountPage
-                case .subscription: List { AIAccessSection(enabled: $aiEnabled) }.navigationTitle("AI 识别与订阅")
+                case .subscription: List { AIAccessSection(enabled: $aiEnabled) }.navigationTitle(String(localized: "AI 识别与订阅"))
                 case .scan: PaperScanView().environmentObject(sync)
                 case .reminders: remindersPage
                 case .downloads: downloadsPage
@@ -112,9 +112,9 @@ struct MeView: View {
     private var remindersPage: some View {
         List {
             Section {
-                    Toggle("每天提醒我做完任务", isOn: $remindOn)
+                    Toggle(String(localized: "每天提醒我做完任务"), isOn: $remindOn)
                     if remindOn {
-                        Picker("提醒时间", selection: $remindHour) {
+                        Picker(String(localized: "提醒时间"), selection: $remindHour) {
                             // 选项里必须包含当前值,否则 Picker 显示成空白 ——
                             // 一个「有开关、没有值」的设置项看着就像坏了(验证时用
                             // -remind_hour 23 当场撞到)
@@ -122,7 +122,7 @@ struct MeView: View {
                         }
                     }
                     HStack {
-                        Text("通知权限").foregroundStyle(Ink.dim)
+                        Text(String(localized: "通知权限")).foregroundStyle(Ink.dim)
                         Spacer()
                         Text(notifyState).foregroundStyle(Ink.dim)
                     }
@@ -134,88 +134,88 @@ struct MeView: View {
                         }
                     }
                 } header: {
-                    Text("提醒")
+                    Text(String(localized: "提醒"))
                 } footer: {
                     // 说清它只在「今天没做够」时才响 —— 否则用户会以为坏了
-                    Text("只在当天还没做够 \(pack.dailyGoal) 题时才响；做完了当天就不再提醒。")
+                    Text(String(localized: "只在当天还没做够 \(pack.dailyGoal) 题时才响；做完了当天就不再提醒。"))
                 }
 
         }
-        .navigationTitle("每日提醒")
+        .navigationTitle(String(localized: "每日提醒"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private var downloadsPage: some View {
         List {
-            Section("课程包") {
-                    row("课数", "\(pack.lessons.count) 课")
-                    row("每日任务", "\(pack.dailyGoal) 题")
-                    row("更新", sync.running ? "正在拉…" : (sync.note ?? "已是最新"))
-                    Button("现在检查更新") { Task { await sync.sync(force: true) } }
-                    Button("停用本机课程副本", role: .destructive) { sync.reset() }
+            Section(String(localized: "课程包")) {
+                    row(String(localized: "课数"), String(localized: "\(pack.lessons.count) 课"))
+                    row(String(localized: "每日任务"), String(localized: "\(pack.dailyGoal) 题"))
+                    row(String(localized: "更新"), sync.running ? String(localized: "正在拉…") : (sync.localizedNote ?? String(localized: "已是最新")))
+                    Button(String(localized: "现在检查更新")) { Task { await sync.sync(force: true) } }
+                    Button(String(localized: "停用本机课程副本"), role: .destructive) { sync.reset() }
                 }
 
             Section {
-                Text("App 不预装个人资料。登录后可导入自己的错题照片；已同步的个人课程支持离线练习。")
+                Text(String(localized: "App 不预装个人资料。登录后可导入自己的错题照片；已同步的个人课程支持离线练习。"))
                     .font(.caption).foregroundStyle(Ink.dim)
             }
         }
-        .navigationTitle("离线课程")
+        .navigationTitle(String(localized: "离线课程"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private var accountPage: some View {
         List {
-            Section("账号") {
+            Section(String(localized: "账号")) {
                     if LessonPaths.offlineReadOnly {
-                        Text("离线模式：仅使用本机资料，未验证当前登录状态。")
+                        Text(String(localized: "离线模式：仅使用本机资料，未验证当前登录状态。"))
                             .font(.footnote).foregroundStyle(Ink.dim)
                     }
                     if let s = session.status {
-                        row("登录为", s.nick.isEmpty ? s.user : "\(s.nick)（\(s.user)）")
-                        Button("手机绑定与换绑") { phoneBinding = true }.disabled(session.busy)
-                        Button("邮箱验证与换绑") { emailBinding = true }.disabled(session.busy)
-                        Button("设置／修改登录密码") { accountPassword = true }.disabled(session.busy)
-                        Button("退出登录", role: .destructive) { Task { await session.logout() } }
+                        row(String(localized: "登录为"), s.nick.isEmpty ? s.user : String(localized: "\(s.nick)（\(s.user)）"))
+                        Button(String(localized: "手机绑定与换绑")) { phoneBinding = true }.disabled(session.busy)
+                        Button(String(localized: "邮箱验证与换绑")) { emailBinding = true }.disabled(session.busy)
+                        Button(String(localized: "设置／修改登录密码")) { accountPassword = true }.disabled(session.busy)
+                        Button(String(localized: "退出登录"), role: .destructive) { Task { await session.logout() } }
                             .disabled(session.busy)
-                        Button("注销账号", role: .destructive) { deletePw = ""; askDelete = true }
+                        Button(String(localized: "注销账号"), role: .destructive) { deletePw = ""; askDelete = true }
                             .disabled(session.busy)
                         if let receipt = session.deletionReceipt, receipt.owner == s.user, receipt.status == "pending" {
-                            Text("注销处理中 · 尚未完成删除").foregroundStyle(Ink.dim)
-                            Text("预计处理日期：\(receipt.expectedBy.prefix(10))").font(.footnote)
-                            Button("刷新注销进度") { Task { await session.refreshDeletion() } }
-                            if let error = session.deletionRefreshError { Text(error).font(.footnote).foregroundStyle(Ink.red) }
-                            Link("联系支持", destination: URL(string: "https://app-ios-wrong-book.tianli.cyou/support.html")!)
+                            Text(String(localized: "注销处理中 · 尚未完成删除")).foregroundStyle(Ink.dim)
+                            Text(String(localized: "预计处理日期：\(receipt.expectedBy.prefix(10))")).font(.footnote)
+                            Button(String(localized: "刷新注销进度")) { Task { await session.refreshDeletion() } }
+                            if let error = session.deletionRefreshDisplayError ?? session.deletionRefreshError { Text(error).font(.footnote).foregroundStyle(Ink.red) }
+                            Link(String(localized: "联系支持"), destination: URL(string: "https://app-ios-wrong-book.tianli.cyou/support.html")!)
                         }
                     } else {
                         // 没登录也能做题，但要说清代价 —— 不然「分怎么不涨」查不出来
-                        Text(T("wrongbook.account.guest_note", "登录或验证手机／邮箱注册后，导入自己的错题照片并同步学习资料。"))
+                        Text(T("wrongbook.account.guest_note", String(localized: "登录或验证手机／邮箱注册后，导入自己的错题照片并同步学习资料。")))
                             .font(.footnote).foregroundStyle(Ink.dim)
-                        Button("去登录") { Task { await session.logout() } }
+                        Button(String(localized: "去登录")) { Task { await session.logout() } }
                     }
                 }
 
         }
-        .navigationTitle("账号与隐私")
+        .navigationTitle(String(localized: "账号与隐私"))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $phoneBinding) { AccountBindingView(phone: true) }
         .sheet(isPresented: $emailBinding) { AccountBindingView(phone: false) }
         .sheet(isPresented: $accountPassword) { AccountPasswordView() }
         // App Store 5.1.1(v)：能注册就必须能在 app 内删号。要密码，二次确认，文案说清删什么。
-        .alert("注销账号？", isPresented: $askDelete) {
-            SecureField("当前密码", text: $deletePw)
-            Button("确认注销", role: .destructive) {
+        .alert(String(localized: "注销账号？"), isPresented: $askDelete) {
+            SecureField(String(localized: "当前密码"), text: $deletePw)
+            Button(String(localized: "确认注销"), role: .destructive) {
                 Task {
                     if await session.deleteAccount(password: deletePw) { deleteErr = nil }
-                    else { deleteErr = session.error }
+                    else { deleteErr = session.displayError ?? session.error }
                 }
             }
-            Button("取消", role: .cancel) {}
+            Button(String(localized: "取消"), role: .cancel) {}
         } message: {
-            Text(AccountDeletionCopy.summary + "删除完成后不可恢复。注销不会自动取消 Apple 订阅，请先在系统订阅设置中取消续期。输入当前密码确认发起注销。")
+            Text(AccountDeletionCopy.summary + String(localized: "删除完成后不可恢复。注销不会自动取消 Apple 订阅，请先在系统订阅设置中取消续期。输入当前密码确认发起注销。"))
         }
-        .alert("没删成", isPresented: Binding(get: { deleteErr != nil }, set: { if !$0 { deleteErr = nil } })) {
-            Button("好", role: .cancel) {}
+        .alert(String(localized: "没删成"), isPresented: Binding(get: { deleteErr != nil }, set: { if !$0 { deleteErr = nil } })) {
+            Button(String(localized: "好"), role: .cancel) {}
         } message: { Text(deleteErr ?? "") }
     }
 
@@ -237,8 +237,8 @@ struct MeView: View {
 
     private func refreshPlan() async {
         let f = DateFormatter()
-        f.dateFormat = "M月d日 HH:00"
+        f.setLocalizedDateFormatFromTemplate("MMMdHHmm")
         planRows = await Reminder.currentPlan().prefix(3).map { "\(f.string(from: $0.fire))　\($0.body)" }
-        if planRows.isEmpty && remindOn { planRows = ["今天已经做够了，今天不再提醒"] }
+        if planRows.isEmpty && remindOn { planRows = [String(localized: "今天已经做够了，今天不再提醒")] }
     }
 }

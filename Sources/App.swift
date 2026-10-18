@@ -62,7 +62,7 @@ struct WrongBookApp: App {
         #if os(macOS)
         .commands {
             CommandGroup(replacing: .appSettings) {
-                Button("设置…") { ProductSettings.show() }.keyboardShortcut(",", modifiers: .command)
+                Button(String(localized: "设置…")) { ProductSettings.show() }.keyboardShortcut(",", modifiers: .command)
             }
         }
         #endif
@@ -161,19 +161,19 @@ struct RootView: View {
         .onChange(of: session.credentialRevision) { _, _ in
             if session.status != nil { WatchLink.shared.publishSession() }
         }
-        .alert("继续订阅", isPresented: Binding(
+        .alert(String(localized: "继续订阅"), isPresented: Binding(
             get: { subscriptions.purchaseIntent != nil && session.phase == .loggedIn },
             set: { if !$0 { subscriptions.purchaseIntent = nil } }), presenting: subscriptions.purchaseIntent) { product in
-            Button("继续") {
+            Button(String(localized: "继续")) {
                 subscriptions.purchaseIntent = nil
                 Task { await subscriptions.purchase(product) }
             }
-            Button("取消", role: .cancel) { subscriptions.purchaseIntent = nil }
+            Button(String(localized: "取消"), role: .cancel) { subscriptions.purchaseIntent = nil }
         } message: { product in
-            Text("订阅将绑定当前错题本账号 \(session.status?.nick ?? "")。\(product.displayName)，价格 \(product.displayPrice)。请在 Apple 购买确认页核对周期和金额。")
+            Text(String(localized: "订阅将绑定当前错题本账号 \(session.status?.nick ?? "")。\(product.displayName)，价格 \(product.displayPrice)。请在 Apple 购买确认页核对周期和金额。"))
         }
-        .alert("注销处理结果", isPresented: Binding(get: { session.deletionNotice != nil }, set: { if !$0 { session.deletionNotice = nil } })) {
-            Button("好", role: .cancel) { session.deletionNotice = nil }
+        .alert(String(localized: "注销处理结果"), isPresented: Binding(get: { session.deletionNotice != nil }, set: { if !$0 { session.deletionNotice = nil } })) {
+            Button(String(localized: "好"), role: .cancel) { session.deletionNotice = nil }
         } message: { Text(session.deletionNotice ?? "") }
     }
 }

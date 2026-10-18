@@ -40,7 +40,69 @@ enum Api {
     struct Failure: LocalizedError {
         let message: String
         var statusCode: Int = 0
+        var displayMessage: String? = nil
         var errorDescription: String? { message }
+    }
+
+    /// UI-only projection. Raw errors remain stable for the command line and diagnostics.
+    static func displayError(_ error: Error) -> String {
+        if let failure = error as? Failure, let text = failure.displayMessage { return text }
+        if let failure = error as? Failure, failure.statusCode != 0 {
+            let code = failure.statusCode
+            switch code {
+            case 413: return String(localized: "上传内容超过服务器大小限制，请稍后重试或联系支持（HTTP 413）")
+            case 500...599: return String(localized: "学习服务器处理失败，请稍后重试（HTTP \(code)）")
+            case 401: return String(localized: "登录已失效，请重新登录（HTTP 401）")
+            case 200...299: return String(localized: "服务端返回的不是 JSON")
+            default: return String(localized: "学习库请求失败（HTTP \(code)）")
+            }
+        }
+        if let changed = error as? PaperRequestSession.Changed { return changed.localizedDisplayDescription }
+        return String(localized: String.LocalizationValue(error.localizedDescription))
+    }
+
+    /// Optional bilingual payload values; an older server's Chinese text is still usable.
+    static func displayText(_ json: [String: Any], key: String, fallback: String = "",
+                            languages: [String] = Locale.preferredLanguages) -> String {
+        let language = languages.first { $0.lowercased().hasPrefix("en") || $0.lowercased().hasPrefix("zh") } ?? "en"
+        let chinese = language.lowercased().hasPrefix("zh")
+        let preferred = chinese ? ["zh-Hans", "zh", "en"] : ["en", "zh-Hans", "zh"]
+        for language in preferred {
+            // The untagged legacy value is Chinese, so prefer it to an English-only fallback.
+            if chinese, language == "en", let text = json[key] as? String, !text.isEmpty { return text }
+            if let text = json[key + "_" + language] as? String, !text.isEmpty { return text }
+            if let values = json[key] as? [String: Any], let text = values[language] as? String, !text.isEmpty { return text }
+        }
+        if let text = json[key] as? String, !text.isEmpty { return text }
+        return fallback
+    }
+
+    /// Resolve localized RemoteUI fields before passing the unchanged shared schema onward.
+    static func localizedUI(_ raw: [String: Any], languages: [String] = Locale.preferredLanguages) -> [String: Any] {
+        var result = raw
+        var copy: [String: String] = [:]
+        let base = raw["copy"] as? [String: Any] ?? [:]
+        let overlays = ["en", "zh", "zh-Hans"]
+        var keys = Set(base.keys)
+        for language in overlays { keys.formUnion((raw["copy_" + language] as? [String: Any] ?? [:]).keys) }
+        for key in keys {
+            var candidates: [String: Any] = [:]
+            candidates["text"] = base[key]
+            for language in overlays {
+                candidates["text_" + language] = (raw["copy_" + language] as? [String: Any])?[key]
+            }
+            let text = displayText(candidates, key: "text", languages: languages)
+            if !text.isEmpty { copy[key] = text }
+        }
+        result["copy"] = copy
+        if let vocab = raw["vocab"] as? [String: [String: Any]] {
+            result["vocab"] = vocab.mapValues { word in
+                var selected = word
+                selected["label"] = displayText(word, key: "label", languages: languages)
+                return selected
+            }
+        }
+        return result
     }
 
     /// 普通请求由共享 cookie jar 管登录。导入批次只借用开始时的短生命周期会话快照，
@@ -56,6 +118,7 @@ enum Api {
             url = c.url ?? url
         }
         var req = URLRequest(url: url)
+        req.setValue(Locale.preferredLanguages.joined(separator: ", "), forHTTPHeaderField: "Accept-Language")
         req.timeoutInterval = timeout
         if let body {
             req.httpMethod = "POST"
@@ -83,7 +146,9 @@ enum Api {
         }
         if !(200...299).contains(code) || obj["ok"] as? Bool != true {
             // 服务端的 err 是给人看的中文，原样透出去比包一层「请求失败」有用
-            throw Failure(message: obj["err"] as? String ?? "学习库拒绝了这次请求(HTTP \(code))", statusCode: code)
+            let raw = obj["err"] as? String ?? "学习库拒绝了这次请求(HTTP \(code))"
+            throw Failure(message: raw, statusCode: code,
+                          displayMessage: displayText(obj, key: "err", fallback: String(localized: "学习库拒绝了这次请求(HTTP \(code))")))
         }
         return obj
     }
@@ -173,6 +238,7 @@ enum Api {
         let wrongId: String?
         let job: String?
         let autoErr: String?
+        var displayAutoErr: String? = nil
     }
 
     /// 传一份卷子的**一页**（整卷扫描）。一页一个请求 —— 六页塞进一个 body 就是十几兆，
@@ -194,8 +260,10 @@ enum Api {
         if !auto { body["auto"] = false }
         let r = try await request("api/paper_page", body: body, timeout: 90,
                                   account: account, transport: transport)  // 3MB 走手机网络，20 秒不够
+        let displayAutoErr = Self.displayText(r, key: "auto_err")
         return PaperUpload(wrongId: r["wrong_id"] as? String, job: r["job"] as? String,
-                           autoErr: r["auto_err"] as? String)
+                           autoErr: r["auto_err"] as? String,
+                           displayAutoErr: displayAutoErr.isEmpty ? nil : displayAutoErr)
     }
 
     enum JobState {
@@ -203,16 +271,30 @@ enum Api {
         case done(ok: Bool, log: String)
     }
 
+    struct JobReport {
+        let state: JobState
+        let displayLog: String?
+    }
+
     /// 轮询一件读图/入库作业。读图在服务端要 30~120 秒，这里只问「完了没」，
     /// 结果那段 `log` 是 `wrong_ingest.py auto` 的原样输出 —— 「录进题库 N 道」那句
     /// 是它算的，界面只摘不数（两处各数一遍迟早对不上，和 wrong.html 同一条原则）。
     static func job(_ id: String, account: PaperRequestSession,
                     transport: URLSession = .shared) async throws -> JobState {
+        let report = try await jobReport(id, account: account, transport: transport)
+        return report.state
+    }
+
+    /// Keep the raw recognition log for counts and diagnostics; localize only its UI projection.
+    static func jobReport(_ id: String, account: PaperRequestSession,
+                          transport: URLSession = .shared) async throws -> JobReport {
         let r = try await request("api/job", query: ["id": id], account: account, transport: transport)
         guard (r["state"] as? String) == "done", let res = r["res"] as? [String: Any] else {
-            return .running
+            return JobReport(state: .running, displayLog: nil)
         }
-        return .done(ok: res["ok"] as? Bool == true, log: res["log"] as? String ?? "")
+        let text = displayText(res, key: "log")
+        return JobReport(state: .done(ok: res["ok"] as? Bool == true, log: res["log"] as? String ?? ""),
+                         displayLog: text.isEmpty ? nil : text)
     }
 
     /// 撤一张登记过的错题图（自检通道收尾用；真删，服务端不留底）。
@@ -249,7 +331,7 @@ enum AccountHints {
             resend = seconds(json["resend_seconds"], fallback: 60, in: 10...600)
             ttl = seconds(json["code_ttl_seconds"], fallback: 300, in: 60...3600)
         }
-        let ui = (json["ui"] as? [String: Any]).flatMap { try? JSONSerialization.data(withJSONObject: $0) }
+        let ui = (json["ui"] as? [String: Any]).flatMap { try? JSONSerialization.data(withJSONObject: Api.localizedUI($0)) }
         Remote.ui = ui.flatMap { try? JSONDecoder().decode(FeedUI.self, from: $0) }
     }
     static func seconds(_ raw: Any?, fallback: Int, in range: ClosedRange<Int>) -> Int {

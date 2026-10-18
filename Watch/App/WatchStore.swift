@@ -26,7 +26,7 @@ final class WatchStore: ObservableObject {
         let d = UserDefaults.standard
         if let u = d.string(forKey: "dev_user"), let pw = d.string(forKey: "dev_pw") {
             do { try await Api.login(user: u, password: pw) } catch {
-                phase = .failed(error.localizedDescription)
+                phase = .failed(Api.displayError(error))
                 return
             }
         }
@@ -68,7 +68,7 @@ final class WatchStore: ObservableObject {
                 offline = true
                 phase = .ready
             } else {
-                phase = .failed("暂时连不上学习库")
+                phase = .failed(String(localized: "暂时连不上学习库"))
             }
         }
     }

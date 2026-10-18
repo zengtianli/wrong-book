@@ -21,6 +21,15 @@ struct Lesson: Identifiable, Hashable {
     var id: String { slug }
     var isTeach: Bool { kind == "teach" }
 
+    var localizedSubjectName: String {
+        switch (subject, subjectName) {
+        case ("math", "数学"): return String(localized: "数学")
+        case ("chinese", "语文"): return String(localized: "语文")
+        case ("english", "英语"): return String(localized: "英语")
+        default: return subjectName
+        }
+    }
+
     /// Only the current account instance can resolve this validated local file.
     var resolvedURL: URL? {
         guard !scope.isEmpty, scope == LessonPaths.activeScope, LessonPaths.valid(file),
@@ -86,7 +95,7 @@ struct LessonPack {
             lessons: list,
             dailyGoal: o["daily_goal"] as? Int ?? 12,
             problem: missing.isEmpty ? nil
-                : "有 \(missing.count) 课的页面没进包：" + missing.prefix(3).map(\.slug).joined(separator: "、"))
+                : String(localized: "有 \(missing.count) 课的页面没进包：") + missing.prefix(3).map(\.slug).joined(separator: "、"))
     }
 
     /// manifest（`/api/lessons` 的原样 JSON）里的课程条目。Apple Watch 只拿它把错题归到课名下，
@@ -117,6 +126,7 @@ struct SubjectGroup: Identifiable {
     let name: String
     let units: [UnitGroup]
     var id: String { key }
+    var localizedName: String { units.first?.lessons.first?.localizedSubjectName ?? name }
 }
 
 struct UnitGroup: Identifiable {

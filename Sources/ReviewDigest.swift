@@ -22,8 +22,8 @@ struct ReviewDigest: Codable, Equatable {
         let manual: Bool
 
         /// 与 WrongEntry 同一种说法：错几次是红的一截，订正进度是绿的一截
-        var wrongText: String { manual && wrong == 0 ? "手动收进" : "错 \(wrong) 次" }
-        var okText: String? { ok > 0 ? "已订正 \(ok)/2" : nil }
+        var wrongText: String { manual && wrong == 0 ? String(localized: "手动收进") : String(localized: "错 \(wrong) 次") }
+        var okText: String? { ok > 0 ? String(localized: "已订正 \(ok)/2") : nil }
     }
 
     /// 待巩固几类（= 错题本里还没连对两次划掉的题型数，「复习」那一页的来源）

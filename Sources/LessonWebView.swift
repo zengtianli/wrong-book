@@ -179,7 +179,7 @@ struct LessonWebView: UIViewRepresentable {
             guard let u = lesson.resolvedURL,
                   let html = try? String(contentsOf: u, encoding: .utf8) else {
                 // 静默白屏是最难查的一种 —— 明说是哪一课、缺在哪
-                let msg = "这份个人课程暂不可用，请返回学习页重新同步。"
+                let msg = String(localized: "这份个人课程暂不可用，请返回学习页重新同步。")
                 wv.loadHTMLString(
                     "<meta name=viewport content='width=device-width,initial-scale=1'>"
                     + "<pre style='padding:24px;font:15px/1.7 -apple-system;white-space:pre-wrap'>"
@@ -268,11 +268,13 @@ enum LessonEntry: Equatable {
     static func complaint(for result: String) -> String? {
         switch result {
         case "drill", "wrong": return nil
-        case "mix":    return "错题本里没有还在题库里的题型 —— 给你出了一套常规的"
-        case "gone":   return "这类题已不在当前个人课程中，请同步课程后重试"
-        case "noentry":return "这一课的页面是旧版渲染的，没有复习入口 —— 重新构建一次就有了"
-        case "threw":  return "引擎组卷时报错了"
-        default:       return "复习入口没回话（\(result.isEmpty ? "空" : result)）"
+        case "mix":    return String(localized: "错题本里没有还在题库里的题型 —— 给你出了一套常规的")
+        case "gone":   return String(localized: "这类题已不在当前个人课程中，请同步课程后重试")
+        case "noentry":return String(localized: "这一课的页面是旧版渲染的，没有复习入口 —— 重新构建一次就有了")
+        case "threw":  return String(localized: "引擎组卷时报错了")
+        default:
+            let detail = result.isEmpty ? String(localized: "空") : result
+            return String(localized: "复习入口没回话（\(detail)）")
         }
     }
 }

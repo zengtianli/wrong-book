@@ -5,9 +5,41 @@ import WebKit
 @MainActor
 final class LessonSync: ObservableObject {
     static let shared = LessonSync()
-    @Published private(set) var note: String?
+    @Published private(set) var note: String? { didSet { failureDisplayMessage = nil } }
+    private var failureDisplayMessage: String?
     @Published private(set) var running = false
     @Published private(set) var revision = 0
+    /// UI copy is localized separately so the command-line note remains stable.
+    var localizedNote: String? {
+        guard let note else { return nil }
+        switch note {
+        case "离线模式：仅使用本机资料；登录联网后可上传和同步。":
+            return String(localized: "离线模式：仅使用本机资料；登录联网后可上传和同步。")
+        case "个人课程已同步":
+            return String(localized: "个人课程已同步")
+        case "已停用本机课程副本，可重新同步个人课程":
+            return String(localized: "已停用本机课程副本，可重新同步个人课程")
+        default:
+            let prefix = "暂时无法同步个人课程："
+            guard note.hasPrefix(prefix) else { return note }
+            if let failureDisplayMessage { return String(localized: "暂时无法同步个人课程：\(failureDisplayMessage)") }
+            let rawError = String(note.dropFirst(prefix.count))
+            let detail: String
+            switch rawError {
+            case "个人课程清单缺少账号校验信息":
+                detail = String(localized: "个人课程清单缺少账号校验信息")
+            case "个人课程文件校验信息无效":
+                detail = String(localized: "个人课程文件校验信息无效")
+            case "课程下载校验失败":
+                detail = String(localized: "课程下载校验失败")
+            case "请检查网络与登录状态":
+                detail = String(localized: "请检查网络与登录状态")
+            default:
+                detail = Api.displayError(Api.Failure(message: rawError))
+            }
+            return String(localized: "暂时无法同步个人课程：\(detail)")
+        }
+    }
     private var owner: String?
     private var generation = UUID()
     private var lastRun: Date?
@@ -99,7 +131,10 @@ final class LessonSync: ObservableObject {
             lastRun = Date()
             note = lessons.isEmpty ? nil : "个人课程已同步"
         } catch {
-            if token == generation { note = "暂时无法同步个人课程：" + error.localizedDescription }
+            if token == generation {
+                note = "暂时无法同步个人课程：" + error.localizedDescription
+                failureDisplayMessage = Api.displayError(error)
+            }
         }
     }
 

@@ -25,7 +25,7 @@ struct FocusLibraryView: View {
         items.filter { item in
             (subject.isEmpty || item.lesson.subject == subject)
             && ((!reviewOnly && !pendingOnly) || pending(item))
-            && (search.isEmpty || (item.text + item.lesson.title + item.lesson.subjectName).localizedCaseInsensitiveContains(search))
+            && (search.isEmpty || (item.text + item.lesson.title + item.lesson.subjectName + item.lesson.localizedSubjectName).localizedCaseInsensitiveContains(search))
         }
     }
     private func pending(_ item: QuestionIndex.Item) -> Bool {
@@ -75,34 +75,34 @@ struct FocusLibraryView: View {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(reviewOnly ? "REVIEW & UNDERSTAND" : "MY WRONGBOOK")
                         .font(.system(size: 9, weight: .semibold)).tracking(2).foregroundStyle(Ink.accent)
-                    Text(reviewOnly ? "复习，把它真正学会" : "我的错题本")
+                    Text(reviewOnly ? String(localized: "复习，把它真正学会") : String(localized: "我的错题本"))
                         .font(.system(size: 24, weight: .semibold)).foregroundStyle(Ink.text)
-                    Text(reviewOnly ? "从待巩固的题开始，做完一组再回看。" : "把没弄明白的题留下来，一道一道学会。")
+                    Text(reviewOnly ? String(localized: "从待巩固的题开始，做完一组再回看。") : String(localized: "把没弄明白的题留下来，一道一道学会。"))
                         .font(.caption).foregroundStyle(Ink.dim)
                 }
                 Spacer(minLength: 4)
                 if !reviewOnly {
-                    Button { NotificationCenter.default.post(name: .wrongbookImport, object: nil) } label: { Label("导入", systemImage: "plus") }
+                    Button { NotificationCenter.default.post(name: .wrongbookImport, object: nil) } label: { Label(String(localized: "导入"), systemImage: "plus") }
                         .buttonStyle(.borderedProminent).controlSize(.small)
                 }
             }
             HStack(spacing: 8) {
-                Picker("学科", selection: $subject) {
-                    Text("全部科目").tag("")
-                    ForEach(pack.tree.filter { ["math", "chinese", "english"].contains($0.key) }) { group in Text(group.name).tag(group.key) }
+                Picker(String(localized: "学科"), selection: $subject) {
+                    Text(String(localized: "全部科目")).tag("")
+                    ForEach(pack.tree.filter { ["math", "chinese", "english"].contains($0.key) }) { group in Text(group.localizedName).tag(group.key) }
                 }.labelsHidden().pickerStyle(.menu).wideFixedSize()
-                if !reviewOnly { Toggle("待巩固", isOn: $pendingOnly).toggleStyle(.button).controlSize(.small) }
+                if !reviewOnly { Toggle(String(localized: "待巩固"), isOn: $pendingOnly).toggleStyle(.button).controlSize(.small) }
                 Spacer(minLength: 0)
-                Text("\(visible.count) 道").font(.caption).foregroundStyle(Ink.dim)
+                Text(String(localized: "\(visible.count) 道")).font(.caption).foregroundStyle(Ink.dim)
             }
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Ink.dim)
                 #if os(visionOS)
                 // Vision Pro 的占位字是给玻璃底配的浅色，摊在白纸上看不见：显式给一个深一点的
-                TextField("搜索题目或来源", text: $search, prompt: Text("搜索题目或来源").foregroundStyle(Ink.dim))
+                TextField(String(localized: "搜索题目或来源"), text: $search, prompt: Text(String(localized: "搜索题目或来源")).foregroundStyle(Ink.dim))
                     .textFieldStyle(.plain).focused($searchFocused)
                 #else
-                TextField("搜索题目或来源", text: $search).textFieldStyle(.plain).focused($searchFocused)
+                TextField(String(localized: "搜索题目或来源"), text: $search).textFieldStyle(.plain).focused($searchFocused)
                 #endif
                 if !search.isEmpty { Button { search = "" } label: { Image(systemName: "xmark.circle.fill") }.buttonStyle(.plain) }
             }.padding(9).background(Ink.card, in: RoundedRectangle(cornerRadius: 6))
@@ -114,11 +114,11 @@ struct FocusLibraryView: View {
                 LazyVStack(spacing: 0) {
                     ForEach(visible) { item in questionRow(item) }
                     ForEach(fallback) { lesson in
-                        Button { choose(ReviewTarget(lesson: lesson, entry: reviewOnly ? .wrongSet : .normal, subtitle: "练习资料")) } label: {
+                        Button { choose(ReviewTarget(lesson: lesson, entry: reviewOnly ? .wrongSet : .normal, subtitle: String(localized: "练习资料"))) } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text(lesson.title).font(.system(size: 14)).foregroundStyle(Ink.text)
-                                    Text("练习资料 · 打开查看题目").font(.caption).foregroundStyle(Ink.dim)
+                                    Text(String(localized: "练习资料 · 打开查看题目")).font(.caption).foregroundStyle(Ink.dim)
                                 }
                                 Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(Ink.dim)
                             }.padding(12).contentShape(Rectangle())
@@ -129,24 +129,24 @@ struct FocusLibraryView: View {
                     if !loading && visible.isEmpty && fallback.isEmpty {
                         VStack(spacing: 12) {
                             Image(systemName: reviewOnly ? "checkmark.circle" : "book.closed").font(.system(size: 28)).foregroundStyle(Ink.accent)
-                            Text(reviewOnly ? "暂无待巩固的题" : "从第一道错题开始").font(.headline)
-                            Text(search.isEmpty ? "导入自己的图片，识别后同步到这里。" : "没有符合条件的题目，试试其他关键词。")
+                            Text(reviewOnly ? String(localized: "暂无待巩固的题") : String(localized: "从第一道错题开始")).font(.headline)
+                            Text(search.isEmpty ? String(localized: "导入自己的图片，识别后同步到这里。") : String(localized: "没有符合条件的题目，试试其他关键词。"))
                                 .font(.caption).foregroundStyle(Ink.dim)
-                            Button("导入图片") { NotificationCenter.default.post(name: .wrongbookImport, object: nil) }
+                            Button(String(localized: "导入图片")) { NotificationCenter.default.post(name: .wrongbookImport, object: nil) }
                         }.frame(maxWidth: .infinity).padding(.vertical, 48)
                     }
                 }.background(Ink.card, in: RoundedRectangle(cornerRadius: 8))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Ink.line))
             }.refreshable { await sync.sync(force: true); await reload() }
-            Text("已同步资料可离线练习 · 掌握进度由练习结果更新").font(.system(size: 10)).foregroundStyle(Ink.dim)
+            Text(String(localized: "已同步资料可离线练习 · 掌握进度由练习结果更新")).font(.system(size: 10)).foregroundStyle(Ink.dim)
         }.padding(20).background(Ink.paper)
     }
     private func questionRow(_ item: QuestionIndex.Item) -> some View {
         VStack(spacing: 0) {
             Button { choose(ReviewTarget(lesson: item.lesson, entry: item.gid.isEmpty ? .normal : .drill(gid: item.gid),
-                                         subtitle: item.isPrivate ? "导入原题" : "同类题复习")) } label: {
+                                         subtitle: item.isPrivate ? String(localized: "导入原题") : String(localized: "同类题复习"))) } label: {
                 HStack(spacing: 12) {
-                    Text(item.lesson.subjectName.prefix(1)).font(.system(size: 13, weight: .medium))
+                    Text(item.lesson.localizedSubjectName.prefix(1)).font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Ink.accent).frame(width: 28, height: 28)
                         .background(Ink.accentSoft, in: RoundedRectangle(cornerRadius: 5))
                     VStack(alignment: .leading, spacing: 5) {
@@ -154,7 +154,7 @@ struct FocusLibraryView: View {
                         Text(item.lesson.title + " · " + item.lesson.date).font(.system(size: 11)).foregroundStyle(Ink.dim).lineLimit(1)
                     }
                     Spacer(minLength: 0)
-                    if pending(item) { Text("待巩固").font(.system(size: 10)).foregroundStyle(Ink.red) }
+                    if pending(item) { Text(String(localized: "待巩固")).font(.system(size: 10)).foregroundStyle(Ink.red) }
                     Image(systemName: "chevron.right").font(.caption2).foregroundStyle(Ink.dim)
                 }.padding(12).frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
             }.buttonStyle(.plain)
@@ -180,10 +180,10 @@ struct FocusLibraryView: View {
             }
             updatedBook = WrongBook.parse(archive: snapshot, pack: loaded)
         }
-        catch { note = "复习进度暂时无法读取，请稍后同步重试。" }
+        catch { note = String(localized: "复习进度暂时无法读取，请稍后同步重试。") }
         guard scope == LessonPaths.activeScope else { return }
         pack = loaded; items = rows; book = updatedBook; loading = false
-        problem = note ?? (failed ? "部分资料暂时不能逐题列出，可从下方打开原练习。" : nil)
+        problem = note ?? (failed ? String(localized: "部分资料暂时不能逐题列出，可从下方打开原练习。") : nil)
         // 平台验收车道：个人课程同步到位（scope 生效）后列表第一次读完 —— 有数据或明确为空 —— 才算「第一屏有数据」；
         // 登录后、同步前那一次空读不算。不传 -lane_* 时只是一行日志
         if scope != nil { LaneSignal.ready(reviewOnly ? "review" : "library") }
@@ -192,7 +192,7 @@ struct FocusLibraryView: View {
            let item = rows.first(where: { $0.uid == uid }) {
             openedLaunchQuestion = true
             choose(ReviewTarget(lesson: item.lesson, entry: item.gid.isEmpty ? .normal : .drill(gid: item.gid),
-                                subtitle: item.isPrivate ? "导入原题" : "同类题复习"))
+                                subtitle: item.isPrivate ? String(localized: "导入原题") : String(localized: "同类题复习")))
         }
         #endif
     }

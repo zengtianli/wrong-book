@@ -17,8 +17,47 @@ final class AISubscription: ObservableObject {
     @Published private(set) var loadingProducts = false
     @Published private(set) var productMessage: String?
     var busy: Bool { refreshingAccess || processingPurchase }
-    @Published var message: String?
+    @Published var message: String? { didSet { failureDisplayMessage = nil } }
+    private var failureDisplayMessage: String?
     @Published var purchaseIntent: Product?
+    /// Keep raw status copy stable for regression checks; views use localized copy.
+    var localizedProductMessage: String? {
+        guard let productMessage else { return nil }
+        switch productMessage {
+        case "App Store 暂未返回订阅方案，请稍后重试。已有免费额度仍可使用。":
+            return String(localized: "App Store 暂未返回订阅方案，请稍后重试。已有免费额度仍可使用。")
+        case "部分订阅方案暂不可用，可选择已显示的方案或重试。":
+            return String(localized: "部分订阅方案暂不可用，可选择已显示的方案或重试。")
+        case "无法连接 App Store 获取订阅方案，请检查网络后重试。":
+            return String(localized: "无法连接 App Store 获取订阅方案，请检查网络后重试。")
+        default:
+            return productMessage
+        }
+    }
+    var localizedMessage: String? {
+        if let failureDisplayMessage { return failureDisplayMessage }
+        guard let message else { return nil }
+        switch message {
+        case "Apple 购买验证未通过，请恢复购买重试。":
+            return String(localized: "Apple 购买验证未通过，请恢复购买重试。")
+        case "这笔订阅属于另一个错题本账号，请登录购买时的账号后恢复购买。":
+            return String(localized: "这笔订阅属于另一个错题本账号，请登录购买时的账号后恢复购买。")
+        case "登录状态已改变，请登录后重新同步订阅。":
+            return String(localized: "登录状态已改变，请登录后重新同步订阅。")
+        case "请先登录并同步账号。":
+            return String(localized: "请先登录并同步账号。")
+        case "找不到可以显示购买确认的窗口，请稍后重试。":
+            return String(localized: "找不到可以显示购买确认的窗口，请稍后重试。")
+        case "购买等待 Apple 确认；确认后会自动更新权益。":
+            return String(localized: "购买等待 Apple 确认；确认后会自动更新权益。")
+        case "购买状态尚未确认，请稍后恢复购买。":
+            return String(localized: "购买状态尚未确认，请稍后恢复购买。")
+        case "当前错题本账号没有有效订阅。请确认 Apple 账户与购买时的错题本账号。":
+            return String(localized: "当前错题本账号没有有效订阅。请确认 Apple 账户与购买时的错题本账号。")
+        default:
+            return Api.displayError(Api.Failure(message: message))
+        }
+    }
     private let fetchProducts: () async throws -> [Product]
     private let fetchAccess: (PaperRequestSession) async throws -> Api.AIAccess
     private let syncPurchases: () async throws -> Void
@@ -126,7 +165,7 @@ final class AISubscription: ObservableObject {
                 try await accept(result, account: account, generation: generation)
             } catch {
                 // Keep the transaction unfinished for login/retry/restore.
-                if generation == accountGeneration { message = subscriptionError(error) }
+                if generation == accountGeneration { recordSubscriptionError(error) }
             }
         }
     }
@@ -164,6 +203,11 @@ final class AISubscription: ObservableObject {
         return error.localizedDescription
     }
 
+    private func recordSubscriptionError(_ error: Error) {
+        message = subscriptionError(error)
+        if !(error is PaperRequestSession.Changed) { failureDisplayMessage = Api.displayError(error) }
+    }
+
     private func refreshAccess(account suppliedAccount: PaperRequestSession? = nil) async {
         guard !refreshingAccess else { return }
         let generation = accountGeneration
@@ -186,7 +230,7 @@ final class AISubscription: ObservableObject {
             }
         } catch is CancellationError {
         } catch {
-            if generation == accountGeneration { message = subscriptionError(error) }
+            if generation == accountGeneration { recordSubscriptionError(error) }
         }
     }
 
@@ -223,7 +267,7 @@ final class AISubscription: ObservableObject {
                 if generation == accountGeneration { message = "购买状态尚未确认，请稍后恢复购买。" }
             }
         } catch {
-            if generation == accountGeneration { message = subscriptionError(error) }
+            if generation == accountGeneration { recordSubscriptionError(error) }
         }
     }
 
@@ -243,7 +287,7 @@ final class AISubscription: ObservableObject {
                 message = "当前错题本账号没有有效订阅。请确认 Apple 账户与购买时的错题本账号。"
             }
         } catch {
-            if generation == accountGeneration { message = subscriptionError(error) }
+            if generation == accountGeneration { recordSubscriptionError(error) }
         }
     }
 }

@@ -10,12 +10,16 @@ final class Session: ObservableObject {
 
     @Published var phase: Phase = .checking
     @Published var status: Status?
-    @Published var error: String?
+    @Published var error: String? {
+        didSet { if error == nil { displayError = nil } }
+    }
+    @Published var displayError: String?
     @Published var busy = false
     @Published var credentialRevision = 0
     @Published var deletionReceipt: DeletionReceipt?
     @Published var deletionNotice: String?
     @Published var deletionRefreshError: String?
+    @Published var deletionRefreshDisplayError: String?
     private let receiptKey = "accountDeletionReceipt"
     // A delayed read from the previous login must never restore its user/scope.
     // Cookie-changing operations are also serialized with busy below.
@@ -49,9 +53,9 @@ final class Session: ObservableObject {
         }
         do {
             if let scope { try LessonPaths.removeFiles(scope: scope) }
-            deletionNotice = "账号注销已完成，当前账号的本机课程副本、网页存档及登录信息已清除。"
+            deletionNotice = String(localized: "账号注销已完成，当前账号的本机课程副本、网页存档及登录信息已清除。")
         } catch {
-            deletionNotice = "账号注销已完成，但本机课程副本清理失败。资料已停用，请联系支持协助清理。"
+            deletionNotice = String(localized: "账号注销已完成，但本机课程副本清理失败。资料已停用，请联系支持协助清理。")
         }
     }
 
@@ -59,6 +63,7 @@ final class Session: ObservableObject {
         guard !busy else { return }
         let generation = identityGeneration
         deletionRefreshError = nil
+        deletionRefreshDisplayError = nil
         do {
             if deletionReceipt == nil, let user = status?.user {
                 let fetched = try await Api.currentDeletion()
@@ -86,8 +91,8 @@ final class Session: ObservableObject {
                             await LessonPaths.webDataStore(scope: scope).removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
                             try LessonPaths.removeFiles(scope: scope)
                         }
-                        deletionNotice = "此前提交的账号注销申请已完成，当前登录账号不受影响。"
-                    } catch { deletionNotice = "此前账号注销已完成，本机旧副本清理失败，请联系支持。" }
+                        deletionNotice = String(localized: "此前提交的账号注销申请已完成，当前登录账号不受影响。")
+                    } catch { deletionNotice = String(localized: "此前账号注销已完成，本机旧副本清理失败，请联系支持。") }
                 }
             }
         } catch {
@@ -95,6 +100,7 @@ final class Session: ObservableObject {
             // Keep the durable receipt; a network error never means deletion succeeded.
             if deletionReceipt?.status == "pending" {
                 deletionRefreshError = "暂时无法刷新注销进度：" + error.localizedDescription
+                deletionRefreshDisplayError = String(localized: "暂时无法刷新注销进度：") + Api.displayError(error)
             }
         }
     }
@@ -154,6 +160,7 @@ final class Session: ObservableObject {
         } catch {
             guard generation == identityGeneration else { return }
             self.error = error.localizedDescription
+            self.displayError = Api.displayError(error)
             // ⚠ 必须落回 loggedOut：从 restore() 的 dev 分支进来时 phase 还是 .checking，
             // 不落回就永远停在开屏转圈上 —— 界面不动，也没有任何错误可看。
             phase = .loggedOut
@@ -179,6 +186,7 @@ final class Session: ObservableObject {
         } catch {
             guard generation == identityGeneration else { return }
             self.error = error.localizedDescription        // 邮箱已注册 / 格式不对 / 名额满，服务端文案原样
+            self.displayError = Api.displayError(error)
             phase = .loggedOut
         }
     }
@@ -204,6 +212,7 @@ final class Session: ObservableObject {
         } catch {
             guard generation == identityGeneration else { return }
             self.error = error.localizedDescription
+            self.displayError = Api.displayError(error)
             phase = .loggedOut
         }
     }
@@ -239,6 +248,7 @@ final class Session: ObservableObject {
         identityGeneration = UUID()
         clearLocalLogin()
         self.error = failure.localizedDescription
+        self.displayError = Api.displayError(failure)
     }
 
     private func clearLocalLogin() {
@@ -271,16 +281,18 @@ final class Session: ObservableObject {
                 receipt.owner = owner
                 receipt.scope = scope
                 saveReceipt(receipt)
-                deletionNotice = "注销申请已受理，尚未完成删除。通常 30 天内完成；处理期间暂停新增数据。可在「右上角账号与设置 → 账号与隐私」查看进度，超时请联系支持。"
+                deletionNotice = String(localized: "注销申请已受理，尚未完成删除。通常 30 天内完成；处理期间暂停新增数据。可在「右上角账号与设置 → 账号与隐私」查看进度，超时请联系支持。")
                 return true
             } catch {
                 guard generation == identityGeneration else { return false }
                 self.error = error.localizedDescription
+                self.displayError = Api.displayError(error)
                 return false
             }
         } catch {
             guard generation == identityGeneration else { return false }
             self.error = error.localizedDescription
+            self.displayError = Api.displayError(error)
             return false
         }
     }

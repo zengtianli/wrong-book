@@ -58,11 +58,11 @@ struct ReviewRectangular: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {
-            Label(digest.map { "待巩固 \($0.due) 类" } ?? "错题本", systemImage: "book.closed.fill")
+            Label(digest.map { String(localized: "待巩固 \($0.due) 类") } ?? String(localized: "app.name"), systemImage: "book.closed.fill")
                 .font(.headline)
                 .widgetAccentable()
             if let d = digest {
-                Text(d.next.first.map { "先复习：\($0.name)" } ?? "错题都订正完了")
+                Text(d.next.first.map { String(localized: "先复习：\($0.name)") } ?? String(localized: "错题都订正完了"))
                     .lineLimit(1)
                 Text("今天 \(d.done(on: date))/\(d.goal) 题 · 连续 \(d.streak) 天")
                     .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
@@ -83,7 +83,7 @@ struct ReviewInline: View {
         if let d = digest {
             Label("待巩固 \(d.due) · 今天 \(d.done(on: date))/\(d.goal)", systemImage: "book.closed")
         } else {
-            Label("错题本", systemImage: "book.closed")
+            Label(String(localized: "app.name"), systemImage: "book.closed")
         }
     }
 }
@@ -112,7 +112,7 @@ struct ReviewCorner: View {
                 }
         } else {
             Image(systemName: "book.closed").font(.title3)
-                .widgetLabel("错题本")
+                .widgetLabel { Text(String(localized: "app.name")) }
         }
     }
 }

@@ -26,32 +26,32 @@ struct AccountVerification: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Button(challenge.isEmpty ? (phone ? "获取短信验证码" : "获取邮箱验证码") :
-                   canResend ? "重新获取验证码" : "\(resendSeconds) 秒后可重新获取") {
+            Button(challenge.isEmpty ? (phone ? String(localized: "获取短信验证码") : String(localized: "获取邮箱验证码")) :
+                   canResend ? String(localized: "重新获取验证码") : String(localized: "\(resendSeconds) 秒后可重新获取")) {
                 Task { await send() }
             }.frame(minHeight: 44).disabled(busy || session.busy || !canResend || address.isEmpty)
             if mayRequestNew {
-                Button("等待后申请新的验证码") {
+                Button(String(localized: "等待后申请新的验证码")) {
                     requestID = UUID().uuidString; mayRequestNew = false
                     Task { await send() }
                 }.frame(minHeight: 44).disabled(busy || session.busy || !canResend)
-                Text(T("account.phone.unknown_note", "原请求已回读；发送结果未知时不会自动重发。等待后可主动申请新验证码，旧码随之失效。"))
+                Text(T("account.phone.unknown_note", String(localized: "原请求已回读；发送结果未知时不会自动重发。等待后可主动申请新验证码，旧码随之失效。")))
                     .font(.footnote).foregroundStyle(.secondary)
             }
             if !challenge.isEmpty && grant.isEmpty {
-                TextField("6 位验证码", text: $code).keyboardType(.numberPad)
+                TextField(String(localized: "6 位验证码"), text: $code).keyboardType(.numberPad)
                     .textContentType(.oneTimeCode).privacySensitive()
-                Button("验证") { Task { await verify() } }
+                Button(String(localized: "验证")) { Task { await verify() } }
                     .frame(minHeight: 44).disabled(busy || session.busy || code.count != 6)
             }
-            if !grant.isEmpty { Label("验证完成", systemImage: "checkmark.circle.fill").foregroundStyle(Ink.accent) }
+            if !grant.isEmpty { Label(String(localized: "验证完成"), systemImage: "checkmark.circle.fill").foregroundStyle(Ink.accent) }
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
             if phone {
-                Text(T("account.phone.footnote", "+86 家长手机号；短信签名「{sign}」，有效{minutes}分钟。收不到可等待重发或改用邮箱。",
+                Text(T("account.phone.footnote", String(localized: "+86 家长手机号；短信签名「{sign}」，有效{minutes}分钟。收不到可等待重发或改用邮箱。"),
                     ["sign": sign, "minutes": String(codeMinutes)]))
                     .font(.footnote).foregroundStyle(.secondary)
             } else {
-                Text(T("account.email.code_note", "验证码发送到本人邮箱；请同时检查垃圾邮件。"))
+                Text(T("account.email.code_note", String(localized: "验证码发送到本人邮箱；请同时检查垃圾邮件。")))
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
@@ -82,7 +82,7 @@ struct AccountVerification: View {
             grant = ""; code = ""
             requestID = UUID().uuidString
             mayRequestNew = false
-            message = response["message"] as? String
+            message = Api.displayText(response, key: "message", fallback: "")
             sign = response["sign_name"] as? String ?? sign
             codeMinutes = AccountHints.codeMinutes(response["expires_in"])
             resendSeconds = phone ? AccountHints.resendSeconds(response["resend_after"]) : 60
@@ -91,7 +91,7 @@ struct AccountVerification: View {
             guard active, key == inputKey else { return }
             session.authenticationFailure(error)
             mayRequestNew = phone && (error as? Api.Failure)?.statusCode == 503
-            message = error.localizedDescription
+            message = Api.displayError(error)
         }
     }
     private func verify() async {
@@ -103,11 +103,11 @@ struct AccountVerification: View {
             guard active, key == inputKey, id == challenge else { return }
             grant = response["grant"] as? String ?? ""
             guard !grant.isEmpty else { throw Api.Failure(message: "未收到验证授权，请重新验证") }
-            code = ""; message = T("account.verification.done", "验证完成")
+            code = ""; message = T("account.verification.done", String(localized: "验证完成"))
         } catch {
             guard active, key == inputKey else { return }
             session.authenticationFailure(error)
-            message = error.localizedDescription
+            message = Api.displayError(error)
         }
     }
     private func reset() {
@@ -126,26 +126,26 @@ struct PhoneRegisterView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("家长本人手机号") {
-                    TextField("+86 手机号", text: $phone).textContentType(.telephoneNumber).keyboardType(.phonePad).privacySensitive()
+                Section(String(localized: "家长本人手机号")) {
+                    TextField(String(localized: "+86 手机号"), text: $phone).textContentType(.telephoneNumber).keyboardType(.phonePad).privacySensitive()
                     AccountVerification(address: phone, purpose: "register", grant: $grant)
-                    Text(T("wrongbook.account.phone.register_note", "已有学习库账号请先登录，再在账号设置绑定手机号，保留原错题和订阅。新手机号注册会创建空白个人学习库；密码和邮箱可稍后设置。"))
+                    Text(T("wrongbook.account.phone.register_note", String(localized: "已有学习库账号请先登录，再在账号设置绑定手机号，保留原错题和订阅。新手机号注册会创建空白个人学习库；密码和邮箱可稍后设置。")))
                         .font(.footnote)
                 }
                 Section {
                     AccountPolicyLinks()
-                    Toggle("我已阅读并同意用户协议与隐私政策", isOn: $agreed)
+                    Toggle(String(localized: "我已阅读并同意用户协议与隐私政策"), isOn: $agreed)
                 }
-                Button(session.busy ? "注册中" : "注册并登录") {
+                Button(session.busy ? String(localized: "注册中") : String(localized: "注册并登录")) {
                     Task {
                         await session.phoneAuthenticate(grant: grant, registering: true, agreed: agreed)
                         if session.status != nil { dismiss() }
                     }
                 }.frame(minHeight: 44).disabled(session.busy || grant.isEmpty || !agreed)
-                Button("其他地区／使用邮箱注册") { showEmail = true }
-                if let error = session.error { Text(error).foregroundStyle(Ink.red) }
-            }.navigationTitle("手机号注册")
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() }.disabled(session.busy) } }
+                Button(String(localized: "其他地区／使用邮箱注册")) { showEmail = true }
+                if let error = session.displayError ?? session.error { Text(error).foregroundStyle(Ink.red) }
+            }.navigationTitle(String(localized: "手机号注册"))
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(String(localized: "关闭")) { dismiss() }.disabled(session.busy) } }
                 .sheet(isPresented: $showEmail) { RegisterView() }
         }.interactiveDismissDisabled(session.busy)
     }
@@ -156,12 +156,12 @@ struct AccountRiskVerification: View {
     @Binding var email: String
     @Binding var emailGrant: String
     var body: some View {
-        DisclosureGroup("号码风险验证：原密码或独立邮箱") {
-            SecureField("原登录密码（如已设置）", text: $password).textContentType(.password).privacySensitive()
-            TextField("已绑定且验证的邮箱", text: $email).textContentType(.emailAddress).keyboardType(.emailAddress)
+        DisclosureGroup(String(localized: "号码风险验证：原密码或独立邮箱")) {
+            SecureField(String(localized: "原登录密码（如已设置）"), text: $password).textContentType(.password).privacySensitive()
+            TextField(String(localized: "已绑定且验证的邮箱"), text: $email).textContentType(.emailAddress).keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never).autocorrectionDisabled().privacySensitive()
             AccountVerification(address: email, purpose: "recover", phone: false, grant: $emailGrant)
-            Text(T("account.phone.risk_note", "号码长期未用或登录环境变化时，服务端可能要求独立验证。不能完成时请联系支持。"))
+            Text(T("account.phone.risk_note", String(localized: "号码长期未用或登录环境变化时，服务端可能要求独立验证。不能完成时请联系支持。")))
                 .font(.footnote)
         }
     }
@@ -186,34 +186,34 @@ struct AccountRecoveryView: View {
         NavigationStack {
             Form {
                 if complete {
-                    Text(T("wrongbook.account.recover.done_note", "密码已重置，原错题、学习记录与订阅保留。所有旧会话已失效，请重新登录。"))
-                    Button("返回登录") { dismiss() }
+                    Text(T("wrongbook.account.recover.done_note", String(localized: "密码已重置，原错题、学习记录与订阅保留。所有旧会话已失效，请重新登录。")))
+                    Button(String(localized: "返回登录")) { dismiss() }
                 } else {
-                    Picker("恢复方式", selection: $phoneMode) { Text("手机号").tag(true); Text("邮箱").tag(false) }
+                    Picker(String(localized: "恢复方式"), selection: $phoneMode) { Text(String(localized: "手机号")).tag(true); Text(String(localized: "邮箱")).tag(false) }
                         .onChange(of: phoneMode) { _, _ in grant = ""; emailGrant = "" }
-                    TextField(phoneMode ? "已验证的 +86 手机号" : "已验证的邮箱", text: phoneMode ? $phone : $email)
+                    TextField(phoneMode ? String(localized: "已验证的 +86 手机号") : String(localized: "已验证的邮箱"), text: phoneMode ? $phone : $email)
                         .textInputAutocapitalization(.never).autocorrectionDisabled().privacySensitive()
                     AccountVerification(address: phoneMode ? phone : email, purpose: phoneMode ? "phone_recover" : "recover",
                         phone: phoneMode, grant: $grant).id(phoneMode)
                     if phoneMode { AccountRiskVerification(password: $oldPassword, email: $riskEmail, emailGrant: $emailGrant) }
-                    SecureField("新密码（15–128字符）", text: $password).textContentType(.newPassword).privacySensitive()
-                    SecureField("确认新密码", text: $confirm).textContentType(.newPassword).privacySensitive()
-                    Text(T("account.password.rule_note", "15–128 个字符，允许空格和中文。可使用系统生成密码或独特短语。")).font(.footnote)
-                    Button(busy ? "提交中" : "重置密码") {
+                    SecureField(String(localized: "新密码（15–128字符）"), text: $password).textContentType(.newPassword).privacySensitive()
+                    SecureField(String(localized: "确认新密码"), text: $confirm).textContentType(.newPassword).privacySensitive()
+                    Text(T("account.password.rule_note", String(localized: "15–128 个字符，允许空格和中文。可使用系统生成密码或独特短语。"))).font(.footnote)
+                    Button(busy ? String(localized: "提交中") : String(localized: "重置密码")) {
                         Task {
                             busy = true; defer { busy = false }
                             do {
                                 _ = try await Api.accountRequest(phoneMode ? "api/phone_recover" : "api/recover",
                                     body: ["grant": grant, "new": password, "password": oldPassword, "email_grant": emailGrant])
                                 complete = true; password = ""; confirm = ""; oldPassword = ""
-                            } catch { message = error.localizedDescription }
+                            } catch { message = Api.displayError(error) }
                         }
                     }.frame(minHeight: 44).disabled(busy || grant.isEmpty || password.count < 15 || password.count > 128 || password != confirm)
                 }
                 if let message { Text(message).foregroundStyle(Ink.red) }
-                Link("收不到验证码／恢复申诉：联系支持", destination: URL(string: "mailto:hi@tianli.cyou")!)
-            }.navigationTitle("忘记密码")
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() }.disabled(busy) } }
+                Link(String(localized: "收不到验证码／恢复申诉：联系支持"), destination: URL(string: "mailto:hi@tianli.cyou")!)
+            }.navigationTitle(String(localized: "忘记密码"))
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(String(localized: "关闭")) { dismiss() }.disabled(busy) } }
         }.interactiveDismissDisabled(busy)
     }
 }
@@ -237,43 +237,43 @@ struct AccountBindingView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(phone ? "当前手机号" : "当前邮箱") { Text(current.isEmpty ? "未绑定验证" : current).privacySensitive() }
+                Section(phone ? String(localized: "当前手机号") : String(localized: "当前邮箱")) { Text(current.isEmpty ? String(localized: "未绑定验证") : current).privacySensitive() }
                 if loaded {
-                    Section("重新确认身份") {
-                        if hasPassword { SecureField("当前登录密码", text: $password).textContentType(.password).privacySensitive() }
+                    Section(String(localized: "重新确认身份")) {
+                        if hasPassword { SecureField(String(localized: "当前登录密码"), text: $password).textContentType(.password).privacySensitive() }
                         else { AccountVerification(address: currentPhone, purpose: "phone_identity", grant: $identity) }
                     }
-                    Section(current.isEmpty ? "绑定验证地址" : "验证新地址") {
-                        TextField(phone ? "+86 家长手机号" : "本人邮箱", text: $address)
+                    Section(current.isEmpty ? String(localized: "绑定验证地址") : String(localized: "验证新地址")) {
+                        TextField(phone ? String(localized: "+86 家长手机号") : String(localized: "本人邮箱"), text: $address)
                             .textInputAutocapitalization(.never).autocorrectionDisabled().privacySensitive()
                         AccountVerification(address: address,
                             purpose: phone ? (current.isEmpty ? "phone_new" : "phone_change_new") : "email_new",
                             phone: phone, password: password, identityGrant: identity, grant: $newGrant)
                     }
                     if !current.isEmpty {
-                        Section("确认原地址") {
+                        Section(String(localized: "确认原地址")) {
                             AccountVerification(address: current, purpose: phone ? "phone_old" : "email_old",
                                 phone: phone, password: password, identityGrant: identity, grant: $oldGrant)
                         }
                     }
-                    Button(session.busy ? "保存中" : "确认保存") {
+                    Button(session.busy ? String(localized: "保存中") : String(localized: "确认保存")) {
                         Task {
                             do {
                                 let result = try await session.updateAccount(phone ? "api/phone_bind" : "api/email_bind", body: [
                                     phone ? "phone" : "email": address, "password": password, "identity_grant": identity,
                                     "grant": newGrant, "old_grant": oldGrant])
-                                message = result["message"] as? String ?? T("account.binding.done", "绑定验证已保存")
+                                message = Api.displayText(result, key: "message", fallback: T("account.binding.done", String(localized: "绑定验证已保存")))
                                 password = ""; identity = ""; newGrant = ""; oldGrant = ""; address = ""
                                 await load()
-                            } catch { message = error.localizedDescription }
+                            } catch { message = Api.displayError(error) }
                         }
                     }.frame(minHeight: 44).disabled(session.busy || newGrant.isEmpty || (!current.isEmpty && oldGrant.isEmpty))
-                } else { Button("重新读取账号") { Task { await load() } } }
+                } else { Button(String(localized: "重新读取账号")) { Task { await load() } } }
                 if let message { Text(message).font(.footnote) }
-                Text(T("wrongbook.account.binding.note", "绑定和换绑保留原内部账号、错题、学习记录和订阅。手机号换绑会使其他旧会话失效；地址被占用时不会自动合并账号。")).font(.footnote)
-                Link("原地址无法使用／恢复申诉", destination: URL(string: "mailto:hi@tianli.cyou")!)
-            }.navigationTitle(phone ? "手机绑定与换绑" : "邮箱验证与换绑")
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() }.disabled(session.busy) } }
+                Text(T("wrongbook.account.binding.note", String(localized: "绑定和换绑保留原内部账号、错题、学习记录和订阅。手机号换绑会使其他旧会话失效；地址被占用时不会自动合并账号。"))).font(.footnote)
+                Link(String(localized: "原地址无法使用／恢复申诉"), destination: URL(string: "mailto:hi@tianli.cyou")!)
+            }.navigationTitle(phone ? String(localized: "手机绑定与换绑") : String(localized: "邮箱验证与换绑"))
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(String(localized: "关闭")) { dismiss() }.disabled(session.busy) } }
                 .task { await load() }
         }.interactiveDismissDisabled(session.busy)
     }
@@ -285,7 +285,7 @@ struct AccountBindingView: View {
                 (me["email_verified"] as? Bool == true ? me["email"] as? String ?? "" : "")
             hasPassword = me["has_password"] as? Bool ?? true
             loaded = true
-        } catch { session.authenticationFailure(error); message = error.localizedDescription }
+        } catch { session.authenticationFailure(error); message = Api.displayError(error) }
     }
 }
 
@@ -304,30 +304,30 @@ struct AccountPasswordView: View {
         NavigationStack {
             Form {
                 if loaded {
-                    if hasPassword { SecureField("当前密码", text: $old).textContentType(.password).privacySensitive() }
+                    if hasPassword { SecureField(String(localized: "当前密码"), text: $old).textContentType(.password).privacySensitive() }
                     else {
-                        Text(T("account.phone.password_set_note", "确认当前绑定手机后设置独立登录密码。已有密码请使用修改或找回流程。")).font(.footnote)
+                        Text(T("account.phone.password_set_note", String(localized: "确认当前绑定手机后设置独立登录密码。已有密码请使用修改或找回流程。"))).font(.footnote)
                         AccountVerification(address: phone, purpose: "phone_identity", grant: $grant)
                     }
-                    SecureField("新密码（15–128字符）", text: $password).textContentType(.newPassword).privacySensitive()
-                    SecureField("确认密码", text: $confirm).textContentType(.newPassword).privacySensitive()
-                    Text(T("account.password.rule_note", "15–128 个字符，允许空格和中文。可使用系统生成密码或独特短语。")).font(.footnote)
-                    Button(session.busy ? "保存中" : hasPassword ? "修改登录密码" : "设置登录密码") {
+                    SecureField(String(localized: "新密码（15–128字符）"), text: $password).textContentType(.newPassword).privacySensitive()
+                    SecureField(String(localized: "确认密码"), text: $confirm).textContentType(.newPassword).privacySensitive()
+                    Text(T("account.password.rule_note", String(localized: "15–128 个字符，允许空格和中文。可使用系统生成密码或独特短语。"))).font(.footnote)
+                    Button(session.busy ? String(localized: "保存中") : hasPassword ? String(localized: "修改登录密码") : String(localized: "设置登录密码")) {
                         Task {
                             do {
                                 _ = try await session.updateAccount(hasPassword ? "api/passwd" : "api/password_set",
                                     body: hasPassword ? ["old": old, "new": password] : ["identity_grant": grant, "new": password])
                                 old = ""; password = ""; confirm = ""; grant = ""
-                                message = T("account.password.saved", "密码已保存，其他旧会话已失效。")
+                                message = T("account.password.saved", String(localized: "密码已保存，其他旧会话已失效。"))
                                 await load()
-                            } catch { message = error.localizedDescription }
+                            } catch { message = Api.displayError(error) }
                         }
                     }.frame(minHeight: 44).disabled(session.busy || (hasPassword ? old.isEmpty : grant.isEmpty) ||
                         password.count < 15 || password.count > 128 || password != confirm)
-                } else { Button("重新读取账号") { Task { await load() } } }
+                } else { Button(String(localized: "重新读取账号")) { Task { await load() } } }
                 if let message { Text(message).font(.footnote) }
-            }.navigationTitle("登录密码")
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() }.disabled(session.busy) } }
+            }.navigationTitle(String(localized: "登录密码"))
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(String(localized: "关闭")) { dismiss() }.disabled(session.busy) } }
                 .task { await load() }
         }.interactiveDismissDisabled(session.busy)
     }
@@ -335,7 +335,7 @@ struct AccountPasswordView: View {
         do {
             let me = try await Api.accountRequest("api/me")
             phone = me["phone"] as? String ?? ""; hasPassword = me["has_password"] as? Bool ?? true; loaded = true
-        } catch { session.authenticationFailure(error); message = error.localizedDescription }
+        } catch { session.authenticationFailure(error); message = Api.displayError(error) }
     }
 }
 
@@ -345,8 +345,8 @@ struct AccountPolicyLinks: View {
     @State private var terms = false
     var body: some View {
         Group {
-            Button("阅读用户协议") { terms = true }
-            Button("阅读隐私政策") { privacy = true }
+            Button(String(localized: "阅读用户协议")) { terms = true }
+            Button(String(localized: "阅读隐私政策")) { privacy = true }
         }
         .sheet(isPresented: $privacy) { AccountPolicyView(privacy: true) }
         .sheet(isPresented: $terms) { AccountPolicyView(privacy: false) }
@@ -360,17 +360,17 @@ struct AccountPolicyView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    Text(privacy ? "错题本隐私政策" : "错题本用户协议").font(.title2.bold())
-                    Text("错题本用于整理家长和学习者自己的错题照片、学习资料及复习记录；只上传你有权使用的内容。")
-                    Text("账号保存家长本人手机号或邮箱、已设置密码的安全哈希、可选昵称、错题照片、识别结果与学习记录。手机验证码用于注册、登录、绑定和恢复；不收集孩子手机号，不用于营销。")
-                    Text("手机认证由阿里云处理手机号和验证请求，当前只支持中国大陆 +86；海外用户可以使用邮箱。请勿向他人提供密码和验证码。")
-                    Text("图片只有在明确同意后才上传至现有学习服务并交由 DeepSeek 识别。免费识别额度和 Apple 订阅权益由服务端核验。")
-                    Text(AccountDeletionCopy.summary + "注销不会自动取消 Apple 订阅，请先在系统订阅设置中取消续期。")
-                    Link("完整隐私说明", destination: URL(string: "https://app-ios-wrong-book.tianli.cyou/privacy.html")!)
-                    Link("帮助与账号恢复申诉", destination: URL(string: "mailto:hi@tianli.cyou")!)
+                    Text(privacy ? String(localized: "错题本隐私政策") : String(localized: "错题本用户协议")).font(.title2.bold())
+                    Text(String(localized: "错题本用于整理家长和学习者自己的错题照片、学习资料及复习记录；只上传你有权使用的内容。"))
+                    Text(String(localized: "账号保存家长本人手机号或邮箱、已设置密码的安全哈希、可选昵称、错题照片、识别结果与学习记录。手机验证码用于注册、登录、绑定和恢复；不收集孩子手机号，不用于营销。"))
+                    Text(String(localized: "手机认证由阿里云处理手机号和验证请求，当前只支持中国大陆 +86；海外用户可以使用邮箱。请勿向他人提供密码和验证码。"))
+                    Text(String(localized: "图片只有在明确同意后才上传至现有学习服务并交由 DeepSeek 识别。免费识别额度和 Apple 订阅权益由服务端核验。"))
+                    Text(AccountDeletionCopy.summary + String(localized: "注销不会自动取消 Apple 订阅，请先在系统订阅设置中取消续期。"))
+                    Link(String(localized: "完整隐私说明"), destination: URL(string: "https://app-ios-wrong-book.tianli.cyou/privacy.html")!)
+                    Link(String(localized: "帮助与账号恢复申诉"), destination: URL(string: "mailto:hi@tianli.cyou")!)
                 }.padding(24).frame(maxWidth: 740)
-            }.navigationTitle(privacy ? "隐私政策" : "用户协议")
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() } } }
+            }.navigationTitle(privacy ? String(localized: "隐私政策") : String(localized: "用户协议"))
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(String(localized: "关闭")) { dismiss() } } }
         }
     }
 }

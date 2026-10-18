@@ -18,19 +18,19 @@ struct HomeView: View {
                 Text("w·").font(.system(size: 22, weight: .semibold, design: .serif))
                     .foregroundStyle(.white).frame(width: 32, height: 32)
                     .background(Ink.accent, in: RoundedRectangle(cornerRadius: 8))
-                Text("wrongbook").font(.system(size: 20, weight: .bold))
+                Text("Mistake Notebook").font(.system(size: 20, weight: .bold))
                 Spacer()
                 Button { Task { await sync.sync(force: true) } } label: { Image(systemName: "arrow.clockwise") }
-                    .disabled(sync.running).accessibilityLabel("同步错题").keyboardShortcut("r", modifiers: .command)
+                    .disabled(sync.running).accessibilityLabel(String(localized: "同步错题")).keyboardShortcut("r", modifiers: .command)
                 Button { settings = true } label: { Image(systemName: "person.crop.circle") }
-                    .accessibilityLabel("账号与设置").keyboardShortcut(",", modifiers: .command)
+                    .accessibilityLabel(String(localized: "账号与设置")).keyboardShortcut(",", modifiers: .command)
             }.buttonStyle(.plain).foregroundStyle(Ink.text)
                 .padding(.horizontal, 20).padding(.vertical, 12).background(Ink.card)
             Divider()
             TabView(selection: $tab) {
-                FocusLibraryView().tabItem { Label("错题本", systemImage: "book.closed") }.tag(0)
-                PaperScanView().tabItem { Label("导入", systemImage: "square.and.arrow.down") }.tag(1)
-                FocusLibraryView(reviewOnly: true).tabItem { Label("复习", systemImage: "arrow.clockwise") }.tag(2)
+                FocusLibraryView().tabItem { Label(String(localized: "错题本"), systemImage: "book.closed") }.tag(0)
+                PaperScanView().tabItem { Label(String(localized: "导入"), systemImage: "square.and.arrow.down") }.tag(1)
+                FocusLibraryView(reviewOnly: true).tabItem { Label(String(localized: "复习"), systemImage: "arrow.clockwise") }.tag(2)
             }
         }
         .tint(Ink.accent).background(Ink.paper)
@@ -49,7 +49,7 @@ struct SettingsSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack { Text("账号与设置").font(.headline); Spacer(); Button("完成") { onDone() } }.padding(16)
+            HStack { Text(String(localized: "账号与设置")).font(.headline); Spacer(); Button(String(localized: "完成")) { onDone() } }.padding(16)
             MeView()
         }.frame(minWidth: 320, minHeight: 480)
     }

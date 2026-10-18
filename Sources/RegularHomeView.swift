@@ -23,12 +23,12 @@ struct RegularHomeView: View {
             detail
                 .toolbar {
                     ToolbarItemGroup(placement: .primaryAction) {
-                        Button { Task { await sync.sync(force: true) } } label: { Label("同步错题", systemImage: "arrow.clockwise") }
+                        Button { Task { await sync.sync(force: true) } } label: { Label(String(localized: "同步错题"), systemImage: "arrow.clockwise") }
                             .disabled(sync.running)
                             #if !os(macOS)
                             .keyboardShortcut("r", modifiers: .command)
                             #endif
-                        Button { settings = true } label: { Label("账号与设置", systemImage: "person.crop.circle") }
+                        Button { settings = true } label: { Label(String(localized: "账号与设置"), systemImage: "person.crop.circle") }
                             #if !os(macOS)
                             .keyboardShortcut(",", modifiers: .command)
                             #endif
@@ -63,16 +63,16 @@ struct RegularHomeView: View {
                         .tag(s)
                 }
             }
-            Section("今天") {
+            Section(String(localized: "今天")) {
                 TodayCard(digest: digest)
             }
-            if let note = sync.note {
+            if let note = sync.localizedNote {
                 Section {
                     Text(note).font(.caption).foregroundStyle(.secondary)
                 }
             }
         }
-        .navigationTitle("错题本")
+        .navigationTitle(String(localized: "错题本"))
     }
 
     // ── 右边 ────────────────────────────────────────────────────────────────
@@ -121,9 +121,9 @@ enum HomeSection: Int, CaseIterable, Identifiable, Hashable {
     var id: Int { rawValue }
     var title: String {
         switch self {
-        case .library: return "错题本"
-        case .review: return "复习"
-        case .importing: return "导入"
+        case .library: return String(localized: "错题本")
+        case .review: return String(localized: "复习")
+        case .importing: return String(localized: "导入")
         }
     }
     var icon: String {
@@ -144,18 +144,18 @@ private struct TodayCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline) {
                     Text("\(d.done())").font(.title2.weight(.semibold)).monospacedDigit()
-                    Text("/ \(d.goal) 题").font(.callout).foregroundStyle(.secondary)
+                    Text(String(localized: "/ \(d.goal) 题")).font(.callout).foregroundStyle(.secondary)
                     Spacer()
-                    Label("连续 \(d.streak) 天", systemImage: "flame.fill")
+                    Label(String(localized: "连续 \(d.streak) 天"), systemImage: "flame.fill")
                         .font(.caption).foregroundStyle(.orange)
                 }
                 ProgressView(value: d.progress())
-                Text(d.remaining() == 0 ? "今天的题做完了 · 待巩固 \(d.due) 类" : "还差 \(d.remaining()) 题 · 待巩固 \(d.due) 类")
+                Text(d.remaining() == 0 ? String(localized: "今天的题做完了 · 待巩固 \(d.due) 类") : String(localized: "还差 \(d.remaining()) 题 · 待巩固 \(d.due) 类"))
                     .font(.caption).foregroundStyle(.secondary)
             }
             .padding(.vertical, 4)
         } else {
-            Text("同步后显示今天的进度").font(.caption).foregroundStyle(.secondary)
+            Text(String(localized: "同步后显示今天的进度")).font(.caption).foregroundStyle(.secondary)
         }
     }
 }
@@ -194,20 +194,20 @@ private struct LibraryBoard: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("TODAY")
                         .font(.system(size: 9, weight: .semibold)).tracking(2).foregroundStyle(Ink.accent)
-                    Text(reviewOnly ? "选一类开始复习" : "选一道题打开")
+                    Text(reviewOnly ? String(localized: "选一类开始复习") : String(localized: "选一道题打开"))
                         .font(.system(size: 24, weight: .semibold)).foregroundStyle(Ink.text)
-                    Text(reviewOnly ? "做完一组再回来，列表会按练习结果更新。" : "左边是收进来的题，点一道就在这里练。")
+                    Text(reviewOnly ? String(localized: "做完一组再回来，列表会按练习结果更新。") : String(localized: "左边是收进来的题，点一道就在这里练。"))
                         .font(.callout).foregroundStyle(Ink.dim)
                 }
                 if let d = digest {
                     HStack(spacing: 12) {
-                        stat("\(d.due)", "类待巩固", Ink.red)
-                        stat("\(d.done())/\(d.goal)", "今天已做", Ink.accent)
-                        stat("\(d.streak)", "天连续", Ink.blue)
+                        stat("\(d.due)", String(localized: "类待巩固"), Ink.red)
+                        stat("\(d.done())/\(d.goal)", String(localized: "今天已做"), Ink.accent)
+                        stat("\(d.streak)", String(localized: "天连续"), Ink.blue)
                     }
                     if !d.next.isEmpty {
                         VStack(alignment: .leading, spacing: 0) {
-                            Text("先复习这几类").font(.headline).foregroundStyle(Ink.text).padding(.bottom, 8)
+                            Text(String(localized: "先复习这几类")).font(.headline).foregroundStyle(Ink.text).padding(.bottom, 8)
                             ForEach(d.next) { item in nextRow(item) }
                         }
                     }
@@ -233,7 +233,7 @@ private struct LibraryBoard: View {
     private func nextRow(_ item: ReviewDigest.Item) -> some View {
         Button { open(item) } label: {
             HStack(spacing: 12) {
-                Text(item.subject.prefix(1)).font(.system(size: 13, weight: .medium))
+                Text(String(localized: String.LocalizationValue(item.subject)).prefix(1)).font(.system(size: 13, weight: .medium))
                     .foregroundStyle(Ink.accent).frame(width: 28, height: 28)
                     .background(Ink.accentSoft, in: RoundedRectangle(cornerRadius: 5))
                 VStack(alignment: .leading, spacing: 3) {
@@ -259,6 +259,6 @@ private struct LibraryBoard: View {
         let slug = String(item.id[..<cut]), gid = String(item.id[item.id.index(after: cut)...])
         guard let lesson = LessonPack.load().lessons.first(where: { $0.slug == slug }) else { return }
         selection = ReviewTarget(lesson: lesson, entry: .drill(gid: gid),
-                                 subtitle: gid.hasPrefix("photo:") ? "导入原题" : "同类题复习")
+                                 subtitle: gid.hasPrefix("photo:") ? String(localized: "导入原题") : String(localized: "同类题复习"))
     }
 }

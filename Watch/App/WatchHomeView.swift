@@ -67,7 +67,7 @@ struct WatchHomeView: View {
         .padding(.horizontal, 4)
         .padding(.bottom, 8)          // 圆角屏的下角会切掉贴底的东西
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .navigationTitle("错题本")
+        .navigationTitle(String(localized: "app.name"))
     }
 
     // ── 第二页：先复习这几类 ────────────────────────────────────────────────
